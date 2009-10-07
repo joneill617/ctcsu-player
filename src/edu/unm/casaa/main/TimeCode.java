@@ -1,6 +1,6 @@
 /*
 This source code file is part of the CASAA Treatment Coding System Utility
-    Copyright (C) 2009  Alex Manuel amanuel@unm.edu
+    Copyright (C) 2009  UNM CASAA
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
