@@ -1,4 +1,4 @@
-#summary Explains how the project is used.
+#summary Explains how the project is designed and used.
 
 UtteranceQueue
 
