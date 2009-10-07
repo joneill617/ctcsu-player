@@ -1,6 +1,6 @@
 /*
 This source code file is part of the CASAA Treatment Coding System Utility
-    Copyright (C) 2009  Alex Manuel amanuel@unm.edu
+    Copyright (C) 2009  UNM CASAA
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ import javax.swing.border.TitledBorder;
 /**
  * This class creates the empty shell GUI for the MISC Coding interface.
  * 
- * @author Alex Manuel amanuel@unm.edu
+ * @author UNM CASAA
  *
  */
 public class MiscTemplateView extends JPanel {

@@ -1,6 +1,6 @@
 /*
 This source code file is part of the CASAA Treatment Coding System Utility
-    Copyright (C) 2009  Alex Manuel amanuel@unm.edu
+    Copyright (C) 2009  UNM CASAA
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import javax.swing.border.TitledBorder;
 
 /**
  * This is the template panel for the Global Ratings sliders.
- * @author Alex Manuel amanuel@unm.edu
+ * @author UNM CASAA
  *
  */
 public class GlobalTemplateView extends JPanel {
