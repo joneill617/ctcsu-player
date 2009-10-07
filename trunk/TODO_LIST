@@ -1,0 +1,89 @@
+From 01 June 2009:
+Parsing Bugs:
+	- Not saving data in the end of audio files
+		+ KH: reports doesn't occur if audio file is local to machine
+	- Button clicks not registering (GUI)
+	- Auto-end to parses
+		+ perhaps set a final value at 1 less than total bytes?
+	- Add a save button that pauses the audio saves the data,
+		then restarts the audio.
+
+Coding Bugs:
+	- Data Lost after manually editing the text file
+	- Put a version number, or create a backup file for each text file.
+	- Replay should do this: | # | -
+							  <-----x
+	- Variable speed (1 fast - 1 slow)
+	- Volume default at 5
+	- Have stream check GUI when resuming or replaying an audio file
+		+ currently resets to stream defaults
+	- Remove Tool Tips
+
+From Whiteboard notes:
+From 17 March 2009:
+1 - Bug where codes lost, may be related to using currentUtterance in coding.
+2 - killLastUtterance() feature requested
+3 - "No Code" button
+4 - Replay more on short utterances (less than a second)
+- Bug where resume fails if last utterance not closed with an end parse call
+- Edit template
+	+ CD track controls
+	+ Replay Button
+		+ parserTemplate -> back 10 secs
+		+ codingTemplate -> back 1 utterance
+- Save progress to file button
+	+ dialog to save on close?
+	+ make it harder to not write out to file
+		+ create more opportunities to write to file (pause, or other method call, etc.)
+- Global Slider Listeners and Handlers
+
+
+From 9/3/2008:
+
+- Update Misc Utterance display functions
+	+ update handled in thread with invokeLater()
+	+ would this also have the time display code for the player?
+- New code button handlers and listeners
+- Other Misc code button handlers
+- Fraction timecode into smaller units
+- Invoke listeners in a thread?
+- Build Edit template
+	+ with CD-type track controls to skip through utterances
+- Build the Global ratings template
+	+ with snap-to-tick sliders (1, 5, default 3)
+- Save progress to file button to back up progress while working
+	+ perhaps save to a temp buffer file, or
+	+ change change I/O implementation to handle this
+
+
+August 26, 2008:
+
+pokeTimer() ->
+setTimeDisplay()
+	-> update the player's time display
+	-> updateMiscDisplay()
+		-> if( time == nextUtteranceStart ){
+				changeUtternace();
+			}
+
+- Save endtime on end of file or close
+	+ dialog to remind to save before closing
+
+- Invoke Listeners in separate threads?	
+
+- Have each template have its own player contro0ls?
+
+- Replay Button - 
+	+ go back through queue and reset template and player to that point
+		+does this erase what's in the queue?
+
+- Edit or Review utterance feature
+	+ review buttons for editing and skipping through utterances
+		+ skip to the next utterance like a CD track button 
+		
+- How to split timecode into smaller than one second chunks
+	on logical sound boundaries?
+		+ 1/4 seconds?
+		+ 1/10 seconds?
+		+ test these for accurate tracking
+		+ update TimeCode class and calls to handle this

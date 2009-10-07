@@ -1,0 +1,195 @@
+/*
+This source code file is part of the CASAA Treatment Coding System Utility
+    Copyright (C) 2009  Alex Manuel amanuel@unm.edu
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+package edu.unm.casaa.misc;
+
+import edu.unm.casaa.utterance.Utterance;
+
+/**
+ * The MiscDataItem is an object designed to hold all of the
+ * relevant information for a MISC utterance.
+ * @author Alex Manuel
+ *
+ */
+public class MiscDataItem extends MiscLookupTable implements Utterance {
+
+	private int orderEnum		= -1;
+	private String startTime	= null;
+	private int startBytes		= -1;
+	private String endTime		= null;
+	private int endBytes		= -1;
+	private int miscCode		= -1;
+	
+	/**
+	 * Constructor requires the order from the data queue,
+	 * and the start time from the player.
+	 * @param order the enumerated order for this utterance
+	 * @param start the start time code for this utterance
+	 */
+	public MiscDataItem(int order, String start, int startByteCode){
+		orderEnum = order;
+		startTime = start;
+		startBytes = startByteCode;
+	}
+
+	/**
+	 * Returns the order number where this particular utterance occurs.
+	 * Returns -1 if value wasn't properly set.
+	 * @return the order of this utterance in the queue. 
+	 */
+	public int getEnum() {
+		return orderEnum;
+	}
+
+	/**
+	 * Returns the start time code for this utterance.
+	 * Returns -1 if value wasn't properly set.
+	 * @return the start time code
+	 */
+	public String getStartTime() {
+		return startTime;
+	}
+	
+	/**
+	 * Returns the number of bytes into the audio file 
+	 * at the start of this utterance.
+	 * Returns -1 if value wasn't properly set.
+	 * @return the start time code
+	 */
+	public int getStartBytes() {
+		return startBytes;
+	}
+	
+	/**
+	 * Returns the end time code for this utterance.
+	 * Returns -1 if value wasn't properly set.
+	 * @return the end time code
+	 */
+	public String getEndTime() {
+		//should this throw an exception if the end time 
+		//can't be retrieved due to the audio file ending?
+		return endTime;
+	}
+
+	/**
+	 * Returns the number of bytes into the audio file 
+	 * at the end of this utterance.
+	 * Returns -1 if value wasn't properly set.
+	 * @return the end time code
+	 */
+	public int getEndBytes() {
+		//should this throw an exception if the end time 
+		//can't be retrieved due to the audio file ending?
+		return endBytes;
+	}
+	
+	/**
+	 * Returns the MISC statistical code for this utterance.
+	 * Returns -1 if value wasn't properly set.
+	 * @return the MISC statistical code
+	 */
+	public int getCodeVal() {
+		return miscCode;
+	}
+
+	/**
+	 * Returns the MISC code abbreviation for the particular
+	 * MISC statistical code recorded for this utterance.
+	 * Returns an error message if value wasn't properly set.
+	 * @return the MISC code abbreviation
+	 */
+	public String getCodeAbbrv(int code) {
+		return super.getCodeAbbrv(miscCode);
+	}
+	
+	/**
+	 * Returns the MISC code integer value for the particular
+	 * MISC statistical code recorded for this utterance.
+	 * Returns -1 on error.
+	 * @return the MISC code integer value
+	 */
+	public int getCodeVal(String code) {
+		return super.getCodeVal(code);
+	}
+
+	/**
+	 * Sets the end time code for this utterance.
+	 * @param end the end time code
+	 */
+	public void setEndTime(String end) {
+		this.endTime = end;
+	}
+
+	/**
+	 * Sets the end time byte accumulation for this utterance.
+	 * @param end the end time code
+	 */
+	public void setEndBytes(int bytes) {
+		this.endBytes = bytes;
+	}
+
+	/**
+	 * Sets the MISC statistical code for this utterance.
+	 * @param integer code the MISC statistical code
+	 */
+	public void setCodeVal(int code) {
+		this.miscCode = code;
+	}
+	
+	/**
+	 * Sets the MISC statistical code for this utterance.
+	 * @param name the MISC statistical code
+	 */
+	public void setCodeVal(String code) {
+		this.miscCode = this.getCodeVal(code);
+	}
+	
+	/**
+	 * Returns the string value for this utterance,
+	 * based on whether it has received a MISC code or not.
+	 * This is used for writing the utterance to a File.
+	 * @return a string representation of this utterance
+	 */
+	public String toString(){
+		if( miscCode == -1 ){
+			return writeParsed();
+		}
+		else{
+			return writeCoded();
+		}
+	}
+	
+	public String writeCoded(){
+		return ("" + orderEnum 	+ "\t" +
+					startTime 	+ "\t" +
+					endTime 	+ "\t" +
+					startBytes	+ "\t" +
+					endBytes	+ "\t" +
+					miscCode 	+ "\t" +
+					getCodeAbbrv(miscCode));
+	}
+	
+	public String writeParsed(){
+		return ("" + orderEnum 	+ "\t" +
+					startTime 	+ "\t" +
+					endTime 	+ "\t" +
+					startBytes	+ "\t" +
+					endBytes);
+	}
+
+}
