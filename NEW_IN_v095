@@ -1,0 +1,33 @@
+New in this version (v0.9.5):
+June 2009
+
+- Added Request: Button mouse-over tool-tips removed.
+- Added Request: Volume default set at 5
+- Fixed bug where player ignored user's volume setting when 
+	resuming play.
+- Fixed bug where audio stutters initially on resume play after pause.
+- Added Request: Added a "Backup" button.
+	If Backup Button is pressed while player is playing or paused,
+	it will pause the audio if needed,
+	write all of the current data out to a text file,
+	reload the current data into memory,
+	then alert the user that the operation is complete.
+- Added Request: Pressing Stop or the Window X-button 
+	will end an active parse, then save the data to file.
+	This provides closing data to the last parse rather than null.
+- Multiple fixes and changes made to address performance issues
+	such as, mouse clicks not responding.
+	+ While the user facing portion of the application remains
+	almost identical.  Major architectural changes have been made
+	under the surface to:
+	- increase efficient memory usage,
+	- allow for better modularity (so new coding methods can be added),
+	- increase GUI responsiveness
+	- increase maintainability, and facilitate fixes and changes
+	- address and improve overall multi-threading performance
+
+Remaining to fix before release:
+- Fix Replay button performance during coding.
+- Complete writing Backup feature, so that it writes to a separate file.
+	
+	
