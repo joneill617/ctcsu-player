@@ -18,6 +18,8 @@ This source code file is part of the CASAA Treatment Coding System Utility
 
 package edu.unm.casaa.utterance;
 
+import edu.unm.casaa.misc.MiscCode;
+
 public interface Utterance {
 
 	public int getEnum();
@@ -25,16 +27,16 @@ public interface Utterance {
 	public String getEndTime();
 	public int getStartBytes();
 	public int getEndBytes();
-	public int getCodeVal();
-	public String getCodeAbbrv(int codeVal);
+
+	public MiscCode getMiscCode();
 	
 	//these should be set on initialization
 	//public int setEnum();	
 	//public int setStartTime();	
 	public void setEndTime(String end);	
 	public void setEndBytes(int bytes);
-	public void setCodeVal(int code);
-	public void setCodeVal(String code);
+	public void setMiscCode(int code);
+	public void setMiscCode(MiscCode code);
 	
 	//output order should be tab-delimited:
 	//order startCode endCode [codeCode codeString] "\r\n"

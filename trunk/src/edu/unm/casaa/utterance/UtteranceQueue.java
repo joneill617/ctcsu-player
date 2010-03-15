@@ -28,6 +28,7 @@ import java.util.ListIterator;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
+import edu.unm.casaa.misc.MiscCode;
 import edu.unm.casaa.misc.MiscDataItem;
 
 /**
@@ -185,7 +186,7 @@ public class UtteranceQueue extends LinkedList<Utterance> {
 	 */
 	public void stripCodeFromCurrentUtterance(){
 		Utterance curr = iter.previous();
-		curr.setCodeVal(-1);
+		curr.setMiscCode(MiscCode.INVALID);
 	}
 
 	/**
@@ -211,7 +212,7 @@ public class UtteranceQueue extends LinkedList<Utterance> {
 
 	public Utterance getLastCodedUtterance(){		
 		iter = listIterator(super.size());
-		while( iter.hasPrevious() && iter.previous().getCodeVal() == -1 );
+		while( iter.hasPrevious() && iter.previous().getMiscCode() == MiscCode.INVALID );
 		return iter.next();
 	}
 
@@ -273,21 +274,23 @@ public class UtteranceQueue extends LinkedList<Utterance> {
 			//MISC format: int order, String startTime, String EndTime,
 			//				int startBytes, int endBytes,
 			//				int code, String codename
-			String nextStr = in.nextLine();
-			StringTokenizer st = new StringTokenizer(nextStr/*in.nextLine()*/, "\t");
-			int lineSize = st.countTokens();  //5 = parsed only, 7 = coded
-			int order = new Integer(st.nextToken()).intValue();
+			String 			nextStr 	= in.nextLine();
+			StringTokenizer st 			= new StringTokenizer(nextStr/*in.nextLine()*/, "\t");
+			int 			lineSize 	= st.countTokens();  //5 = parsed only, 7 = coded
+			int 			order 		= new Integer(st.nextToken()).intValue();
+
 			//TODO: place a check for "null" in start and end fields 
 			//		to report to the user.
-			String start = st.nextToken();
-			String end = st.nextToken();
-			int stBytes = new Integer(st.nextToken()).intValue();
-			MiscDataItem item = new MiscDataItem(order, start, stBytes);
+			String 			start 		= st.nextToken();
+			String 			end 		= st.nextToken();
+			int 			stBytes 	= new Integer(st.nextToken()).intValue();
+			int 			endBytes 	= new Integer(st.nextToken()).intValue();
+			MiscDataItem 	item 		= new MiscDataItem(order, start, stBytes);
+
 			item.setEndTime(end);
-			int endBytes = new Integer(st.nextToken()).intValue();
 			item.setEndBytes(endBytes);
 			if( lineSize == 7 ){
-				item.setCodeVal(new Integer(st.nextToken()).intValue());
+				item.setMiscCode(new Integer(st.nextToken()).intValue());
 				st.nextToken(); //throw away the code string
 			}
 			this.addUtterance(item);
