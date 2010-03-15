@@ -45,6 +45,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import edu.unm.casaa.globals.GlobalTemplateUiService;
 import edu.unm.casaa.globals.GlobalTemplateView;
+import edu.unm.casaa.misc.MiscCode;
 import edu.unm.casaa.misc.MiscDataItem;
 import edu.unm.casaa.misc.MiscTemplateUiService;
 import edu.unm.casaa.misc.MiscTemplateView;
@@ -446,7 +447,7 @@ public class MainController implements BasicPlayerListener {
 				((MiscTemplateView) templateView).setTextFieldCode(
 						currentUtterance.getCodeAbbrv(currentUtterance.getCodeVal()));
 			}*/
-			currentUtterance.setCodeVal(-1);
+			currentUtterance.setMiscCode(MiscCode.INVALID);
 			((MiscTemplateView) templateView).setTextFieldStartTime(currentUtterance.getStartTime());
 			((MiscTemplateView) templateView).setTextFieldEndTime(currentUtterance.getEndTime());
 
@@ -1104,305 +1105,13 @@ public class MainController implements BasicPlayerListener {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// MISC Template Handlers
 
-	//Therapist Coding Buttons
-	public void handleButtonADP(){
-		currentUtterance.setCodeVal("ADP");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("ADP");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonADW(){
-		currentUtterance.setCodeVal("ADW");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("ADW");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonAF(){
-		currentUtterance.setCodeVal("AF");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("AF");		
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonCO(){
-		currentUtterance.setCodeVal("CO");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("CO");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonDI(){
-		currentUtterance.setCodeVal("DI");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("DI");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonEC(){
-		currentUtterance.setCodeVal("EC");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("EC");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonFA(){
-		currentUtterance.setCodeVal("FA");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("FA");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonFI(){
-		currentUtterance.setCodeVal("FI");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("FI");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonGI(){
-		currentUtterance.setCodeVal("GI");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("GI");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonCQminus(){
-		currentUtterance.setCodeVal("CQ-");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("CQ-");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonCQ(){
-		currentUtterance.setCodeVal("CQ0");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("CQ0");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonCQplus(){
-		currentUtterance.setCodeVal("CQ+");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("CQ+");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonOQminus(){
-		currentUtterance.setCodeVal("OQ-");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("OQ-");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonOQ(){
-		currentUtterance.setCodeVal("OQ0");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("OQ0");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonOQplus(){
-		currentUtterance.setCodeVal("OQ+");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("OQ+");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonRCP(){
-		currentUtterance.setCodeVal("RCP");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("RCP");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonRCW(){
-		currentUtterance.setCodeVal("RCW");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("RCW");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonSRminus(){
-		currentUtterance.setCodeVal("SR-");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("SR-");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonSR(){
-		currentUtterance.setCodeVal("SR0");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("SR0");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonSRplus(){
-		currentUtterance.setCodeVal("SR+");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("SR+");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonCRminus(){
-		currentUtterance.setCodeVal("CR-");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("CR-");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonCR(){
-		currentUtterance.setCodeVal("CR0");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("CR0");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonCRplus(){
-		currentUtterance.setCodeVal("CR+");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("CR+");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonRF(){
-		currentUtterance.setCodeVal("RF");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("RF");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonSU(){
-		currentUtterance.setCodeVal("SU");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("SU");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonST(){
-		currentUtterance.setCodeVal("ST");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("ST");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonWA(){
-		currentUtterance.setCodeVal("WA");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("WA");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	//Client Coding Buttons
-	public void handleButtonCplus(){
-		currentUtterance.setCodeVal("C+");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("C+");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonCminus(){
-		currentUtterance.setCodeVal("C-");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("C-");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonRplus(){
-		currentUtterance.setCodeVal("R+");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("R+");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonRminus(){
-		currentUtterance.setCodeVal("R-");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("R-");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonDplus(){
-		currentUtterance.setCodeVal("D+");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("D+");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonDminus(){
-		currentUtterance.setCodeVal("D-");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("D-");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonAplus(){
-		currentUtterance.setCodeVal("A+");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("A+");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonAminus(){
-		currentUtterance.setCodeVal("A-");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("A-");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonNplus(){
-		currentUtterance.setCodeVal("N+");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("N+");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonNminus(){
-		currentUtterance.setCodeVal("N-");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("N-");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonTSplus(){
-		currentUtterance.setCodeVal("TS+");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("TS+");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonTSminus(){
-		currentUtterance.setCodeVal("TS-");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("TS-");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonOplus(){
-		currentUtterance.setCodeVal("O+");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("O+");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonOminus(){
-		currentUtterance.setCodeVal("O-");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("O-");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonFN(){
-		currentUtterance.setCodeVal("FN");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("FN");
-		waitingForCode = false;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonNC(){
-		currentUtterance.setCodeVal("NC");
-		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode("NC");
+	public void handleButtonMiscCode(MiscCode miscCode){
+		if( miscCode == MiscCode.INVALID ){
+			System.err.println("ERROR: handleButtonMisc received MiscCode.INVALID");
+			return;
+		}
+		currentUtterance.setMiscCode(miscCode);
+		((MiscTemplateView) playerView.getPanelTemplate()).setTextFieldCode(miscCode.getLabel());
 		waitingForCode = false;
 	}
 
@@ -1533,12 +1242,12 @@ public class MainController implements BasicPlayerListener {
 				//System.out.println("DEBUG: nextUncodedUtterance enum = " + nextUncodedUtterance.getEnum());
 				((MiscTemplateView) templateView).setTextFieldNext(getNextUncodedUtterance().toString());
 				((MiscTemplateView) templateView).setTextFieldOrder(currentUtterance.getEnum());
-				if( currentUtterance.getCodeVal() == -1 ){
+				if( currentUtterance.getMiscCode() == MiscCode.INVALID ){
 					((MiscTemplateView) templateView).setTextFieldCode("");
 				}
 				else{
 					((MiscTemplateView) templateView).setTextFieldCode(
-							currentUtterance.getCodeAbbrv(currentUtterance.getCodeVal()));
+							currentUtterance.getMiscCode().getLabel() );
 				}
 				((MiscTemplateView) templateView).setTextFieldStartTime(currentUtterance.getStartTime());
 				((MiscTemplateView) templateView).setTextFieldEndTime(currentUtterance.getEndTime());

@@ -26,14 +26,14 @@ import edu.unm.casaa.utterance.Utterance;
  * @author Alex Manuel
  *
  */
-public class MiscDataItem extends MiscLookupTable implements Utterance {
+public class MiscDataItem implements Utterance {
 
 	private int orderEnum		= -1;
 	private String startTime	= null;
 	private int startBytes		= -1;
 	private String endTime		= null;
 	private int endBytes		= -1;
-	private int miscCode		= -1;
+	private MiscCode miscCode	= MiscCode.INVALID;
 	
 	/**
 	 * Constructor requires the order from the data queue,
@@ -41,10 +41,10 @@ public class MiscDataItem extends MiscLookupTable implements Utterance {
 	 * @param order the enumerated order for this utterance
 	 * @param start the start time code for this utterance
 	 */
-	public MiscDataItem(int order, String start, int startByteCode){
-		orderEnum = order;
-		startTime = start;
-		startBytes = startByteCode;
+	public MiscDataItem(int orderEnum, String startTime, int startBytes){
+		this.orderEnum 	= orderEnum;
+		this.startTime 	= startTime;
+		this.startBytes = startBytes;
 	}
 
 	/**
@@ -99,34 +99,14 @@ public class MiscDataItem extends MiscLookupTable implements Utterance {
 	}
 	
 	/**
-	 * Returns the MISC statistical code for this utterance.
-	 * Returns -1 if value wasn't properly set.
-	 * @return the MISC statistical code
+	 * Returns the MISC code for this utterance.
+	 * Returns MiscCode.INVALID if value wasn't set.
+	 * @return the MISC code.
 	 */
-	public int getCodeVal() {
+	public MiscCode getMiscCode() {
 		return miscCode;
 	}
-
-	/**
-	 * Returns the MISC code abbreviation for the particular
-	 * MISC statistical code recorded for this utterance.
-	 * Returns an error message if value wasn't properly set.
-	 * @return the MISC code abbreviation
-	 */
-	public String getCodeAbbrv(int code) {
-		return super.getCodeAbbrv(miscCode);
-	}
 	
-	/**
-	 * Returns the MISC code integer value for the particular
-	 * MISC statistical code recorded for this utterance.
-	 * Returns -1 on error.
-	 * @return the MISC code integer value
-	 */
-	public int getCodeVal(String code) {
-		return super.getCodeVal(code);
-	}
-
 	/**
 	 * Sets the end time code for this utterance.
 	 * @param end the end time code
@@ -144,19 +124,27 @@ public class MiscDataItem extends MiscLookupTable implements Utterance {
 	}
 
 	/**
-	 * Sets the MISC statistical code for this utterance.
+	 * Sets the MISC statistical code for this utterance by integer value.
 	 * @param integer code the MISC statistical code
 	 */
-	public void setCodeVal(int code) {
-		this.miscCode = code;
+	public void setMiscCode(int code) {
+		// Search for enum with matching value.
+		for( MiscCode m : MiscCode.values() ) {
+			if( m.getValue() == code ) {
+				this.miscCode = m;
+				return;
+			}
+		}
+		// Error - code unrecognized.
+		this.miscCode = MiscCode.INVALID;
 	}
 	
 	/**
 	 * Sets the MISC statistical code for this utterance.
 	 * @param name the MISC statistical code
 	 */
-	public void setCodeVal(String code) {
-		this.miscCode = this.getCodeVal(code);
+	public void setMiscCode(MiscCode code) {
+		this.miscCode = code;
 	}
 	
 	/**
@@ -166,7 +154,7 @@ public class MiscDataItem extends MiscLookupTable implements Utterance {
 	 * @return a string representation of this utterance
 	 */
 	public String toString(){
-		if( miscCode == -1 ){
+		if( miscCode == MiscCode.INVALID ){
 			return writeParsed();
 		}
 		else{
@@ -180,8 +168,8 @@ public class MiscDataItem extends MiscLookupTable implements Utterance {
 					endTime 	+ "\t" +
 					startBytes	+ "\t" +
 					endBytes	+ "\t" +
-					miscCode 	+ "\t" +
-					getCodeAbbrv(miscCode));
+					miscCode.getValue() 	+ "\t" +
+					miscCode.getLabel());
 	}
 	
 	public String writeParsed(){

@@ -26,25 +26,6 @@ import javax.swing.JPanel;
 import edu.unm.casaa.main.MainController;
 import edu.unm.casaa.main.TemplateUiService;
 
-enum MiscCode{ 
-	ADP, ADW, AF,
-	CO, DI, EC,
-	FA, FI, GI,
-	CQ_MINUS, CQ_NEUTRAL, CQ_PLUS,
-	OQ_MINUS, OQ_NEUTRAL, OQ_PLUS,
-	RCP, RCW,
-	SR_MINUS, SR_NEUTRAL, SR_PLUS,
-	CR_MINUS, CR_NEUTRAL, CR_PLUS,
-	RF, SU, ST, WA,
-	C_PLUS, C_MINUS,
-	R_PLUS, R_MINUS,
-	D_PLUS, D_MINUS,
-	A_PLUS, A_MINUS,
-	N_PLUS, N_MINUS,
-	TS_PLUS, TS_MINUS,
-	O_PLUS, O_MINUS,
-	FN, NC };
-
 public class MiscTemplateUiService extends TemplateUiService{
 	
 	private MainController mp_control = null;
@@ -59,6 +40,10 @@ public class MiscTemplateUiService extends TemplateUiService{
 		mp_view = new MiscTemplateView();
 		
 		mp_view.getButtonADP().addMouseListener(getMiscButtonListener(MiscCode.ADP));
+		mp_view.getButtonADP().setToolTipText( Integer.toString( MiscCode.ADP.getValue() ) );
+
+		// TODO - CARL - Other tooltips...
+
 		mp_view.getButtonADW().addMouseListener(getMiscButtonListener(MiscCode.ADW));
 		mp_view.getButtonAF().addMouseListener(getMiscButtonListener(MiscCode.AF));
 		
@@ -140,144 +125,12 @@ public class MiscTemplateUiService extends TemplateUiService{
 
 		private MiscCode code;
 		
-		MiscTemplateListener(MiscCode button){
-			code = button;
+		MiscTemplateListener(MiscCode code){
+			this.code = code;
 		}
 		
 		public void mousePressed(MouseEvent e){
-			switch(code){
-			case ADP:
-				mp_control.handleButtonADP();
-				break;
-			case ADW:
-				mp_control.handleButtonADW();
-				break;
-			case AF:
-				mp_control.handleButtonAF();
-				break;
-			case CO:
-				mp_control.handleButtonCO();
-				break;
-			case DI:
-				mp_control.handleButtonDI();
-				break;
-			case EC:
-				mp_control.handleButtonEC();
-				break;
-			case FA:
-				mp_control.handleButtonFA();
-				break;
-			case FI:
-				mp_control.handleButtonFI();
-				break;
-			case GI:
-				mp_control.handleButtonGI();
-				break;
-			case CQ_MINUS:
-				mp_control.handleButtonCQminus();
-				break;
-			case CQ_NEUTRAL:
-				mp_control.handleButtonCQ();
-				break;
-			case CQ_PLUS:
-				mp_control.handleButtonCQplus();
-				break;
-			case OQ_MINUS:
-				mp_control.handleButtonOQminus();
-				break;
-			case OQ_NEUTRAL:
-				mp_control.handleButtonOQ();
-				break;
-			case OQ_PLUS:
-				mp_control.handleButtonOQplus();
-				break;
-			case RCP:
-				mp_control.handleButtonRCP();
-				break;
-			case RCW:
-				mp_control.handleButtonRCW();
-				break;
-			case SR_MINUS:
-				mp_control.handleButtonSRminus();
-				break;
-			case SR_NEUTRAL:
-				mp_control.handleButtonSR();
-				break;
-			case SR_PLUS:
-				mp_control.handleButtonSRplus();
-				break;
-			case CR_MINUS:
-				mp_control.handleButtonCRminus();
-				break;
-			case CR_NEUTRAL:
-				mp_control.handleButtonCR();
-				break;
-			case CR_PLUS:
-				mp_control.handleButtonCRplus();
-				break;
-			case RF:
-				mp_control.handleButtonRF();
-				break;
-			case SU:
-				mp_control.handleButtonSU();
-				break;
-			case ST:
-				mp_control.handleButtonST();
-				break;
-			case WA:
-				mp_control.handleButtonWA();
-				break;
-			case C_PLUS:
-				mp_control.handleButtonCplus();
-				break;
-			case C_MINUS:
-				mp_control.handleButtonCminus();
-				break;
-			case R_PLUS:
-				mp_control.handleButtonRplus();
-				break;
-			case R_MINUS:
-				mp_control.handleButtonRminus();
-				break;
-			case D_PLUS:
-				mp_control.handleButtonDplus();
-				break;
-			case D_MINUS:
-				mp_control.handleButtonDminus();
-				break;
-			case A_PLUS:
-				mp_control.handleButtonAplus();
-				break;
-			case A_MINUS:
-				mp_control.handleButtonAminus();
-				break;
-			case N_PLUS:
-				mp_control.handleButtonNplus();
-				break;
-			case N_MINUS:
-				mp_control.handleButtonNminus();
-				break;
-			case TS_PLUS:
-				mp_control.handleButtonTSplus();
-				break;
-			case TS_MINUS:
-				mp_control.handleButtonTSminus();
-				break;
-			case O_PLUS:
-				mp_control.handleButtonOplus();
-				break;
-			case O_MINUS:
-				mp_control.handleButtonOminus();
-				break;
-			case FN:
-				mp_control.handleButtonFN();
-				break;
-			case NC:
-				mp_control.handleButtonNC();
-				break;
-			default:
-				System.err.println("ERROR: MiscTemplateListener failed on code: " + code);
-			}
+			mp_control.handleButtonMiscCode( code );
 		}
 				
 	}
