@@ -35,6 +35,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import java.util.HashMap;
+
 /**
  * This class creates the empty shell GUI for the MISC Coding interface.
  * 
@@ -99,59 +101,8 @@ public class MiscTemplateView extends JPanel {
 	private JCheckBox checkBoxPauseUncoded	= null;
 	//private JButton buttonDUMMY 			= null;
 
-	//Therapist Coding Controls
-	private JButton buttonADP				= null;
-	private JButton buttonADW				= null;
-	private JButton buttonAF				= null;
-	private JButton buttonCO				= null;
-	private JButton buttonDI				= null;
-	private JButton buttonEC				= null;
-	private JButton buttonFA				= null;
-	private JButton buttonFI				= null;
-	private JButton buttonGI				= null;
-
-	private JButton buttonCQminus			= null;
-	private JButton buttonCQ				= null;
-	private JButton buttonCQplus			= null;
-
-	private JButton buttonOQminus			= null;
-	private JButton buttonOQ				= null;
-	private JButton buttonOQplus			= null;
-
-	private JButton buttonRCP				= null;
-	private JButton buttonRCW				= null;
-
-	private JButton buttonSRminus			= null;
-	private JButton buttonSR				= null;
-	private JButton buttonSRplus			= null;
-
-	private JButton buttonCRminus			= null;
-	private JButton buttonCR				= null;
-	private JButton buttonCRplus			= null;
-
-	private JButton buttonRF				= null;
-	private JButton buttonSU				= null;
-	private JButton buttonST				= null;
-	private JButton buttonWA				= null;
-
-	//Client Coding Controls
-	private JButton buttonCplus				= null;
-	private JButton buttonCminus			= null;
-	private JButton buttonRplus				= null;
-	private JButton buttonRminus			= null;
-	private JButton buttonDplus				= null;
-	private JButton buttonDminus			= null;
-	private JButton buttonAplus				= null;
-	private JButton buttonAminus			= null;
-	private JButton buttonNplus				= null;
-	private JButton buttonNminus			= null;
-	private JButton buttonTSplus			= null;
-	private JButton buttonTSminus			= null;
-	private JButton buttonOplus				= null;
-	private JButton buttonOminus			= null;
-	private JButton buttonFN				= null;
-	private JButton buttonNC				= null;
-
+	// Coding controls.
+	private HashMap< Integer, JButton > buttonMiscCode	= new HashMap< Integer, JButton >();
 
 	//====================================================================
 	// Constructor and Initialization Methods
@@ -178,446 +129,19 @@ public class MiscTemplateView extends JPanel {
 	//====================================================================
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	//Therapist Coding Buttons
-	public JButton getButtonADP(){
-		if( buttonADP == null ){
-			buttonADP = new JButton("ADP");
-			buttonADP.setPreferredSize(getDimButtonSize());
-			//buttonADP.setToolTipText("Advise With Permission");
-		}
-		return buttonADP;
-	}
+	//Misc Code Buttons
+	public JButton getButtonMiscCode(MiscCode miscCode){
+		JButton button = (JButton) buttonMiscCode.get( miscCode.getValue() );
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonADW(){
-		if( buttonADW == null ){
-			buttonADW = new JButton("ADW");
-			buttonADW.setPreferredSize(getDimButtonSize());
-			//buttonADW.setToolTipText("Advise Without Permission");
+		// Create button if it does not yet exist.
+		if( button == null ){
+			button = new JButton(miscCode.getLabel());
+			button.setPreferredSize(getDimButtonSize());
+			button.setToolTipText(Integer.toString(miscCode.getValue()));
+			buttonMiscCode.put( miscCode.getValue(), button);
 		}
-		return buttonADW;
+		return button;
 	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonAF(){
-		if( buttonAF == null ){
-			buttonAF = new JButton("AF");
-			buttonAF.setPreferredSize(getDimButtonSize());
-			//buttonAF.setToolTipText("Affirm");
-		}
-		return buttonAF;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonCO(){
-		if( buttonCO == null ){
-			buttonCO = new JButton("CO");
-			buttonCO.setPreferredSize(getDimButtonSize());
-			//buttonCO.setToolTipText("Confront");
-		}
-		return buttonCO;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonDI(){
-		if( buttonDI == null ){
-			buttonDI = new JButton("DI");
-			buttonDI.setPreferredSize(getDimButtonSize());
-			//buttonDI.setToolTipText("Direct");
-		}
-		return buttonDI;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonEC(){
-		if( buttonEC == null ){
-			buttonEC = new JButton("EC");
-			buttonEC.setPreferredSize(getDimButtonSize());
-			//buttonEC.setToolTipText("Emphasize Control");
-		}
-		return buttonEC;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonFA(){
-		if( buttonFA == null ){
-			buttonFA = new JButton("FA");
-			buttonFA.setPreferredSize(getDimButtonSize());
-			//buttonFA.setToolTipText("Facilitate");
-		}
-		return buttonFA;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonFI(){
-		if( buttonFI == null ){
-			buttonFI = new JButton("FI");
-			buttonFI.setPreferredSize(getDimButtonSize());
-			//buttonFI.setToolTipText("Filler");
-		}
-		return buttonFI;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonGI(){
-		if( buttonGI == null ){
-			buttonGI = new JButton("GI");
-			buttonGI.setPreferredSize(getDimButtonSize());
-			//buttonGI.setToolTipText("Giving Information");
-		}
-		return buttonGI;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonCQminus(){
-		if( buttonCQminus == null ){
-			buttonCQminus = new JButton("CQ-");
-			buttonCQminus.setPreferredSize(getDimButtonSize());
-			//buttonCQminus.setToolTipText("Closed Question Minus");
-		}
-		return buttonCQminus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonCQ(){
-		if( buttonCQ == null ){
-			buttonCQ = new JButton("CQ0");
-			buttonCQ.setPreferredSize(getDimButtonSize());
-			//buttonCQ.setToolTipText("Closed Question Neutral");
-		}
-		return buttonCQ;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonCQplus(){
-		if( buttonCQplus == null ){
-			buttonCQplus = new JButton("CQ+");
-			buttonCQplus.setPreferredSize(getDimButtonSize());
-			//buttonCQplus.setToolTipText("Closed Question Plus");
-		}
-		return buttonCQplus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonOQminus(){
-		if( buttonOQminus == null ){
-			buttonOQminus = new JButton("OQ-");
-			buttonOQminus.setPreferredSize(getDimButtonSize());
-			//buttonOQminus.setToolTipText("Open Question Minus");
-		}
-		return buttonOQminus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonOQ(){
-		if( buttonOQ == null ){
-			buttonOQ = new JButton("OQ0");
-			buttonOQ.setPreferredSize(getDimButtonSize());
-			//buttonOQ.setToolTipText("Open Question Neutral");
-		}
-		return buttonOQ;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonOQplus(){
-		if( buttonOQplus == null ){
-			buttonOQplus = new JButton("OQ+");
-			buttonOQplus.setPreferredSize(getDimButtonSize());
-			//buttonOQplus.setToolTipText("Open Question Plus");
-		}
-		return buttonOQplus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonSRminus(){
-		if( buttonSRminus == null ){
-			buttonSRminus = new JButton("SR-");
-			buttonSRminus.setPreferredSize(getDimButtonSize());
-			//buttonSRminus.setToolTipText("Simple Reflection Minus");
-		}
-		return buttonSRminus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonSR(){
-		if( buttonSR == null ){
-			buttonSR = new JButton("SR0");
-			buttonSR.setPreferredSize(getDimButtonSize());
-			//buttonSR.setToolTipText("Simple Reflection Neutral");
-		}
-		return buttonSR;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonSRplus(){
-		if( buttonSRplus == null ){
-			buttonSRplus = new JButton("SR+");
-			buttonSRplus.setPreferredSize(getDimButtonSize());
-			//buttonSRplus.setToolTipText("Simple Reflection Plus");
-		}
-		return buttonSRplus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonCRminus(){
-		if( buttonCRminus == null ){
-			buttonCRminus = new JButton("CR-");
-			buttonCRminus.setPreferredSize(getDimButtonSize());
-			//buttonCRminus.setToolTipText("Complex Reflection Minus");
-		}
-		return buttonCRminus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonCR(){
-		if( buttonCR == null ){
-			buttonCR = new JButton("CR0");
-			buttonCR.setPreferredSize(getDimButtonSize());
-			//buttonCR.setToolTipText("Complex Reflection");
-		}
-		return buttonCR;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonCRplus(){
-		if( buttonCRplus == null ){
-			buttonCRplus = new JButton("CR+");
-			buttonCRplus.setPreferredSize(getDimButtonSize());
-			//buttonCRplus.setToolTipText("Complex Reflection Plus");
-		}
-		return buttonCRplus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonRCP(){
-		if( buttonRCP == null ){
-			buttonRCP = new JButton("RCP");
-			buttonRCP.setPreferredSize(getDimButtonSize());
-			//buttonRCP.setToolTipText("Raise Concern With Permission");
-		}
-		return buttonRCP;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonRCW(){
-		if( buttonRCW == null ){
-			buttonRCW = new JButton("RCW");
-			buttonRCW.setPreferredSize(getDimButtonSize());
-			//buttonRCW.setToolTipText("Raise Concern Without Permission");
-		}
-		return buttonRCW;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonRF(){
-		if( buttonRF == null ){
-			buttonRF = new JButton("RF");
-			buttonRF.setPreferredSize(getDimButtonSize());
-			//buttonRF.setToolTipText("Reframe");
-		}
-		return buttonRF;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonSU(){
-		if( buttonSU == null ){
-			buttonSU = new JButton("SU");
-			buttonSU.setPreferredSize(getDimButtonSize());
-			//buttonSU.setToolTipText("Support");
-		}
-		return buttonSU;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonST(){
-		if( buttonST == null ){
-			buttonST = new JButton("ST");
-			buttonST.setPreferredSize(getDimButtonSize());
-			//buttonST.setToolTipText("Structure");
-		}
-		return buttonST;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonWA(){
-		if( buttonWA == null ){
-			buttonWA = new JButton("WA");
-			buttonWA.setPreferredSize(getDimButtonSize());
-			//buttonWA.setToolTipText("Warn");
-		}
-		return buttonWA;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	//Client Coding Buttons
-	public JButton getButtonCplus(){
-		if( buttonCplus == null ){
-			buttonCplus = new JButton("C+");
-			buttonCplus.setPreferredSize(getDimButtonSize());
-			//buttonCplus.setToolTipText("Commit+");
-		}
-		return buttonCplus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonCminus(){
-		if( buttonCminus == null ){
-			buttonCminus = new JButton("C-");
-			buttonCminus.setPreferredSize(getDimButtonSize());
-			//buttonCminus.setToolTipText("Commit-");
-		}
-		return buttonCminus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonRplus(){
-		if( buttonRplus == null ){
-			buttonRplus = new JButton("R+");
-			buttonRplus.setPreferredSize(getDimButtonSize());
-			//buttonRplus.setToolTipText("Reason+");
-		}
-		return buttonRplus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonRminus(){
-		if( buttonRminus == null ){
-			buttonRminus = new JButton("R-");
-			buttonRminus.setPreferredSize(getDimButtonSize());
-			//buttonRminus.setToolTipText("Reason-");
-		}
-		return buttonRminus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonDplus(){
-		if( buttonDplus == null ){
-			buttonDplus = new JButton("D+");
-			buttonDplus.setPreferredSize(getDimButtonSize());
-			//buttonDplus.setToolTipText("Desire+");
-		}
-		return buttonDplus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonDminus(){
-		if( buttonDminus == null ){
-			buttonDminus = new JButton("D-");
-			buttonDminus.setPreferredSize(getDimButtonSize());
-			//buttonDminus.setToolTipText("Desire-");
-		}
-		return buttonDminus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonAplus(){
-		if( buttonAplus == null ){
-			buttonAplus = new JButton("A+");
-			buttonAplus.setPreferredSize(getDimButtonSize());
-			//buttonAplus.setToolTipText("Ability+");
-		}
-		return buttonAplus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonAminus(){
-		if( buttonAminus == null ){
-			buttonAminus = new JButton("A-");
-			buttonAminus.setPreferredSize(getDimButtonSize());
-			//buttonAminus.setToolTipText("Ability-");
-		}
-		return buttonAminus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonNplus(){
-		if( buttonNplus == null ){
-			buttonNplus = new JButton("N+");
-			buttonNplus.setPreferredSize(getDimButtonSize());
-			//buttonNplus.setToolTipText("Need+");
-		}
-		return buttonNplus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonNminus(){
-		if( buttonNminus == null ){
-			buttonNminus = new JButton("N-");
-			buttonNminus.setPreferredSize(getDimButtonSize());
-			//buttonNminus.setToolTipText("Need-");
-		}
-		return buttonNminus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonTSplus(){
-		if( buttonTSplus == null ){
-			buttonTSplus = new JButton("TS+");
-			buttonTSplus.setPreferredSize(getDimButtonSize());
-			//buttonTSplus.setToolTipText("Taking Steps+");
-		}
-		return buttonTSplus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonTSminus(){
-		if( buttonTSminus == null ){
-			buttonTSminus = new JButton("TS-");
-			buttonTSminus.setPreferredSize(getDimButtonSize());
-			//buttonTSminus.setToolTipText("Taking Steps-");
-		}
-		return buttonTSminus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonOplus(){
-		if( buttonOplus == null ){
-			buttonOplus = new JButton("O+");
-			buttonOplus.setPreferredSize(getDimButtonSize());
-			//buttonOplus.setToolTipText("Other+");
-		}
-		return buttonOplus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonOminus(){
-		if( buttonOminus == null ){
-			buttonOminus = new JButton("O-");
-			buttonOminus.setPreferredSize(getDimButtonSize());
-			//buttonOminus.setToolTipText("Other-");
-		}
-		return buttonOminus;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonFN(){
-		if( buttonFN == null ){
-			buttonFN = new JButton("FN");
-			buttonFN.setPreferredSize(getDimButtonSize());
-			//buttonFN.setToolTipText("Follow/Neutral/Ask");
-		}
-		return buttonFN;
-	}
-	
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JButton getButtonNC(){
-		if( buttonNC == null ){
-			buttonNC = new JButton("NC");
-			buttonNC.setPreferredSize(getDimButtonSize());
-			//buttonNC.setToolTipText("No Code");
-		}
-		return buttonNC;
-	}
-	
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	/*public JButton getButtonDUMMY(){
-		if( buttonDUMMY == null ){
-			buttonDUMMY = new JButton();
-			buttonDUMMY.setPreferredSize(getDimButtonSize());
-			buttonDUMMY.setVisible(false);
-		}
-		return buttonDUMMY;
-	}*/
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	public JCheckBox getCheckBoxPauseUncoded(){
@@ -645,41 +169,41 @@ public class MiscTemplateView extends JPanel {
 					BUTTON_HOR_GAP,
 					BUTTON_VER_GAP));
 			panelTherapistControls.setBorder(getBorderTherapist());			
-			panelTherapistControls.add(getButtonCQminus());
-			panelTherapistControls.add(getButtonCQ());
-			panelTherapistControls.add(getButtonCQplus());
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.CQ_MINUS));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.CQ_NEUTRAL));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.CQ_PLUS));
 			
-			panelTherapistControls.add(getButtonOQminus());
-			panelTherapistControls.add(getButtonOQ());
-			panelTherapistControls.add(getButtonOQplus());
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.OQ_MINUS));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.OQ_NEUTRAL));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.OQ_PLUS));
 			
-			panelTherapistControls.add(getButtonSRminus());
-			panelTherapistControls.add(getButtonSR());
-			panelTherapistControls.add(getButtonSRplus());
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.SR_MINUS));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.SR_NEUTRAL));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.SR_PLUS));
 			
-			panelTherapistControls.add(getButtonCRminus());
-			panelTherapistControls.add(getButtonCR());
-			panelTherapistControls.add(getButtonCRplus());
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.CR_MINUS));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.CR_NEUTRAL));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.CR_PLUS));
 			
-			panelTherapistControls.add(getButtonADP());
-			panelTherapistControls.add(getButtonADW());
-			panelTherapistControls.add(getButtonAF());
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.ADP));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.ADW));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.AF));
 			
-			panelTherapistControls.add(getButtonCO());
-			panelTherapistControls.add(getButtonDI());
-			panelTherapistControls.add(getButtonEC());
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.CO));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.DI));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.EC));
 			
-			panelTherapistControls.add(getButtonFA());
-			panelTherapistControls.add(getButtonFI());
-			panelTherapistControls.add(getButtonGI());	
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.FA));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.FI));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.GI));
 			
-			panelTherapistControls.add(getButtonRCP());
-			panelTherapistControls.add(getButtonRCW());
-			panelTherapistControls.add(getButtonRF());
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.RCP));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.RCW));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.RF));
 			
-			panelTherapistControls.add(getButtonST());
-			panelTherapistControls.add(getButtonSU());
-			panelTherapistControls.add(getButtonWA());
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.ST));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.SU));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.WA));
 		}
 		return panelTherapistControls;
 	}
@@ -694,30 +218,30 @@ public class MiscTemplateView extends JPanel {
 					BUTTON_VER_GAP));
 			panelClientControls.setBorder(getBorderClient());
 
-			panelClientControls.add(getButtonDplus());
-			panelClientControls.add(getButtonDminus());
+			panelClientControls.add(getButtonMiscCode(MiscCode.D_PLUS));
+			panelClientControls.add(getButtonMiscCode(MiscCode.D_MINUS));
 			
-			panelClientControls.add(getButtonAplus());
-			panelClientControls.add(getButtonAminus());
+			panelClientControls.add(getButtonMiscCode(MiscCode.A_PLUS));
+			panelClientControls.add(getButtonMiscCode(MiscCode.A_MINUS));
 			
-			panelClientControls.add(getButtonRplus());
-			panelClientControls.add(getButtonRminus());
+			panelClientControls.add(getButtonMiscCode(MiscCode.R_PLUS));
+			panelClientControls.add(getButtonMiscCode(MiscCode.R_MINUS));
 			
-			panelClientControls.add(getButtonNplus());
-			panelClientControls.add(getButtonNminus());
+			panelClientControls.add(getButtonMiscCode(MiscCode.N_PLUS));
+			panelClientControls.add(getButtonMiscCode(MiscCode.N_MINUS));
 			
-			panelClientControls.add(getButtonCplus());
-			panelClientControls.add(getButtonCminus());
+			panelClientControls.add(getButtonMiscCode(MiscCode.C_PLUS));
+			panelClientControls.add(getButtonMiscCode(MiscCode.C_MINUS));
 			
-			panelClientControls.add(getButtonTSplus());
-			panelClientControls.add(getButtonTSminus());
+			panelClientControls.add(getButtonMiscCode(MiscCode.TS_PLUS));
+			panelClientControls.add(getButtonMiscCode(MiscCode.TS_MINUS));
 			
-			panelClientControls.add(getButtonOplus());
-			panelClientControls.add(getButtonOminus());
+			panelClientControls.add(getButtonMiscCode(MiscCode.O_PLUS));
+			panelClientControls.add(getButtonMiscCode(MiscCode.O_MINUS));
 			
-			panelClientControls.add(getButtonFN());
-			//panelClientControls.add(this.getButtonDUMMY());
-			panelClientControls.add(this.getButtonNC());
+			panelClientControls.add(getButtonMiscCode(MiscCode.FN));
+			panelClientControls.add(getButtonMiscCode(MiscCode.NC));
+
 			panelClientControls.add(this.getCheckBoxPauseUncoded());
 		}
 		return panelClientControls;
