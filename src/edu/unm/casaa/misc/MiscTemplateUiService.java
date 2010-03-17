@@ -29,56 +29,56 @@ import edu.unm.casaa.main.TemplateUiService;
 
 public class MiscTemplateUiService extends TemplateUiService{
 	
-	private MainController mp_control = null;
-	private MiscTemplateView mp_view = null;
+	private MainController control 	= null;
+	private MiscTemplateView view 	= null;
 	
-	public MiscTemplateUiService(MainController control){
-		mp_control = control;
+	public MiscTemplateUiService( MainController control ) {
+		this.control = control;
 		init();
 	}
 	
-	private void init(){
-		mp_view = new MiscTemplateView();
+	private void init() {
+		view = new MiscTemplateView();
 		
-		for( MiscCode m : MiscCode.values() ){
-			if( m == MiscCode.INVALID ){
+		for( MiscCode m : MiscCode.values() ) {
+			if( m == MiscCode.INVALID ) {
 				continue;
 			}
 			
-			JButton button = mp_view.getButtonMiscCode(m);
+			JButton button = view.getButtonMiscCode( m );
 
-			button.addMouseListener(getMiscButtonListener(m));
-			button.setToolTipText(Integer.toString(m.getValue()));
+			button.addMouseListener( getMiscButtonListener( m ) );
+			button.setToolTipText( Integer.toString( m.getValue() ) );
 		}
 		
-		mp_view.getCheckBoxPauseUncoded().addMouseListener(new MouseAdapter(){
-			public void mouseClicked(MouseEvent e){
-				mp_control.setPauseOnUncoded(mp_view.getCheckBoxPauseUncoded().isSelected());
+		view.getCheckBoxPauseUncoded().addMouseListener( new MouseAdapter() {
+			public void mouseClicked( MouseEvent e ) {
+				control.setPauseOnUncoded( view.getCheckBoxPauseUncoded().isSelected() );
 			}
 		});
 	}
 	
-	private MiscTemplateListener getMiscButtonListener(MiscCode button){
-		return new MiscTemplateListener(button);
+	private MiscTemplateListener getMiscButtonListener( MiscCode code ) {
+		return new MiscTemplateListener( code );
 	}
 	
-	public JPanel getTemplateView(){
-		return mp_view;
+	public JPanel getTemplateView() {
+		return view;
 	}
 	
 	//===============================================================
-	// Mouse Adapter inner class
+	// MouseAdapter inner class
 	//===============================================================
-	private class MiscTemplateListener extends MouseAdapter {
 
+	private class MiscTemplateListener extends MouseAdapter {
 		private MiscCode code;
 		
-		MiscTemplateListener(MiscCode code){
+		MiscTemplateListener( MiscCode code ) {
 			this.code = code;
 		}
 		
-		public void mousePressed(MouseEvent e){
-			mp_control.handleButtonMiscCode( code );
+		public void mousePressed( MouseEvent e ) {
+			control.handleButtonMiscCode( code );
 		}
 				
 	}

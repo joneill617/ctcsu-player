@@ -18,67 +18,28 @@ This source code file is part of the CASAA Treatment Coding System Utility
 
 package edu.unm.casaa.utterance;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-
 import javax.swing.JPanel;
 
 import edu.unm.casaa.main.MainController;
 import edu.unm.casaa.main.TemplateUiService;
 
-enum ParserCode{
-	START,
-	END;
-}
-
 public class ParserTemplateUiService extends TemplateUiService{
 
-	private MainController mp_control = null;
-	private ParserTemplateView mp_view = null;
-	
-	public ParserTemplateUiService(MainController control){
-		mp_control = control;
+	private MainController control 	= null;
+	private ParserTemplateView view = null;
+
+	public ParserTemplateUiService( MainController control ) {
+		this.control = control;
 		init();
 	}
 	
-	private void init(){
-		mp_view = new ParserTemplateView();
-		mp_view.getButtonStartParse().addMouseListener(getParserButtonListener(ParserCode.START));
-		mp_view.getButtonEndParse().addMouseListener(getParserButtonListener(ParserCode.END));
+	private void init() {
+		view = new ParserTemplateView();
+		view.getButtonStartParse().addActionListener( control );
+		view.getButtonEndParse().addActionListener( control );
 	}
 	
-	public JPanel getTemplateView(){
-		return mp_view;
+	public JPanel getTemplateView() {
+		return view;
 	}
-	
-	private ParserTemplateMouseListener getParserButtonListener(ParserCode button){
-		return new ParserTemplateMouseListener(button);
-	}
-	
-	//===============================================================
-	// Mouse Adapter inner class
-	//===============================================================
-	private class ParserTemplateMouseListener extends MouseAdapter {
-
-		ParserCode code;
-		
-		ParserTemplateMouseListener(ParserCode button){
-			code = button;
-		}
-		
-		public void mousePressed(MouseEvent e){
-			switch(code){
-			case START:
-				mp_control.handleButtonStartParse();
-				break;
-			case END:
-				mp_control.handleButtonEndParse();
-				break;
-			default:
-				System.err.println("ERROR: ParserTemplateListener failed on code: " + code);
-			}
-		}
-		
-	}
-
 }
