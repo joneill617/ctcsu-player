@@ -18,8 +18,6 @@ This source code file is part of the CASAA Treatment Coding System Utility
 
 package edu.unm.casaa.utterance;
 
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -45,7 +43,6 @@ public class ParserTemplateUiService extends TemplateUiService{
 	
 	private void init(){
 		mp_view = new ParserTemplateView();
-		mp_view.addKeyListener(getParserKeyListener());
 		mp_view.getButtonStartParse().addMouseListener(getParserButtonListener(ParserCode.START));
 		mp_view.getButtonEndParse().addMouseListener(getParserButtonListener(ParserCode.END));
 	}
@@ -56,11 +53,6 @@ public class ParserTemplateUiService extends TemplateUiService{
 	
 	private ParserTemplateMouseListener getParserButtonListener(ParserCode button){
 		return new ParserTemplateMouseListener(button);
-	}
-	
-	private ParserTemplateKeyListener getParserKeyListener(){
-		System.out.println("DEBUG: KeyListener init called");
-		return new ParserTemplateKeyListener();
 	}
 	
 	//===============================================================
@@ -88,22 +80,5 @@ public class ParserTemplateUiService extends TemplateUiService{
 		}
 		
 	}
-	
-	//===============================================================
-	// Key Adapter inner class
-	//===============================================================
-	private class ParserTemplateKeyListener extends KeyAdapter{
-		
-		public ParserTemplateKeyListener(){};
-		
-		public void keyTyped(KeyEvent event){
-			System.out.println("DEBUG: KeyEvent captured");
-			if( event.getKeyCode() == KeyEvent.VK_SPACE ){
-				System.out.println("DEBUG: KeyEvent VK_SPACE");
-				mp_control.handleButtonStartParse();
-			}
-		}
-		
-	}
-	
+
 }
