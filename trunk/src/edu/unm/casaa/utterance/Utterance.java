@@ -28,11 +28,12 @@ public interface Utterance {
 	public int getStartBytes();
 	public int getEndBytes();
 
+	public boolean isParsed();
+	public boolean isCoded();
 	public MiscCode getMiscCode();
 	
-	//these should be set on initialization
-	//public int setEnum();	
-	//public int setStartTime();	
+	// Enum and start time will be initialized by derived class constructor.
+	public void	setEnum(int index);
 	public void setEndTime(String end);	
 	public void setEndBytes(int bytes);
 	public void setMiscCode(int code);
