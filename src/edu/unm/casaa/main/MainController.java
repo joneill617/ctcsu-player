@@ -30,7 +30,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.channels.FileChannel;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -77,18 +76,13 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	private JPanel 				templateView	= null;
 	private TemplateUiService 	templateUI		= null;
 
-	private File 	fileParse				= null;
 	private String 	filenameParse			= null;
-	private File 	fileMisc				= null;
 	private String 	filenameMisc			= null;
-	private File 	fileGlobals				= null;
 	private String 	filenameGlobals			= null;
-	private String 	filenameBackup			= null;
 
 	// Audio Player back-end
 	private BasicPlayer 	basicPlayer		= null;
 
-	private File 	fileAudio				= null;
 	private String 	filenameAudio			= null;
 
 	private Timer timer						= null;
@@ -130,7 +124,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		if( isParsingUtterance() ){
 			parseEnd();
 		}
-		saveCurrentTextFile();
+		saveCurrentTextFile( false );
 		System.exit(0);
 	}
 
@@ -175,6 +169,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			parseStart();
 		} else if( "parseEnd".equals( command ) ) {
 			parseEnd();
+			saveCurrentTextFile( false );
 		}
 	}
 
@@ -293,13 +288,12 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		}
 	}
 
-	// Load audio file from given filename.  Records filenameAudio and fileAudio.
+	// Load audio file from given filename.  Records filenameAudio.
 	// Returns true on success.
 	private boolean loadAudioFile( String filename ) {
 		filenameAudio	= filename;
-		fileAudio 		= new File( filenameAudio );
 		try {
-			basicPlayer.open( fileAudio );
+			basicPlayer.open( new File( filenameAudio ) );
 			pokeTimer();
 			return true;
 		} catch( BasicPlayerException e ) {
@@ -483,14 +477,16 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			parseEnd();
 		}
 		playerStop();
-		saveCurrentTextFile();
+		saveCurrentTextFile( false );
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void handleButtonBackup() {
 		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ) {
 			playerPause();
-		} else if( basicPlayer.getStatus() != BasicPlayer.PAUSED ) {
+		} else if( basicPlayer.getStatus() != BasicPlayer.PAUSED &&
+				   basicPlayer.getStatus() != BasicPlayer.OPENED &&
+				   basicPlayer.getStatus() != BasicPlayer.STOPPED ) {
 			showBackupErrorDialog();
 			return;
 		}
@@ -499,9 +495,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			parseEnd();
 		}
 
-		saveCurrentTextFile();
-		copyTextFileToBackupFile();
-		reloadUtterancesFromFile();
+		saveCurrentTextFile( true );
 		showBackupCompleteDialog();
 	}
 
@@ -619,7 +613,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	// Menu Handlers
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void handleNewParseFile(){
-		saveCurrentTextFile(); // Save current session, if any.
+		saveCurrentTextFile( false );
 
 		JFileChooser chooser = new JFileChooser();
 
@@ -632,7 +626,6 @@ public class MainController implements BasicPlayerListener, ActionListener {
 				currentUtterance	= 0;
 				filenameParse 		= chooser.getSelectedFile().getAbsolutePath();
 				filenameParse 		= correctTextFileType(".parse", filenameParse);
-				fileParse			= new File( filenameParse );
 				setMode( Mode.MODE_PARSE );
 			}
 		}
@@ -640,7 +633,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void handleNewCodeFile(){
-		saveCurrentTextFile(); // Save current session, if any.
+		saveCurrentTextFile( false );
 
 		JFileChooser chooser = new JFileChooser();
 
@@ -650,9 +643,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			utteranceList 		= null;
 			currentUtterance	= 0;
 			filenameParse 		= chooser.getSelectedFile().getAbsolutePath();
-			fileParse 			= new File(filenameParse);
 			filenameMisc 		= correctTextFileType(".casaa", filenameParse);
-			fileMisc 			= new File(filenameMisc);
 			try {
 				copyParseFileToCodeFile();
 			} catch (IOException e) {
@@ -662,7 +653,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 
 			// Load the parse and audio files.
 			setMode( Mode.MODE_CODE );
-			filenameAudio = getUtteranceList().loadFromFile( fileMisc );
+			filenameAudio = getUtteranceList().loadFromFile( new File( filenameMisc ) );
 			loadAudioFile( filenameAudio );
 			postLoad();
 		}
@@ -672,7 +663,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void handleNewGlobalRatings(){
-		saveCurrentTextFile(); // Save current session, if any.
+		saveCurrentTextFile( false );
 
 		JFileChooser chooser = new JFileChooser();
 
@@ -685,7 +676,6 @@ public class MainController implements BasicPlayerListener, ActionListener {
 				currentUtterance	= 0;
 				filenameGlobals 	= chooser.getSelectedFile().getAbsolutePath();
 				filenameGlobals 	= correctTextFileType( ".global", filenameGlobals );
-				fileGlobals 		= new File( filenameGlobals );
 				setMode( Mode.MODE_GLOBALS );
 			}
 		}
@@ -693,7 +683,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void handleLoadParseFile(){
-		saveCurrentTextFile(); // Save current session, if any.
+		saveCurrentTextFile( false );
 
 		JFileChooser chooser = new JFileChooser();
 
@@ -703,10 +693,9 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			utteranceList 		= null;
 			currentUtterance	= 0;
 			filenameParse 		= chooser.getSelectedFile().getAbsolutePath();
-			fileParse 			= new File( filenameParse );
 			setMode( Mode.MODE_PARSE );
 			// Load the parse file.
-			filenameAudio = getUtteranceList().loadFromFile(fileParse);
+			filenameAudio = getUtteranceList().loadFromFile(new File( filenameParse ));
 			if( filenameAudio.equalsIgnoreCase("ERROR: No Audio File Listed") ){
 				showAudioFileNotFoundDialog();
 				return;
@@ -719,7 +708,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void handleLoadCodeFile(){
-		saveCurrentTextFile(); // Save current session, if any.
+		saveCurrentTextFile( false );
 
 		JFileChooser chooser = new JFileChooser();
 
@@ -729,9 +718,8 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			utteranceList 		= null;
 			currentUtterance	= 0;
 			filenameMisc 		= chooser.getSelectedFile().getAbsolutePath();
-			fileMisc 			= new File(filenameMisc);
 			setMode( Mode.MODE_CODE );
-			filenameAudio = getUtteranceList().loadFromFile(fileMisc); // Load the code file.
+			filenameAudio = getUtteranceList().loadFromFile(new File(filenameMisc)); // Load the code file.
 			loadAudioFile( filenameAudio ); // Load the audio file.
 			postLoad();
 		}
@@ -758,16 +746,31 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void saveCurrentTextFile() {
+	private void saveCurrentTextFile( boolean asBackup ) {
 		if( (utteranceList != null) || (templateView instanceof GlobalTemplateView) ){
-			if( templateView instanceof ParserTemplateView && fileParse != null ) {
-				getUtteranceList().writeToFile(fileParse, filenameAudio);
+			if( templateView instanceof ParserTemplateView && filenameParse != null ) {
+				String filename = filenameParse;
+				
+				if( asBackup ) {
+					filename += ".backup";
+				}
+				getUtteranceList().writeToFile( new File( filename ), filenameAudio );
 			}
-			else if( templateView instanceof MiscTemplateView && fileMisc != null ) {
-				getUtteranceList().writeToFile(fileMisc, filenameAudio);
+			else if( templateView instanceof MiscTemplateView && filenameMisc != null ) {
+				String filename = filenameMisc;
+				
+				if( asBackup ) {
+					filename += ".backup";
+				}
+				getUtteranceList().writeToFile( new File( filename ), filenameAudio );
 			}
 			else if( templateView instanceof GlobalTemplateView ) {
-				((GlobalTemplateUiService)templateUI).writeGlobalsToFile(fileGlobals);
+				String filename = filenameGlobals;
+
+				if( asBackup ) {
+					filename += ".backup";
+				}
+				((GlobalTemplateUiService)templateUI).writeGlobalsToFile( new File( filename ) );
 			}
 			else if( templateView == null ) {
 				// No-op.  Reached if only playing audio file, and stop pressed.
@@ -779,84 +782,6 @@ public class MainController implements BasicPlayerListener, ActionListener {
 						"Error Notification", JOptionPane.ERROR_MESSAGE);
 			}
 		}
-	}
-
-	private String getFilenameBackup(){
-		if( templateView instanceof ParserTemplateView ){
-			try {
-				filenameBackup = fileParse.getCanonicalPath().concat( ".BACKUP_" + System.currentTimeMillis() );;
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		else if( templateView instanceof MiscTemplateView ){
-			try {
-				filenameBackup = fileMisc.getCanonicalPath().concat( ".BACKUP_" + System.currentTimeMillis() );;
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		else if( templateView instanceof GlobalTemplateView ){
-			try {
-				filenameBackup = fileGlobals.getCanonicalPath().concat( ".BACKUP_" + System.currentTimeMillis() );;
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		else{
-			showBackupErrorDialog();
-			return "ERROR_CREATING_BACKUP_FILE";
-		}
-		return filenameBackup;
-	}
-
-	private void copyTextFileToBackupFile(){
-		String srcFilename;
-		if( templateView instanceof ParserTemplateView ){
-			srcFilename = filenameParse;
-		}
-		else if( templateView instanceof MiscTemplateView ){
-			srcFilename = filenameMisc;
-		}
-		else if( templateView instanceof GlobalTemplateView ){
-			srcFilename = filenameGlobals;
-		}
-		else{
-			showBackupErrorDialog();
-			return;
-		}
-		if( getFilenameBackup().equalsIgnoreCase("ERROR_CREATING_BACKUP_FILE") ){
-			return;
-		}
-		else{
-			File fileBackup = new File(filenameBackup);
-			try {
-				FileChannel srcChannel = new FileInputStream(srcFilename).getChannel();
-				FileChannel dstChannel = new FileOutputStream(fileBackup).getChannel();
-				dstChannel.transferFrom(srcChannel, 0, srcChannel.size());
-				srcChannel.close();
-				dstChannel.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	private void reloadUtterancesFromFile() {
-		String strAudioFile;
-
-		if( templateView instanceof ParserTemplateView ) {
-			strAudioFile = getUtteranceList().loadFromFile(fileParse);
-			assert(strAudioFile == fileParse.toString());
-		}
-		else if( templateView instanceof MiscTemplateView ) {
-			strAudioFile = getUtteranceList().loadFromFile(fileMisc);
-			assert(strAudioFile == fileMisc.toString());
-		}
-		else {
-			showQueueNotLoadedDialog();
-		}
-		postLoad();
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -965,12 +890,13 @@ public class MainController implements BasicPlayerListener, ActionListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void copyParseFileToCodeFile() throws IOException {
-		InputStream in = new FileInputStream(fileParse);
-		OutputStream out = new FileOutputStream(fileMisc);
-		byte[] buffer = new byte[1024];
-		int length;
-		while ( (length = in.read(buffer)) > 0 ){
-			out.write(buffer, 0, length);
+		InputStream 	in 		= new FileInputStream( new File( filenameParse ) );
+		OutputStream 	out 	= new FileOutputStream( new File( filenameMisc ) );
+		byte[] 			buffer 	= new byte[1024];
+		int 			length;
+
+		while( (length = in.read( buffer )) > 0 ) {
+			out.write( buffer, 0, length );
 		}
 		in.close();
 		out.close();
@@ -1012,6 +938,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	public void parseStart() {
 		if( isParsingUtterance() ) {
 			parseEnd();
+			saveCurrentTextFile( false );
 		}
 		// Record start data.
 		int 	startPosition	= basicPlayer.getEncodedStreamPosition();
@@ -1135,7 +1062,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 				if( getCurrentUtterance() == null ) {
 					// End condition.
 					playerPause();
-					saveCurrentTextFile();
+					saveCurrentTextFile( false );
 				}
 				updateUtteranceDisplays();
 			}
@@ -1322,7 +1249,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			break;
 		case 8:
 			//strStatus = "EOM";
-			saveCurrentTextFile();
+			saveCurrentTextFile( false );
 			break;
 		case 9:
 			//strStatus = "PAN";
@@ -1333,7 +1260,8 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		default:
 			strStatus = "UNKNOWN";
 		}
-		String playerStatus = strStatus.concat(":  " + fileAudio.getName() + 
+		File	file			= new File( filenameAudio );
+		String 	playerStatus 	= strStatus.concat(":  " + file.getName() + 
 				"  |  Total Time = " +
 				(new TimeCode(basicPlayer.getSecondsPerFile()).
 						convertToTimeString()));
