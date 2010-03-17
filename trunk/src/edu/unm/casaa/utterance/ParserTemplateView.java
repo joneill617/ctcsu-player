@@ -110,6 +110,7 @@ public class ParserTemplateView extends JPanel {
 			buttonStartParse = new JButton("Start Parse");
 			buttonStartParse.setPreferredSize(getDimButtonSize());
 			buttonStartParse.setMnemonic(KeyEvent.VK_S);
+			buttonStartParse.setActionCommand("parseStart");
 			/*buttonStartParse.setToolTipText("Start Parsing the Current Utterance\n\n" +
 					"Pressing this button a second time will end the current utterance, \n" +
 					"and begin parsing a second utterance.");*/
@@ -123,6 +124,7 @@ public class ParserTemplateView extends JPanel {
 			buttonEndParse = new JButton("End Parse");
 			buttonEndParse.setPreferredSize(getDimButtonSize());
 			buttonEndParse.setMnemonic(KeyEvent.VK_E);
+			buttonEndParse.setActionCommand("parseEnd");
 			/*buttonEndParse.setToolTipText("End Parsing the Current Utterance\n\n" +
 							"Pressing this button will end the current utterance.");*/
 		}

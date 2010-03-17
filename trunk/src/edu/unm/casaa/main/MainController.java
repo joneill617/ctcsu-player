@@ -66,7 +66,7 @@ enum Mode {
 	MODE_GLOBALS	// TODO - Carl - What is this mode?
 };
 
-public class MainController implements BasicPlayerListener {
+public class MainController implements BasicPlayerListener, ActionListener {
 
 	//====================================================================
 	// Fields
@@ -128,7 +128,7 @@ public class MainController implements BasicPlayerListener {
 
 	private void actionExit(){
 		if( isParsingUtterance() ){
-			handleButtonEndParse();
+			parseEnd();
 		}
 		saveCurrentTextFile();
 		System.exit(0);
@@ -164,6 +164,19 @@ public class MainController implements BasicPlayerListener {
 		pauseOnUncoded = value;
 	}
 
+	//====================================================================
+	// ActionListener interface
+	//====================================================================
+
+	public void actionPerformed( ActionEvent e ) {
+		String command = e.getActionCommand();
+
+		if( "parseStart".equals( command ) ) {
+			parseStart();
+		} else if( "parseEnd".equals( command ) ) {
+			parseEnd();
+		}
+	}
 
 	//====================================================================
 	// Private Helper Methods
@@ -215,7 +228,7 @@ public class MainController implements BasicPlayerListener {
 	}
 
 	// Seek player to time represented by given timeCode string, or to start if timeCode is empty string.
-	private void seekPlayer( String timeCode ){
+	private void playerSeek( String timeCode ) {
 		int secs = 0;
 		
 		if( !timeCode.equals( "" ) ) {
@@ -226,6 +239,36 @@ public class MainController implements BasicPlayerListener {
 			basicPlayer.seek( (long) secs * basicPlayer.getBytesPerSecond() );
 		} catch (BasicPlayerException e) {
 			showAudioFileNotSeekableDialog();
+			e.printStackTrace();
+		}
+	}
+
+	// Pause/resume/stop/play player.  These wrappers are here to clean up exception handling.
+	private void playerPause() {
+		try {
+			basicPlayer.pause();
+		} catch( BasicPlayerException e ) {
+			e.printStackTrace();
+		}
+	}
+	private void playerStop() {
+		try {
+			basicPlayer.stop();
+		} catch( BasicPlayerException e ) {
+			e.printStackTrace();
+		}
+	}
+	private void playerResume() {
+		try {
+			basicPlayer.resume();
+		} catch( BasicPlayerException e ) {
+			e.printStackTrace();
+		}
+	}
+	private void playerPlay() {
+		try {
+			basicPlayer.play();
+		} catch( BasicPlayerException e ) {
 			e.printStackTrace();
 		}
 	}
@@ -422,58 +465,38 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Player Handlers
-	private void handleButtonPlay(){		
-		if( basicPlayer.getStatus() == BasicPlayer.PAUSED ){
-			// Resume.
-			try {
-				basicPlayer.resume();
-				// TODO - Carl - Look here for volume/pan control bug.
-			} catch (BasicPlayerException e) {
-				e.printStackTrace();
-			}
-		}
-		else{
-			try{
-				basicPlayer.play();
-				// Set volume and pan according to GUI.
-				handleSliderGain();
-				handleSliderPan();
-			}catch (BasicPlayerException e){
-				e.printStackTrace();
-			}
+	private void handleButtonPlay() {
+		if( basicPlayer.getStatus() == BasicPlayer.PAUSED ) {
+			// TODO - Carl - Look here for volume/pan control bug.
+			playerResume();
+		} else {
+			// Set volume and pan according to GUI.
+			handleSliderGain();
+			handleSliderPan();
+			playerPlay();
 		}
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void handleButtonStop(){
-		if( isParsingUtterance() ){
-			handleButtonEndParse();
+	private void handleButtonStop() {
+		if( isParsingUtterance() ) {
+			parseEnd();
 		}
-		try{
-			basicPlayer.stop();
-		}catch (BasicPlayerException e){
-			e.printStackTrace();
-		}
-		//TODO: give user save option, to prevent overwrite.
-		//		offer a backup option instead of save.
+		playerStop();
 		saveCurrentTextFile();
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void handleButtonBackup(){
-		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ){
-			try {
-				basicPlayer.pause();
-			} catch (BasicPlayerException e) {
-				e.printStackTrace();
-			}
-		} else if( basicPlayer.getStatus() != BasicPlayer.PAUSED ){
+	private void handleButtonBackup() {
+		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ) {
+			playerPause();
+		} else if( basicPlayer.getStatus() != BasicPlayer.PAUSED ) {
 			showBackupErrorDialog();
 			return;
 		}
 
-		if( isParsingUtterance() ){
-			handleButtonEndParse();
+		if( isParsingUtterance() ) {
+			parseEnd();
 		}
 
 		saveCurrentTextFile();
@@ -483,24 +506,14 @@ public class MainController implements BasicPlayerListener {
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void handleButtonPause(){
+	private void handleButtonPause() {
 		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ){
-			try{
-				basicPlayer.pause();
-			}catch (BasicPlayerException e){
-				e.printStackTrace();
-			}
-		}else if( basicPlayer.getStatus() == BasicPlayer.PAUSED ){		
+			playerPause();
+		} else if( basicPlayer.getStatus() == BasicPlayer.PAUSED ) {
 			// Set volume and pan according to GUI.
 			handleSliderGain();
 			handleSliderPan();
-
-			// Resume.
-			try {
-				basicPlayer.resume();
-			} catch (BasicPlayerException e) {
-				e.printStackTrace();
-			}
+			playerResume();
 		}
 	}
 
@@ -525,10 +538,10 @@ public class MainController implements BasicPlayerListener {
 
 			// Set audio to utterance start time.
 			if( utterance == null ){
-				seekPlayer("");
+				playerSeek("");
 			}
 			else {
-				seekPlayer(utterance.getStartTime());
+				playerSeek(utterance.getStartTime());
 			}
 
 			updateUtteranceDisplays();
@@ -581,9 +594,10 @@ public class MainController implements BasicPlayerListener {
 		Long valSliderPan = new Long((long)playerView.
 				getSliderPan().getValue());
 		double dPanVal = valSliderPan.doubleValue() / 10;
-		try{
-			basicPlayer.setPan(dPanVal);
-		}catch (BasicPlayerException e){
+
+		try {
+			basicPlayer.setPan( dPanVal );
+		} catch( BasicPlayerException e ) {
 			e.printStackTrace();
 		}
 	}
@@ -593,9 +607,10 @@ public class MainController implements BasicPlayerListener {
 		Long valSliderGain = new Long((long)playerView.
 				getSliderGain().getValue());
 		double dGainVal = valSliderGain.doubleValue() / 100;
-		try{
-			basicPlayer.setGain(dGainVal);
-		}catch (BasicPlayerException e){
+
+		try {
+			basicPlayer.setGain( dGainVal );
+		} catch( BasicPlayerException e ) {
 			e.printStackTrace();
 		}
 	}
@@ -604,6 +619,8 @@ public class MainController implements BasicPlayerListener {
 	// Menu Handlers
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void handleNewParseFile(){
+		saveCurrentTextFile(); // Save current session, if any.
+
 		JFileChooser chooser = new JFileChooser();
 
 		chooser.setDialogTitle("Select Save Directory and Enter a Filename for the PARSE File");
@@ -611,7 +628,6 @@ public class MainController implements BasicPlayerListener {
 		chooser.setToolTipText("Use \".parse\" as the file extension.");
 		if( chooser.showSaveDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
 			if( selectAndLoadAudioFile() ) {
-				// TODO - Carl - Save/backup current session, if one exists.
 				utteranceList 		= null;
 				currentUtterance	= 0;
 				filenameParse 		= chooser.getSelectedFile().getAbsolutePath();
@@ -624,12 +640,13 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void handleNewCodeFile(){
+		saveCurrentTextFile(); // Save current session, if any.
+
 		JFileChooser chooser = new JFileChooser();
 
 		chooser.setDialogTitle("Select Save Directory and Enter a Filename for the CASAA File");
 		chooser.setFileFilter(new FileNameExtensionFilter("PARSE files", "parse"));
 		if( chooser.showSaveDialog(playerView) == JFileChooser.APPROVE_OPTION ) {
-			// TODO - Carl - Save/backup current session, if one exists.
 			utteranceList 		= null;
 			currentUtterance	= 0;
 			filenameParse 		= chooser.getSelectedFile().getAbsolutePath();
@@ -655,6 +672,8 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void handleNewGlobalRatings(){
+		saveCurrentTextFile(); // Save current session, if any.
+
 		JFileChooser chooser = new JFileChooser();
 
 		chooser.setDialogTitle( "Select Save Directory and Enter a Filename" );
@@ -662,7 +681,6 @@ public class MainController implements BasicPlayerListener {
 		chooser.setToolTipText( "Use \".global\" as the file extension." );
 		if( chooser.showSaveDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
 			if( selectAndLoadAudioFile() ) {
-				// TODO - Carl - Save/backup current session, if one exists.
 				utteranceList 		= null; // TODO - Carl should we clear list here?  What is globals supposed to do?
 				currentUtterance	= 0;
 				filenameGlobals 	= chooser.getSelectedFile().getAbsolutePath();
@@ -675,12 +693,13 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void handleLoadParseFile(){
+		saveCurrentTextFile(); // Save current session, if any.
+
 		JFileChooser chooser = new JFileChooser();
 
 		chooser.setDialogTitle( "Select a PARSE File to Load" );
 		chooser.setFileFilter( new FileNameExtensionFilter( "PARSE files", "parse" ) );
 		if( chooser.showOpenDialog(playerView) == JFileChooser.APPROVE_OPTION ) {
-			// TODO - Carl - Save/backup current session, if one exists.
 			utteranceList 		= null;
 			currentUtterance	= 0;
 			filenameParse 		= chooser.getSelectedFile().getAbsolutePath();
@@ -700,12 +719,13 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void handleLoadCodeFile(){
+		saveCurrentTextFile(); // Save current session, if any.
+
 		JFileChooser chooser = new JFileChooser();
-		
+
 		chooser.setDialogTitle( "Select a CASAA Code File to Load" );
 		chooser.setFileFilter( new FileNameExtensionFilter( "CASAA code files", "casaa" ) );
 		if( chooser.showOpenDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
-			// TODO - Carl - Save/backup current session, if one exists.
 			utteranceList 		= null;
 			currentUtterance	= 0;
 			filenameMisc 		= chooser.getSelectedFile().getAbsolutePath();
@@ -923,7 +943,7 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void setTimeDisplay(){
-		if( basicPlayer.getBytesPerSecond() != 0 ){
+		if( basicPlayer.getBytesPerSecond() != 0 ) {
 			// Handles constant bit-rates only.
 			// Set the player time display.
 			int 	startBytes 	= basicPlayer.getEncodedStreamPosition();
@@ -987,14 +1007,11 @@ public class MainController implements BasicPlayerListener {
 	}
 
 	//====================================================================
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parser Template Handlers
 
-	//TODO: Disable buttons or alert if no PARSE file loaded
-
-	public void handleButtonStartParse(){
+	public void parseStart() {
 		if( isParsingUtterance() ) {
-			handleButtonEndParse();
+			parseEnd();
 		}
 		// Record start data.
 		int 	startPosition	= basicPlayer.getEncodedStreamPosition();
@@ -1005,14 +1022,14 @@ public class MainController implements BasicPlayerListener {
 		int 		order 	= getUtteranceList().size();
 		Utterance 	data 	= new MiscDataItem(order, start, startPosition);
 
-		getUtteranceList().add(data);
+		getUtteranceList().add( data );
 		currentUtterance	= order; // Select this as current utterance.
 
 		updateUtteranceDisplays();
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void handleButtonEndParse() {
+	public void parseEnd() {
 		// Record end data.
 		int 	endPosition = basicPlayer.getEncodedStreamPosition();
 		String 	end 		= new TimeCode( (endPosition /
@@ -1062,10 +1079,10 @@ public class MainController implements BasicPlayerListener {
 		Utterance utterance = getCurrentUtterance();
 
 		if( utterance == null ) {
-			seekPlayer( "" );
+			playerSeek( "" );
 		}
 		else {
-			seekPlayer( utterance.getStartTime() );
+			playerSeek( utterance.getStartTime() );
 		}
 
 		updateUtteranceDisplays();
@@ -1095,16 +1112,12 @@ public class MainController implements BasicPlayerListener {
 			assert( current != null );
 			if( pauseOnUncoded && !current.isCoded() && 
 					(basicPlayer.getStatus() == BasicPlayer.PLAYING) ) {
-				try {
-					basicPlayer.pause();
-				} catch (BasicPlayerException e) {
-					e.printStackTrace();
-				}
+				playerPause();
 			}
 
 			// Update to next utterance to code.
 			if( current.isCoded() || !pauseOnUncoded ) {
-				if( basicPlayer.getStatus() == BasicPlayer.PAUSED ){
+				if( basicPlayer.getStatus() == BasicPlayer.PAUSED ) {
 					int skipToBytes = current.getEndBytes();
 					// TODO - Carl - Check this for potential resume/skip bug.
 					// TODO - Carl - Also, why are we snapping to integral second alignment here (and in several other places)?
@@ -1121,12 +1134,8 @@ public class MainController implements BasicPlayerListener {
 				// TODO - Carl - Look here for end of file bug.
 				if( getCurrentUtterance() == null ) {
 					// End condition.
-					try {
-						basicPlayer.pause();
-						saveCurrentTextFile();
-					} catch (BasicPlayerException e) {
-						e.printStackTrace();
-					}
+					playerPause();
+					saveCurrentTextFile();
 				}
 				updateUtteranceDisplays();
 			}
@@ -1211,9 +1220,9 @@ public class MainController implements BasicPlayerListener {
 			Utterance	current = getCurrentUtterance();
 
 			if( current == null ) {
-				seekPlayer( "" );
+				playerSeek( "" );
 			} else {
-				seekPlayer( current.getEndTime() ); // Seek to end of last existing utterance, so we're ready to start parsing the next.
+				playerSeek( current.getEndTime() ); // Seek to end of last existing utterance, so we're ready to start parsing the next.
 			}
 		}
 		else if( templateView instanceof MiscTemplateView ){
@@ -1229,9 +1238,9 @@ public class MainController implements BasicPlayerListener {
 			Utterance	current = getCurrentUtterance();
 
 			if( current == null ) {
-				seekPlayer( "" );
+				playerSeek( "" );
 			} else {
-				seekPlayer( current.getStartTime() ); // Seek to start time.
+				playerSeek( current.getStartTime() ); // Seek to start time.
 			}
 		}
 		else if( templateView != null ) {
@@ -1328,7 +1337,7 @@ public class MainController implements BasicPlayerListener {
 				"  |  Total Time = " +
 				(new TimeCode(basicPlayer.getSecondsPerFile()).
 						convertToTimeString()));
-		playerView.setLabelPlayerStatus(playerStatus);
+		playerView.setLabelPlayerStatus( playerStatus );
 	}
 
 	public void display(String msg)
