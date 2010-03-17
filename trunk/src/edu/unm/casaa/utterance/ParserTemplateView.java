@@ -24,6 +24,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.KeyEvent;
+
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -44,18 +46,18 @@ public class ParserTemplateView extends JPanel {
 	//====================================================================
 	// Fields
 	//====================================================================
-	//Window Constants and Variables
+	// Window Constants and Variables
 	private static final int PANEL_WIDTH	= 600;
 	private static final int PANEL_HEIGHT	= 450;
 
-	//GUI Components and Constants
+	// GUI Components and Constants
 	private TitledBorder borderWindow		= null;
 	private Dimension dimMainPanel			= null;
 	private JPanel panelButtons				= null;
 	private JPanel panelCurrentText			= null;
 	private JPanel panelLastText			= null;
 	
-	//Buttons
+	// Buttons
 	private JButton buttonStartParse		= null;
 	private JButton buttonEndParse			= null;
 	private Dimension dimButtonSize			= null;
@@ -63,7 +65,7 @@ public class ParserTemplateView extends JPanel {
 	private static final int BUTTON_HEIGHT	= 100;
 	private TitledBorder borderButtons		= null;
 	
-	//User Feedback Components
+	// Current utterance display.
 	private JTextField textFieldOrder		= null;
 	private static final int ORDER_COLS		= 9;
 	private JLabel labelOrder				= null;
@@ -74,6 +76,7 @@ public class ParserTemplateView extends JPanel {
 	private JLabel labelEnd					= null;
 	private TitledBorder borderTextFields	= null;
 	
+	// Last utterance display.
 	private JTextField textFieldLast		= null;
 	private static final int LAST_COLS		= 60;
 	private TitledBorder borderLast			= null;
@@ -106,6 +109,7 @@ public class ParserTemplateView extends JPanel {
 		if( buttonStartParse == null ){
 			buttonStartParse = new JButton("Start Parse");
 			buttonStartParse.setPreferredSize(getDimButtonSize());
+			buttonStartParse.setMnemonic(KeyEvent.VK_S);
 			/*buttonStartParse.setToolTipText("Start Parsing the Current Utterance\n\n" +
 					"Pressing this button a second time will end the current utterance, \n" +
 					"and begin parsing a second utterance.");*/
@@ -118,6 +122,7 @@ public class ParserTemplateView extends JPanel {
 		if( buttonEndParse == null ){
 			buttonEndParse = new JButton("End Parse");
 			buttonEndParse.setPreferredSize(getDimButtonSize());
+			buttonEndParse.setMnemonic(KeyEvent.VK_E);
 			/*buttonEndParse.setToolTipText("End Parsing the Current Utterance\n\n" +
 							"Pressing this button will end the current utterance.");*/
 		}
