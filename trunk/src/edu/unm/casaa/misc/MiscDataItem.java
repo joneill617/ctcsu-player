@@ -48,6 +48,14 @@ public class MiscDataItem implements Utterance {
 	}
 
 	/**
+	 * Set order number where this particular utterance occurs.
+	 * @param index
+	 */
+	public void setEnum(int index){
+		orderEnum = index;
+	}
+
+	/**
 	 * Returns the order number where this particular utterance occurs.
 	 * Returns -1 if value wasn't properly set.
 	 * @return the order of this utterance in the queue. 
@@ -96,6 +104,20 @@ public class MiscDataItem implements Utterance {
 		//should this throw an exception if the end time 
 		//can't be retrieved due to the audio file ending?
 		return endBytes;
+	}
+
+	/**
+	 * Return true if this utterance has been parsed.
+	 */
+	public boolean isParsed() {
+		return endBytes != -1;
+	}
+
+	/**
+	 * Return true if this utterance has been coded.
+	 */
+	public boolean isCoded() {
+		return miscCode != MiscCode.INVALID;
 	}
 	
 	/**
