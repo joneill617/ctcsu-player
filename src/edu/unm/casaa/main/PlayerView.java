@@ -63,8 +63,8 @@ public class PlayerView extends JFrame {
 	private String strNativeLF					= null;
 	private static final int X_LOCATION			= 100;
 	private static final int Y_LOCATION			= 5;
-	private static final int WINDOW_WIDTH		= 600;  //650
-	private static final int WINDOW_HEIGHT		= 730;  //300
+	private static final int WINDOW_WIDTH		= 700;
+	private static final int WINDOW_HEIGHT		= 850;
 	private Dimension dimMAX					= null;
 	private Dimension dimMIN					= null;
 	private ImageIcon iconParentWindow			= null;
