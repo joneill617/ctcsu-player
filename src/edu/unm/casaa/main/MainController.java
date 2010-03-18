@@ -54,6 +54,11 @@ import javazoom.jlgui.basicplayer.BasicPlayerEvent;
 import javazoom.jlgui.basicplayer.BasicPlayerException;
 import javazoom.jlgui.basicplayer.BasicPlayerListener;
 
+/*
+ * TODO - Carl
+ * When coding, playback seems to pause automatically at the end of uncoded utterance, regardless of "pause if uncoded" state.
+ */
+
 enum Mode {
 	MODE_PLAYBACK, 	// Play audio file.
 	MODE_PARSE,		// Parse audio file.
@@ -162,10 +167,28 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	// Private Helper Methods
 	//====================================================================
 
+	public void display( String msg ) {
+		System.out.println( msg );
+	}
+
+	private void displayPlayerException( BasicPlayerException e ) {
+		display( "BasicPlayerException: " + e.getMessage() );
+		e.printStackTrace();
+	}
+
 	private Utterance getCurrentUtterance() {
 		assert( currentUtterance >= 0 );
 		if( currentUtterance < getUtteranceList().size() ) {
 			return getUtteranceList().get( currentUtterance );
+		} else {
+			return null;
+		}
+	}
+
+	// Get final utterance in list, or null if list is empty.
+	private Utterance getLastUtterance() {
+		if( getUtteranceList().size() > 0 ) {
+			return getUtteranceList().get( getUtteranceList().size() - 1 );
 		} else {
 			return null;
 		}
@@ -210,7 +233,11 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	// Seek player as close as possible to requested bytes.  Updates slider and time display.
 	private void playerSeek( int bytes ) {
 		try {
-			basicPlayer.seek( bytes );
+			long skipped = basicPlayer.seek( bytes );
+
+			// TMP - Carl
+			display( "playerSeek, requested: " + bytes + ", delta: " + (skipped - bytes) );
+
 		} catch( BasicPlayerException e ) {
 			showAudioFileNotSeekableDialog();
 			displayPlayerException( e );
@@ -509,11 +536,11 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		if( templateView instanceof ParserTemplateView ) {
 			removeLastUtterance();
 		} else if( templateView instanceof MiscTemplateView ) {
-			// Strip code from current utterance.
 			Utterance utterance = getCurrentUtterance();
 
+			// While coding, we should never be on an utterance with a code.
 			if( utterance != null ) {
-				utterance.setMiscCode( MiscCode.INVALID );
+				assert( !utterance.isCoded() );
 			}
 
 			// Move to previous utterance, if one exists.
@@ -522,10 +549,10 @@ public class MainController implements BasicPlayerListener, ActionListener {
 				utterance = getCurrentUtterance();
 			}
 
-			// Set audio to utterance start.
 			if( utterance == null ) {
 				playerSeek( 0 );
 			} else {
+				utterance.setMiscCode( MiscCode.INVALID );
 				playerSeek( utterance.getStartBytes() );
 			}
 
@@ -533,6 +560,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		} else {
 			showParsingErrorDialog();
 		}
+		saveCurrentTextFile( false );
 		updateTimeDisplay();
 		updateSeekSliderDisplay();
 	}
@@ -918,11 +946,17 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		updateUtteranceDisplays();
 	}
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// End parse, reading bytes position from basicPlayer.
 	public void parseEnd() {
+		parseEnd( basicPlayer.getEncodedStreamPosition() );
+	}
+
+	// End parse at given byte position.
+	public void parseEnd( int endBytes ) {
+		assert( endBytes >= 0 );
+
 		// Record end data.
-		int 	endPosition = basicPlayer.getEncodedStreamPosition();
-		String 	endString	= TimeCode.toString( endPosition / basicPlayer.getBytesPerSecond() );
+		String 	endString	= TimeCode.toString( endBytes / basicPlayer.getBytesPerSecond() );
 
 		// Save to utterance.
 		Utterance current = getCurrentUtterance();
@@ -932,7 +966,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		}
 		else {
 			current.setEndTime( endString );
-			current.setEndBytes( endPosition );
+			current.setEndBytes( endBytes );
 		}
 		updateUtteranceDisplays();
 	}
@@ -946,42 +980,38 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	// MISC Template Handlers
 
 	public void handleButtonMiscCode(MiscCode miscCode){
-		if( miscCode == MiscCode.INVALID ){
-			System.err.println("ERROR: handleButtonMisc received MiscCode.INVALID");
+		if( miscCode == MiscCode.INVALID ) {
+			display( "ERROR: handleButtonMisc received MiscCode.INVALID" );
 			return;
 		}
 		Utterance utterance = getCurrentUtterance();
 
-		assert(utterance != null);
-		utterance.setMiscCode(miscCode);
+		assert( utterance != null );
+		utterance.setMiscCode( miscCode );
+		saveCurrentTextFile( false );
 		updateUtteranceDisplays();
 	}
 
 	private void removeLastUtterance(){
 		getUtteranceList().removeLast();
 
-		if( getUtteranceList().size() > 0 &&
-				currentUtterance >= getUtteranceList().size() ) {
+		if( getUtteranceList().size() > 0 ) {
 			currentUtterance = getUtteranceList().size() - 1;
+		} else {
+			currentUtterance = 0;
 		}
 
-		Utterance utterance = getCurrentUtterance();
-
-		if( utterance == null ) {
+		if( getCurrentUtterance() == null ) {
 			playerSeek( 0 );
 		} else {
-			playerSeek( utterance.getStartBytes() );
+			playerSeek( getCurrentUtterance().getEndBytes() ); // Seek to end of current parsed utterance, so we're ready to start next (i.e. to replace the one we just removed).
 		}
 
 		updateUtteranceDisplays();
 	}
 
 
-	//TODO: 
-	//	This could include a counter that reports the number of 
-	//		utterances that failed to be coded, or a readout of
-	//		utterance order numbers for those that didn't get coded.
-
+	// TODO:
 	// Set currentUtterance text fields to empty strings when current utterance passes, and
 	// nextUncodedUtterance hasn't yet begun.
 	// The safest way may be to nullify currentUtterance in this time gap, to prevent
@@ -1026,12 +1056,12 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			Utterance			prev	= getPreviousUtterance();
 
 			if( current == null ) {
-				view.setTextFieldOrder(0);
+				view.setTextFieldOrder("");
 				view.setTextFieldStartTime("");
 				view.setTextFieldEndTime("");
 			}
 			else {
-				view.setTextFieldOrder(current.getEnum());
+				view.setTextFieldOrder("" + current.getEnum());
 				view.setTextFieldStartTime(current.getStartTime());
 				view.setTextFieldEndTime(current.getEndTime());
 			}
@@ -1063,13 +1093,13 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			}
 
 			if( current == null ) {
-				view.setTextFieldOrder(0);
+				view.setTextFieldOrder("");
 				view.setTextFieldCode("");
 				view.setTextFieldStartTime("");
 				view.setTextFieldEndTime("");
 			}
 			else{
-				view.setTextFieldOrder(current.getEnum());
+				view.setTextFieldOrder("" + current.getEnum());
 				if( current.getMiscCode() == MiscCode.INVALID ) {
 					view.setTextFieldCode("");
 				}
@@ -1100,17 +1130,16 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			}
 		}
 		else if( templateView instanceof MiscTemplateView ){
-			// Seek to first uncoded utterance.
+			// Seek to first uncoded utterance.  May be one past last utterance in list.
 			currentUtterance = getUtteranceList().getLastCodedUtterance();
 			currentUtterance++;
 
-			if( getUtteranceList().size() > 0 &&
-					currentUtterance >= getUtteranceList().size() ) {
-				currentUtterance = getUtteranceList().size() - 1;
-			}
-
 			if( getCurrentUtterance() == null ) {
-				playerSeek( 0 );
+				if( getUtteranceList().isEmpty() ) {
+					playerSeek( 0 );
+				} else {
+					playerSeek( getLastUtterance().getEndBytes() );
+				}
 			} else {
 				playerSeek( getCurrentUtterance().getStartBytes() );
 			}
@@ -1178,8 +1207,12 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			// SEEKED
 			break;
 		case 8:
-			// TODO - Carl - Look here for "end of playback" issues.
-			// playerStatus = "EOM";
+			// EOM: End of media (i.e. player reached end of audio file).
+			if( isParsingUtterance() ) {
+				// Specify end bytes manually from event, as basicPlayer will now report -1 for
+				// encoded stream position.
+				parseEnd( event.getPosition() );
+			}
 			saveCurrentTextFile( false );
 			break;
 		case 9:
@@ -1197,14 +1230,5 @@ public class MainController implements BasicPlayerListener, ActionListener {
 				TimeCode.toString( basicPlayer.getSecondsPerFile() ) );
 
 		playerView.setLabelPlayerStatus( str );
-	}
-
-	public void display( String msg ) {
-		System.out.println( msg );
-	}
-
-	private void displayPlayerException( BasicPlayerException e ) {
-		display( "BasicPlayerException: " + e.getMessage() );
-		e.printStackTrace();
 	}
 }

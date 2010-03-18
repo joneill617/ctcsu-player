@@ -298,8 +298,8 @@ public class MiscTemplateView extends JPanel {
 		return textFieldOrder;
 	}
 
-	public void setTextFieldOrder(int order){
-		getTextFieldOrder().setText("" + order );
+	public void setTextFieldOrder(String text){
+		getTextFieldOrder().setText(text);
 	}
 
 	private JLabel getLabelOrder(){
