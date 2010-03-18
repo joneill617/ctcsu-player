@@ -20,40 +20,27 @@ package edu.unm.casaa.main;
 
 import java.util.StringTokenizer;
 
+// Convenience class, converts representation of time between HH:MM::SS string and integer seconds.
 public class TimeCode {
-	
-	private int seconds			= 0;
-	private int minutes			= 0;
-	private int hours			= 0;
-	private String timestamp	= null;
-	
-	public TimeCode(int secs){
-		seconds = secs;
-	}
-	
-	public TimeCode(String time){
-		timestamp = time;
+
+	public static String toString( int seconds ) {
+		int hours 	= seconds / 3600;
+		int minutes = (seconds / 60) - (hours * 60);
+
+		seconds = seconds - (hours * 3600) - (minutes * 60);
+
+		return String.format( "%d:%02d:%02d", hours, minutes, seconds );
 	}
 
-	public String convertToTimeString(){
-		hours = seconds / 3600;
-		minutes = (seconds / 60) - (hours * 60);
-		seconds = seconds - (hours * 3600) - (minutes * 60);
-		
-		String hour = new Integer(hours).toString();
-		String mins = new Integer(minutes).toString();
-		String secs = new Integer(seconds).toString();
-		
-		if( minutes < 10 )	{mins = "0" + mins;}
-		if( seconds < 10 )	{secs = "0" + secs;}	
-		
-		return (hour + ":" + mins + ":" + secs);
-	}
-	
-	public int convertTimeCodeStringToSecs(){
-		StringTokenizer st = new StringTokenizer(timestamp, ":");
-		hours 	= new Integer(st.nextToken()).intValue() * 3600;
-		minutes = new Integer(st.nextToken()).intValue() * 60;
-		return (hours + minutes) + new Integer(st.nextToken()).intValue();
+	public static int toSeconds( String string ) {
+		StringTokenizer st 		= new StringTokenizer( string, ":" );
+
+		assert( st.countTokens() == 3 );
+
+		int	hours 	= new Integer( st.nextToken() ).intValue();
+		int minutes = new Integer( st.nextToken() ).intValue();
+		int	seconds	= new Integer( st.nextToken() ).intValue();
+
+		return (hours * 3600) + (minutes * 60) + seconds;
 	}
 }
