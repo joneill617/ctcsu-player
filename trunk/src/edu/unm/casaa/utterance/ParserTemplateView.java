@@ -140,8 +140,8 @@ public class ParserTemplateView extends JPanel {
 		return textFieldOrder;
 	}
 	
-	public void setTextFieldOrder(int order){
-		getTextFieldOrder().setText("" + order);
+	public void setTextFieldOrder(String text){
+		getTextFieldOrder().setText(text);
 	}
 	
 	private JLabel getLabelOrder(){
@@ -162,8 +162,6 @@ public class ParserTemplateView extends JPanel {
 	}
 	
 	public void setTextFieldStartTime(String utteranceString){
-		//TODO
-		//to be set from the model
 		getTextFieldStartTime().setText(utteranceString);
 	}
 	
@@ -185,8 +183,6 @@ public class ParserTemplateView extends JPanel {
 	}
 	
 	public void setTextFieldEndTime(String utteranceString){
-		//TODO
-		//to be set from the model
 		getTextFieldEndTime().setText(utteranceString);
 	}
 	
@@ -208,7 +204,6 @@ public class ParserTemplateView extends JPanel {
 	}
 	
 	public void setTextFieldLast(String utteranceString){
-		//TODO
 		getTextFieldLast().setText(utteranceString);
 	}
 	
