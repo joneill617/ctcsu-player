@@ -166,6 +166,7 @@ public class PlayerView extends JFrame {
 		if( buttonPlay == null ){
 			buttonPlay = new JButton("Play");
 			buttonPlay.setPreferredSize(getDimPlayerButtonSize());
+			buttonPlay.setActionCommand("play");
 			//buttonPlay.setToolTipText("Start Playing the Audio File");
 		}
 		return buttonPlay;
@@ -180,6 +181,7 @@ public class PlayerView extends JFrame {
 		if( buttonStop == null ){
 			buttonStop = new JButton("Stop");
 			buttonStop.setPreferredSize(getDimPlayerButtonSize());
+			buttonStop.setActionCommand("stop");
 			//buttonStop.setToolTipText("Stop Playing the Audio File");
 		}
 		return buttonStop;
@@ -194,6 +196,7 @@ public class PlayerView extends JFrame {
 		if( buttonPause == null ){
 			buttonPause = new JButton("Pause");
 			buttonPause.setPreferredSize(getDimPlayerButtonSize());
+			buttonPause.setActionCommand("pause");
 			//buttonPause.setToolTipText("Pause Playing of the Audio File");
 		}
 		return buttonPause;
@@ -208,6 +211,7 @@ public class PlayerView extends JFrame {
 		if( buttonReplay == null ){
 			buttonReplay = new JButton("Replay");
 			buttonReplay.setPreferredSize(getDimPlayerButtonSize());
+			buttonReplay.setActionCommand("replay");
 			//buttonReplay.setToolTipText("Jumps the audio back a few seconds");
 		}
 		return buttonReplay;
@@ -222,6 +226,7 @@ public class PlayerView extends JFrame {
 		if( buttonBackup == null ){
 			buttonBackup = new JButton("Backup");
 			buttonBackup.setPreferredSize(getDimPlayerButtonSize());
+			buttonBackup.setActionCommand("backup");
 			//buttonBackup.setToolTipText("Saves current work to file");
 		}
 		return buttonBackup;
@@ -292,8 +297,8 @@ public class PlayerView extends JFrame {
 	 * Sets the Player's Seek Slider to a value between 0 and 1000.
 	 * @param int value
 	 */
-	public void setSliderSeek(int value){
-		getSliderSeek().setValue(value);
+	public void setSliderSeek( int value ){
+		getSliderSeek().setValue( value );
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

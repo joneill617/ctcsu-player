@@ -20,8 +20,6 @@ package edu.unm.casaa.main;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -31,8 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -82,14 +78,9 @@ public class MainController implements BasicPlayerListener, ActionListener {
 
 	// Audio Player back-end
 	private BasicPlayer 	basicPlayer		= null;
+	private String 			playerStatus 	= null;
 
 	private String 	filenameAudio			= null;
-
-	private Timer timer						= null;
-	private static final int TIMER_DELAY 	= 250;
-	private static final int INIT_DELAY 	= 1000;
-
-	private String strStatus				= null;
 
 	private UtteranceList utteranceList		= null;
 	private	int currentUtterance			= 0; // Index of utterance selected for parse or code.  May be equal to list size, in which case current utterance is null.
@@ -101,51 +92,35 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	// Main, Constructor and Initialization Methods
 	//====================================================================
 
-	public MainController(){
-		init();		
-	}
-
-	private void init(){
+	public MainController() {
 		basicPlayer = new BasicPlayer();
 		playerView 	= new PlayerView();
-		playerView.getSliderSeek().setEnabled( false ); // Start disabled, since we'll have no audio file loaded yet.
-
-		basicPlayer.addBasicPlayerListener(this);
+		basicPlayer.addBasicPlayerListener( this );
 		registerPlayerViewListeners();
 		// Handle window closing events.
-		playerView.getFrameParentWindow().addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
+		playerView.getFrameParentWindow().addWindowListener( new WindowAdapter() {
+			public void windowClosing( WindowEvent e ) {
 				actionExit();
 			}
 		});
+
+		// Start in playback mode, but with no audio file loaded.
+		setMode( Mode.MODE_PLAYBACK );
 	}
 
-	private void actionExit(){
-		if( isParsingUtterance() ){
+	private void actionExit() {
+		if( isParsingUtterance() ) {
 			parseEnd();
 		}
 		saveCurrentTextFile( false );
-		System.exit(0);
+		System.exit( 0 );
 	}
 
-	private void pokeTimer(){
-		// This does not provide the file time to the player.
-		if( timer != null ){
-			timer.cancel();
-		}
-		timer = new Timer();
-		timer.scheduleAtFixedRate( new TimerTask() {
-			public void run() {
-				setTimeDisplay();
-				setSeekSliderDisplay();
-			}
-		}, INIT_DELAY, TIMER_DELAY );
-	}
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	public static void main( String[] args ) {
 		new MainController();
 	}
 
@@ -170,6 +145,16 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		} else if( "parseEnd".equals( command ) ) {
 			parseEnd();
 			saveCurrentTextFile( false );
+		} else if( "play".equals( command ) ) {
+			handleActionPlay();
+		} else if( "pause".equals( command ) ) {
+			handleActionPause();
+		} else if( "stop".equals( command ) ) {
+			handleActionStop();
+		} else if( "replay".equals( command ) ) {
+			handleActionReplay();
+		} else if( "backup".equals( command ) ) {
+			handleActionBackup();
 		}
 	}
 
@@ -222,20 +207,45 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		return !current.isParsed();
 	}
 
-	// Seek player to time represented by given timeCode string, or to start if timeCode is empty string.
-	private void playerSeek( String timeCode ) {
-		int secs = 0;
-		
-		if( !timeCode.equals( "" ) ) {
-			secs = new TimeCode(timeCode).convertTimeCodeStringToSecs();
+	// Seek player as close as possible to requested bytes.  Updates slider and time display.
+	private void playerSeek( int bytes ) {
+		try {
+			basicPlayer.seek( bytes );
+		} catch( BasicPlayerException e ) {
+			showAudioFileNotSeekableDialog();
+			displayPlayerException( e );
 		}
 
-		try {
-			basicPlayer.seek( (long) secs * basicPlayer.getBytesPerSecond() );
-		} catch (BasicPlayerException e) {
-			showAudioFileNotSeekableDialog();
-			e.printStackTrace();
+		// Set player volume and pan according to sliders, after player line is initialized.
+		handleSliderGain();
+		handleSliderPan();
+
+		// Update time and seek slider displays.
+		updateTimeDisplay();
+		updateSeekSliderDisplay();
+	}
+
+	// Seek player to position defined by slider.  Updates time display, but not slider
+	// (as that would create a feedback cycle).
+	private void playerSeekToSlider() {
+		if( basicPlayer.getStatus() == BasicPlayer.UNKNOWN ) {
+			return;
 		}
+		double 	t 		= playerView.getSliderSeek().getValue() / (double) PlayerView.SEEK_MAX_VAL;
+		long	bytes	= (long) (t * basicPlayer.getEncodedLength());
+
+		try {
+			basicPlayer.seek( bytes );
+		} catch( BasicPlayerException e ) {
+			displayPlayerException( e );
+		}
+
+		// Set player volume and pan according to sliders, after player line is initialized.
+		handleSliderGain();
+		handleSliderPan();
+
+		// Update time display.
+		updateTimeDisplay();
 	}
 
 	// Pause/resume/stop/play player.  These wrappers are here to clean up exception handling.
@@ -243,35 +253,55 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		try {
 			basicPlayer.pause();
 		} catch( BasicPlayerException e ) {
-			e.printStackTrace();
+			displayPlayerException( e );
 		}
 	}
 	private void playerStop() {
 		try {
 			basicPlayer.stop();
 		} catch( BasicPlayerException e ) {
-			e.printStackTrace();
+			displayPlayerException( e );
 		}
+		updateTimeDisplay();
+		updateSeekSliderDisplay();
 	}
 	private void playerResume() {
 		try {
 			basicPlayer.resume();
 		} catch( BasicPlayerException e ) {
-			e.printStackTrace();
+			displayPlayerException( e );
 		}
+		// Set player volume and pan according to sliders, after player line is initialized.
+		handleSliderGain();
+		handleSliderPan();
 	}
 	private void playerPlay() {
 		try {
 			basicPlayer.play();
 		} catch( BasicPlayerException e ) {
-			e.printStackTrace();
+			displayPlayerException( e );
 		}
+		// Set player volume and pan according to sliders, after player line is initialized.
+		handleSliderGain();
+		handleSliderPan();
 	}
 
 	// Switch modes.  Hides/shows relevant UI.
+	// PRE: filenameAudio is set.
 	private void setMode( Mode mode ) {
 		setTemplateView( mode );
-		playerView.getSliderSeek().setEnabled( mode == Mode.MODE_PLAYBACK ); // Enable seek slider during play-back only.
+
+		// Enable seek slider and stop during play-back only, since these manipulate the
+		// audio position and would allow playback to get out of sync with parsing/coding.
+		playerView.getSliderSeek().setEnabled( mode == Mode.MODE_PLAYBACK && filenameAudio != null );
+		playerView.getButtonStop().setEnabled( mode == Mode.MODE_PLAYBACK && filenameAudio != null );
+
+		// NOTE - Carl - Enable/disable feature for these buttons (play, pause, replay, stop, backup)
+		// has not been requested yet.
+		playerView.getButtonPlay().setEnabled( filenameAudio != null );
+		playerView.getButtonPause().setEnabled( filenameAudio != null );
+		playerView.getButtonReplay().setEnabled( mode == Mode.MODE_PARSE || mode == Mode.MODE_CODE );
+		playerView.getButtonBackup().setEnabled( mode == Mode.MODE_PARSE || mode == Mode.MODE_CODE );
 	}
 
 	// Open file chooser to select audio file.  On approve, load audio file.
@@ -294,11 +324,12 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		filenameAudio	= filename;
 		try {
 			basicPlayer.open( new File( filenameAudio ) );
-			pokeTimer();
+			updateTimeDisplay();
+			updateSeekSliderDisplay();
 			return true;
 		} catch( BasicPlayerException e ) {
 			showAudioFileNotFoundDialog();
-			e.printStackTrace();
+			displayPlayerException( e );
 			return false;
 		}
 	}
@@ -306,51 +337,17 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	private void registerPlayerViewListeners() {
 		// Player GUI listeners	
 
-		//Play Button
-		playerView.getButtonPlay().addMouseListener(new MouseAdapter(){
-			public void mousePressed(MouseEvent e){
-				handleButtonPlay();
-			}
-		});
-
-		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		//Stop Button
-		playerView.getButtonStop().addMouseListener(new MouseAdapter(){
-			public void mousePressed(MouseEvent e){
-				handleButtonStop();
-			}
-		});
-
-		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		//Backup Button
-		playerView.getButtonBackup().addMouseListener(new MouseAdapter(){
-			public void mousePressed(MouseEvent e){
-				handleButtonBackup();
-			}
-		});
-
-		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		//Pause Button
-		playerView.getButtonPause().addMouseListener(new MouseAdapter(){
-			public void mousePressed(MouseEvent e){
-				handleButtonPause();
-			}
-		});
-
-
-		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		//Replay button
-		playerView.getButtonReplay().addMouseListener(new MouseAdapter(){
-			public void mousePressed(MouseEvent e){
-				handleButtonReplay();
-			}
-		});
+		playerView.getButtonPlay().addActionListener( this );
+		playerView.getButtonStop().addActionListener( this );
+		playerView.getButtonPause().addActionListener( this );
+		playerView.getButtonReplay().addActionListener( this );
+		playerView.getButtonBackup().addActionListener( this );
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		//Pan Slider
-		playerView.getSliderPan().addChangeListener(new ChangeListener(){
-			public void stateChanged(ChangeEvent ce){
-				if( !playerView.getSliderPan().getValueIsAdjusting()){
+		playerView.getSliderPan().addChangeListener( new ChangeListener() {
+			public void stateChanged( ChangeEvent ce ) {
+				if( playerView.getSliderPan().getValueIsAdjusting() ) {
 					handleSliderPan();
 				}
 			}
@@ -358,9 +355,9 @@ public class MainController implements BasicPlayerListener, ActionListener {
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		//Gain Slider
-		playerView.getSliderGain().addChangeListener(new ChangeListener(){
-			public void stateChanged(ChangeEvent ce){
-				if( !playerView.getSliderGain().getValueIsAdjusting()){
+		playerView.getSliderGain().addChangeListener( new ChangeListener() {
+			public void stateChanged( ChangeEvent ce ) {
+				if( playerView.getSliderGain().getValueIsAdjusting() ) {
 					handleSliderGain();
 				}
 			}
@@ -368,11 +365,12 @@ public class MainController implements BasicPlayerListener, ActionListener {
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		//Seek Slider
-		playerView.getSliderSeek().addChangeListener(new ChangeListener(){
-			public void stateChanged(ChangeEvent ce){
-				// TODO - Carl - Shouldn't this be !, like the above similar checks?  If it should be different, why?
-				if( playerView.getSliderSeek().getValueIsAdjusting()){
-					handleSliderSeek();
+		playerView.getSliderSeek().addChangeListener( new ChangeListener() {
+			public void stateChanged( ChangeEvent ce ){
+				// If value is being adjusted by user, apply to player.
+				// Else slider has changed due to call-back from player.
+				if( playerView.getSliderSeek().getValueIsAdjusting() ) {
+					playerSeekToSlider();
 				}
 			}
 		});
@@ -393,9 +391,8 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// File Menu: Exit
 		playerView.getMenuItemExit().addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e){
-				// Need to check if utterance list has been saved first.
-				System.exit(0);
+			public void actionPerformed( ActionEvent e ) {
+				actionExit();
 			}
 		});
 
@@ -459,20 +456,16 @@ public class MainController implements BasicPlayerListener, ActionListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Player Handlers
-	private void handleButtonPlay() {
+	private void handleActionPlay() {
 		if( basicPlayer.getStatus() == BasicPlayer.PAUSED ) {
-			// TODO - Carl - Look here for volume/pan control bug.
 			playerResume();
 		} else {
-			// Set volume and pan according to GUI.
-			handleSliderGain();
-			handleSliderPan();
 			playerPlay();
 		}
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void handleButtonStop() {
+	private void handleActionStop() {
 		if( isParsingUtterance() ) {
 			parseEnd();
 		}
@@ -481,7 +474,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void handleButtonBackup() {
+	private void handleActionBackup() {
 		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ) {
 			playerPause();
 		} else if( basicPlayer.getStatus() != BasicPlayer.PAUSED &&
@@ -500,28 +493,27 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void handleButtonPause() {
-		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ){
+	private void handleActionPause() {
+		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ) {
 			playerPause();
 		} else if( basicPlayer.getStatus() == BasicPlayer.PAUSED ) {
-			// Set volume and pan according to GUI.
+			playerResume();
+			// Set volume and pan according to GUI.  Call these after playing is resumed.
 			handleSliderGain();
 			handleSliderPan();
-			playerResume();
 		}
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void handleButtonReplay(){
-		if( templateView instanceof ParserTemplateView ){
+	private void handleActionReplay(){
+		if( templateView instanceof ParserTemplateView ) {
 			removeLastUtterance();
-		}
-		else if( templateView instanceof MiscTemplateView ){
+		} else if( templateView instanceof MiscTemplateView ) {
 			// Strip code from current utterance.
 			Utterance utterance = getCurrentUtterance();
 
-			if( utterance != null ){
-				utterance.setMiscCode(MiscCode.INVALID);
+			if( utterance != null ) {
+				utterance.setMiscCode( MiscCode.INVALID );
 			}
 
 			// Move to previous utterance, if one exists.
@@ -530,82 +522,60 @@ public class MainController implements BasicPlayerListener, ActionListener {
 				utterance = getCurrentUtterance();
 			}
 
-			// Set audio to utterance start time.
-			if( utterance == null ){
-				playerSeek("");
-			}
-			else {
-				playerSeek(utterance.getStartTime());
+			// Set audio to utterance start.
+			if( utterance == null ) {
+				playerSeek( 0 );
+			} else {
+				playerSeek( utterance.getStartBytes() );
 			}
 
 			updateUtteranceDisplays();
-		}
-		else{
+		} else {
 			showParsingErrorDialog();
 		}
-		pokeTimer();
+		updateTimeDisplay();
+		updateSeekSliderDisplay();
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void handleSliderSeek(){
-		if( basicPlayer.getStatus() == BasicPlayer.UNKNOWN ) {
+	private void updateSeekSliderDisplay() {
+		// Don't set slider position if user is dragging it.
+		if( playerView.getSliderSeek().getValueIsAdjusting() ) {
 			return;
 		}
-		// TODO - Carl - Check out this code.  Looks error prone.
-		double sliderPct = new Integer(playerView.getSliderSeek().getValue()).doubleValue() /
-			new Integer(PlayerView.SEEK_MAX_VAL).doubleValue();
-		int skipAmt = (int) (sliderPct * basicPlayer.getEncodedLength());
-		skipAmt = skipAmt - (skipAmt % basicPlayer.getBytesPerSecond());
-		try {
-			skipAmt = (int) (basicPlayer.seek((long) skipAmt));
-			if( (skipAmt % basicPlayer.getBytesPerSecond()) != 0 ){
-				// NO OP - Skip error
+
+		Integer position 	= new Integer( basicPlayer.getEncodedStreamPosition() );
+		Integer length 		= new Integer( basicPlayer.getEncodedLength() );
+		double 	t			= position.doubleValue() / length.doubleValue();
+
+		if( t >= 1.0 ){
+			playerView.setSliderSeek( PlayerView.SEEK_MAX_VAL );
+		} else if( t == 0 ) {
+			playerView.setSliderSeek( 0 );
+		} else {
+			playerView.setSliderSeek( new Double( t * PlayerView.SEEK_MAX_VAL ).intValue() );
+		}
+	}
+
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	private void handleSliderPan() {
+		if( basicPlayer.hasPanControl() ) {
+			try {
+				basicPlayer.setPan( playerView.getSliderPan().getValue() / 10.0 );
+			} catch( BasicPlayerException e ) {
+				displayPlayerException( e );
 			}
-			pokeTimer();
-		} catch (BasicPlayerException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void setSeekSliderDisplay(){
-		Integer position = new Integer(basicPlayer.getEncodedStreamPosition());
-		Integer length = new Integer(basicPlayer.getEncodedLength());
-		if( (position.doubleValue() / length.doubleValue()) == 1.0 ){
-			playerView.setSliderSeek(PlayerView.SEEK_MAX_VAL);
-		}
-		else if( (position.doubleValue() / length.doubleValue()) == 0 ){
-			playerView.setSliderSeek(0);
-		}
-		else{
-			playerView.setSliderSeek(new Double((position.doubleValue() / 
-					length.doubleValue()) *
-					PlayerView.SEEK_MAX_VAL).intValue());
 		}
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void handleSliderPan(){
-		Long valSliderPan = new Long((long)playerView.
-				getSliderPan().getValue());
-		double dPanVal = valSliderPan.doubleValue() / 10;
-
-		try {
-			basicPlayer.setPan( dPanVal );
-		} catch( BasicPlayerException e ) {
-			e.printStackTrace();
-		}
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void handleSliderGain(){
-		Long valSliderGain = new Long((long)playerView.
-				getSliderGain().getValue());
-		double dGainVal = valSliderGain.doubleValue() / 100;
-
-		try {
-			basicPlayer.setGain( dGainVal );
-		} catch( BasicPlayerException e ) {
-			e.printStackTrace();
+	private void handleSliderGain() {
+		if( basicPlayer.hasGainControl() ) {
+			try {
+				basicPlayer.setGain( playerView.getSliderGain().getValue() / 100.0 );
+			} catch( BasicPlayerException e ) {
+				displayPlayerException( e );
+			}
 		}
 	}
 
@@ -652,9 +622,9 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			}
 
 			// Load the parse and audio files.
-			setMode( Mode.MODE_CODE );
 			filenameAudio = getUtteranceList().loadFromFile( new File( filenameMisc ) );
 			loadAudioFile( filenameAudio );
+			setMode( Mode.MODE_CODE );
 			postLoad();
 		}
 
@@ -693,7 +663,6 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			utteranceList 		= null;
 			currentUtterance	= 0;
 			filenameParse 		= chooser.getSelectedFile().getAbsolutePath();
-			setMode( Mode.MODE_PARSE );
 			// Load the parse file.
 			filenameAudio = getUtteranceList().loadFromFile(new File( filenameParse ));
 			if( filenameAudio.equalsIgnoreCase("ERROR: No Audio File Listed") ){
@@ -702,6 +671,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			}
 			// Load the audio file.
 			loadAudioFile( filenameAudio );
+			setMode( Mode.MODE_PARSE );
 			postLoad();
 		}
 	}
@@ -718,9 +688,9 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			utteranceList 		= null;
 			currentUtterance	= 0;
 			filenameMisc 		= chooser.getSelectedFile().getAbsolutePath();
-			setMode( Mode.MODE_CODE );
 			filenameAudio = getUtteranceList().loadFromFile(new File(filenameMisc)); // Load the code file.
 			loadAudioFile( filenameAudio ); // Load the audio file.
+			setMode( Mode.MODE_CODE );
 			postLoad();
 		}
 	}
@@ -867,16 +837,14 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void setTimeDisplay(){
+	private void updateTimeDisplay() {
 		if( basicPlayer.getBytesPerSecond() != 0 ) {
 			// Handles constant bit-rates only.
 			// Set the player time display.
 			int 	startBytes 	= basicPlayer.getEncodedStreamPosition();
-			String 	strTimeCode = new TimeCode( (startBytes /
-					basicPlayer.getBytesPerSecond())).
-					convertToTimeString();
+			int		seconds		= startBytes / basicPlayer.getBytesPerSecond();
 
-			playerView.setLabelTime( "Time:  " + strTimeCode );
+			playerView.setLabelTime( "Time:  " + TimeCode.toString( seconds ) );
 			if( templateView instanceof MiscTemplateView ) {
 				updateMiscDisplay( startBytes );
 			}
@@ -903,22 +871,18 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void nullifyLastTemplateView(){
+	private void setTemplateView( Mode mode ) {
 		templateView 	= null;
 		templateUI 		= null;
 		System.gc();
-	}
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void setTemplateView( Mode mode ) {
-		nullifyLastTemplateView();
 		switch( mode ) {
 		case MODE_PARSE:
-			templateUI 		= new ParserTemplateUiService(this);
+			templateUI 		= new ParserTemplateUiService( this );
 			templateView 	= templateUI.getTemplateView();
 			break;
 		case MODE_CODE:
-			templateUI 		= new MiscTemplateUiService(this);
+			templateUI 		= new MiscTemplateUiService( this );
 			templateView 	= templateUI.getTemplateView();
 			break;
 		case MODE_GLOBALS:
@@ -929,7 +893,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			assert false : "Mode unrecognized: " + mode.toString();
 			break;
 		}
-		playerView.setPanelTemplate(templateView);
+		playerView.setPanelTemplate( templateView );
 	}
 
 	//====================================================================
@@ -942,12 +906,11 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		}
 		// Record start data.
 		int 	startPosition	= basicPlayer.getEncodedStreamPosition();
-		String 	start 			= new TimeCode( (startPosition / 
-				basicPlayer.getBytesPerSecond()) ).convertToTimeString();
+		String 	startString		= TimeCode.toString( startPosition / basicPlayer.getBytesPerSecond() );
 
 		// Create a new utterance.
 		int 		order 	= getUtteranceList().size();
-		Utterance 	data 	= new MiscDataItem(order, start, startPosition);
+		Utterance 	data 	= new MiscDataItem( order, startString, startPosition );
 
 		getUtteranceList().add( data );
 		currentUtterance	= order; // Select this as current utterance.
@@ -959,8 +922,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	public void parseEnd() {
 		// Record end data.
 		int 	endPosition = basicPlayer.getEncodedStreamPosition();
-		String 	end 		= new TimeCode( (endPosition /
-				basicPlayer.getBytesPerSecond()) ).convertToTimeString();
+		String 	endString	= TimeCode.toString( endPosition / basicPlayer.getBytesPerSecond() );
 
 		// Save to utterance.
 		Utterance current = getCurrentUtterance();
@@ -969,8 +931,8 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			showParsingErrorDialog();
 		}
 		else {
-			current.setEndTime(end);
-			current.setEndBytes(endPosition);
+			current.setEndTime( endString );
+			current.setEndBytes( endPosition );
 		}
 		updateUtteranceDisplays();
 	}
@@ -1006,10 +968,9 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		Utterance utterance = getCurrentUtterance();
 
 		if( utterance == null ) {
-			playerSeek( "" );
-		}
-		else {
-			playerSeek( utterance.getStartTime() );
+			playerSeek( 0 );
+		} else {
+			playerSeek( utterance.getStartBytes() );
 		}
 
 		updateUtteranceDisplays();
@@ -1029,10 +990,6 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		Utterance	current	= getCurrentUtterance();
 		Utterance	next	= getNextUtterance();
 
-		// TMP - Carl
-		// System.out.println( "updateMiscDisplay, currentBytes: " + currentBytes );
-		// TMP
-
 		if( (current != null && currentBytes > current.getEndBytes()) ||
 			(next != null && currentBytes >= next.getStartBytes()) ) {
 			// Pause on uncoded condition.
@@ -1045,17 +1002,8 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			// Update to next utterance to code.
 			if( current.isCoded() || !pauseOnUncoded ) {
 				if( basicPlayer.getStatus() == BasicPlayer.PAUSED ) {
-					int skipToBytes = current.getEndBytes();
-					// TODO - Carl - Check this for potential resume/skip bug.
-					// TODO - Carl - Also, why are we snapping to integral second alignment here (and in several other places)?
-					// TMP int skipAmt = skipToBytes - (skipToBytes % basicPlayer.getBytesPerSecond());
-					try {
-						// TMP skipAmt = (int) basicPlayer.seek((long) skipAmt);
-						basicPlayer.seek((long) skipToBytes);
-						basicPlayer.resume();
-					} catch (BasicPlayerException e) {
-						e.printStackTrace();
-					}
+					playerSeek( current.getEndBytes() );
+					playerResume();
 				}
 				currentUtterance++;
 				// TODO - Carl - Look here for end of file bug.
@@ -1136,6 +1084,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 
 	// Select current utterance index, seek player, and update UI after loading
 	// data from file.
+	// PRE: Mode is set, so appropriate templateView is active.
 	private void postLoad() {
 		currentUtterance = 0; // Default to first utterance.
 		if( templateView instanceof ParserTemplateView ) {
@@ -1144,12 +1093,10 @@ public class MainController implements BasicPlayerListener, ActionListener {
 				currentUtterance = getUtteranceList().size() - 1;
 			}
 
-			Utterance	current = getCurrentUtterance();
-
-			if( current == null ) {
-				playerSeek( "" );
+			if( getCurrentUtterance() == null ) {
+				playerSeek( 0 );
 			} else {
-				playerSeek( current.getEndTime() ); // Seek to end of last existing utterance, so we're ready to start parsing the next.
+				playerSeek( getCurrentUtterance().getEndBytes() ); // Seek to end of last existing utterance, so we're ready to start parsing the next.
 			}
 		}
 		else if( templateView instanceof MiscTemplateView ){
@@ -1162,19 +1109,17 @@ public class MainController implements BasicPlayerListener, ActionListener {
 				currentUtterance = getUtteranceList().size() - 1;
 			}
 
-			Utterance	current = getCurrentUtterance();
-
-			if( current == null ) {
-				playerSeek( "" );
+			if( getCurrentUtterance() == null ) {
+				playerSeek( 0 );
 			} else {
-				playerSeek( current.getStartTime() ); // Seek to start time.
+				playerSeek( getCurrentUtterance().getStartBytes() );
 			}
 		}
-		else if( templateView != null ) {
-			showQueueNotLoadedDialog(); // TODO - Carl - These cases seem backwards (see below).
+		else if( templateView == null ) {
+			showTemplateNotFoundDialog();
 		}
 		else {
-			showTemplateNotFoundDialog(); // TODO - Carl - These cases seem backwards (see above).
+			showQueueNotLoadedDialog();
 		}
 
 		updateUtteranceDisplays();
@@ -1189,87 +1134,77 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	}
 
 	//====================================================================
-	// Required to implement BasicPlayerListener
+	// BasicPlayerListener interface
 	//====================================================================
 
-	public void opened(Object stream, Map<Object, Object> properties)
+	public void opened( Object stream, Map< Object, Object > properties ) {}
+
+	public void setController(BasicController controller) {}
+
+	public void progress( int bytesread, long microseconds, byte[] pcmdata, 
+			Map< Object, Object > properties)
 	{
-		// Pay attention to properties. It's useful to get duration, 
-		// bitrate, channels, even tag such as ID3v2.
-		display("opened : "+properties.toString());
-		//audioInfo = properties;
+		updateTimeDisplay();
+		updateSeekSliderDisplay();
 	}
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void setController(BasicController controller)
-	{
-		display("setController : "+controller);
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void progress(int bytesread, long microseconds, byte[] pcmdata, 
-			Map<Object, Object> properties)
-	{
-		// Pay attention to properties. It depends on underlying JavaSound SPI
-		// MP3SPI provides mp3.equalizer.
-		//display("progress : "+properties.toString());
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public void stateUpdated(BasicPlayerEvent event)
-	{
-		// Notification of BasicPlayer states 
-		// (opened, playing, end of media, ...)
-		//display("stateUpdated : "+event.toString());
-		switch( event.getCode() ){
+	public void stateUpdated( BasicPlayerEvent event ) {
+		// Notification of BasicPlayer states (opened, playing, end of media, ...).
+		// Modify stored playerStatus string only on "significant" changes (e.g. "Opened", but not "Seeked").
+		switch( event.getCode() ) {
 		case 0:
-			strStatus = "OPENING";
+			playerStatus = "OPENING";
 			break;
 		case 1:
-			strStatus = "OPENED";
+			playerStatus = "OPENED";
 			break;
 		case 2:
-			strStatus = "PLAYING";
+			playerStatus = "PLAYING";
 			break;
 		case 3:
-			strStatus = "STOPPED";
+			playerStatus = "STOPPED";
 			break;
 		case 4:
-			strStatus = "PAUSED";
+			playerStatus = "PAUSED";
 			break;
 		case 5:
-			//strStatus = "RESUMED";
-			strStatus = "PLAYING";
+			// RESUMED
+			playerStatus = "PLAYING";
 			break;
 		case 6:
-			//strStatus = "SEEKING";
+			// SEEKING
 			break;
 		case 7:
-			//strStatus = "SEEKED";
+			// SEEKED
 			break;
 		case 8:
-			//strStatus = "EOM";
+			// TODO - Carl - Look here for "end of playback" issues.
+			// playerStatus = "EOM";
 			saveCurrentTextFile( false );
 			break;
 		case 9:
-			//strStatus = "PAN";
+			// PAN
 			break;
 		case 10:
-			//strStatus = "GAIN";
+			// GAIN
 			break;
 		default:
-			strStatus = "UNKNOWN";
+			playerStatus = "UNKNOWN";
 		}
-		File	file			= new File( filenameAudio );
-		String 	playerStatus 	= strStatus.concat(":  " + file.getName() + 
-				"  |  Total Time = " +
-				(new TimeCode(basicPlayer.getSecondsPerFile()).
-						convertToTimeString()));
-		playerView.setLabelPlayerStatus( playerStatus );
+
+		File	file	= new File( filenameAudio );
+		String	str		= playerStatus.concat( ":  " + file.getName() + "  |  Total Time = " +
+				TimeCode.toString( basicPlayer.getSecondsPerFile() ) );
+
+		playerView.setLabelPlayerStatus( str );
 	}
 
-	public void display(String msg)
-	{
-		System.out.println(msg);
+	public void display( String msg ) {
+		System.out.println( msg );
+	}
+
+	private void displayPlayerException( BasicPlayerException e ) {
+		display( "BasicPlayerException: " + e.getMessage() );
+		e.printStackTrace();
 	}
 }
