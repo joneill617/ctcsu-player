@@ -525,9 +525,6 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			playerPause();
 		} else if( basicPlayer.getStatus() == BasicPlayer.PAUSED ) {
 			playerResume();
-			// Set volume and pan according to GUI.  Call these after playing is resumed.
-			handleSliderGain();
-			handleSliderPan();
 		}
 	}
 
