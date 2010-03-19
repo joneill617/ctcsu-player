@@ -564,7 +564,10 @@ public class BasicPlayer implements BasicController, Runnable
             	//Swapped the placement of the flush to address the blip on resume
                 //m_line.flush();
                 m_line.stop();
-                m_line.flush();
+                //====================================================================
+                // Don't flush on pause.  This change is to eliminate audible skip when
+                // resuming playback in the CASAA Treatment Coding System Utility.  March 2010.
+                // m_line.flush();
                 m_status = PAUSED;
                 //====================================================================
                 // This change is to eliminate logging in July 2008 for 
