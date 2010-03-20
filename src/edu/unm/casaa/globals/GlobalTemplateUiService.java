@@ -22,126 +22,56 @@ package edu.unm.casaa.globals;
 import java.io.File;
 
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import edu.unm.casaa.main.TemplateUiService;
+import edu.unm.casaa.globals.GlobalCode;
 
-enum GlobalCode{
-	ACCEPTANCE,
-	EMPATHY,
-	DIRECTION,
-	AUTONOMY,
-	COLLABORATION,
-	EVOCATION,
-	SELF_EXPLORATION;
-}
+public class GlobalTemplateUiService extends TemplateUiService {
 
-public class GlobalTemplateUiService extends TemplateUiService{
+	private GlobalTemplateView	view 	= new GlobalTemplateView();
+	private GlobalDataModel 	data	= new GlobalDataModel();
 
-	private GlobalTemplateView 		mp_view 		= null;
-	private GlobalDataModel 		mp_data 		= null;
-	
-	public GlobalTemplateUiService(){
+	public GlobalTemplateUiService() {
 		init();
 	}
 
-	private void init(){
-		mp_view = new GlobalTemplateView();
+	private void init() {
+		for( GlobalCode g : GlobalCode.values() ) {
+			JSlider slider = view.getSlider( g );
 
-		mp_view.getSliderAcceptance().addChangeListener(getGlobalSliderListener(GlobalCode.ACCEPTANCE));
-		mp_view.getSliderAcceptance().addChangeListener(getGlobalSliderListener(GlobalCode.EMPATHY));
-		mp_view.getSliderAcceptance().addChangeListener(getGlobalSliderListener(GlobalCode.DIRECTION));
-		mp_view.getSliderAcceptance().addChangeListener(getGlobalSliderListener(GlobalCode.AUTONOMY));
-		mp_view.getSliderAcceptance().addChangeListener(getGlobalSliderListener(GlobalCode.COLLABORATION));
-		mp_view.getSliderAcceptance().addChangeListener(getGlobalSliderListener(GlobalCode.EVOCATION));
-		mp_view.getSliderAcceptance().addChangeListener(getGlobalSliderListener(GlobalCode.SELF_EXPLORATION));
-	
-
-		mp_data = new GlobalDataModel();
-		mp_data.setAcceptance(mp_view.getSliderAcceptance().getValue());
-		mp_data.setAutonomy(mp_view.getSliderAutonomy().getValue());
-		mp_data.setCollaboration(mp_view.getSliderCollaboration().getValue());
-		mp_data.setDirection(mp_view.getSliderDirection().getValue());
-		mp_data.setEmpathy(mp_view.getSliderEmpathy().getValue());
-		mp_data.setEvocation(mp_view.getSliderEvocation().getValue());
-		mp_data.setSelfExploration(mp_view.getSliderSelfExploration().getValue());
+			slider.addChangeListener( getGlobalSliderListener( g ) );
+			data.setValue( g, slider.getValue() ); // Initialize data to slider value.
+		}
 	}
 
-	public JPanel getTemplateView(){
-		return mp_view;
+	public JPanel getTemplateView() {
+		return view;
 	}
 
-	private GlobalTemplateSliderListener getGlobalSliderListener(GlobalCode slider){
-		return new GlobalTemplateSliderListener(slider);
+	private GlobalTemplateSliderListener getGlobalSliderListener( GlobalCode code ) {
+		return new GlobalTemplateSliderListener( code );
 	}
 
-	public void writeGlobalsToFile(File file){
-		System.out.println("DEBUG: Call to globals ui to write to file");
-		mp_data.writeToFile(file);
+	public void writeGlobalsToFile( File file, String filenameAudio ) {
+		data.writeToFile( file, filenameAudio, view.getNotes() );
 	}
-
-	//code to manipulate data?
 
 	//===============================================================
 	// Slider Adapter Listener Class
 	//===============================================================
-	private class GlobalTemplateSliderListener implements ChangeListener{
+	private class GlobalTemplateSliderListener implements ChangeListener {
 
 		private GlobalCode code;
 
-		public GlobalTemplateSliderListener(GlobalCode slider){
-			code = slider;
+		public GlobalTemplateSliderListener( GlobalCode code ) {
+			this.code = code;
 		}
 
-		public void stateChanged(ChangeEvent ce) {
-			switch(code){
-			case ACCEPTANCE:
-				if( ! mp_view.getSliderAcceptance().getValueIsAdjusting()){
-					mp_data.setAcceptance(mp_view.getSliderAcceptance().getValue());
-				}
-				break;
-
-			case EMPATHY:
-				if( ! mp_view.getSliderEmpathy().getValueIsAdjusting()){
-					mp_data.setAcceptance(mp_view.getSliderEmpathy().getValue());
-				}
-				break;
-
-			case DIRECTION:
-				if( ! mp_view.getSliderDirection().getValueIsAdjusting()){
-					mp_data.setAcceptance(mp_view.getSliderDirection().getValue());
-				}
-				break;
-
-			case AUTONOMY:
-				if( ! mp_view.getSliderAutonomy().getValueIsAdjusting()){
-					mp_data.setAcceptance(mp_view.getSliderAutonomy().getValue());
-				}
-				break;
-
-			case COLLABORATION:
-				if( ! mp_view.getSliderCollaboration().getValueIsAdjusting()){
-					mp_data.setAcceptance(mp_view.getSliderCollaboration().getValue());
-				}
-				break;
-
-			case EVOCATION:
-				if( ! mp_view.getSliderEvocation().getValueIsAdjusting()){
-					mp_data.setAcceptance(mp_view.getSliderEvocation().getValue());
-				}
-				break;
-
-			case SELF_EXPLORATION:
-				if( ! mp_view.getSliderSelfExploration().getValueIsAdjusting()){
-					mp_data.setAcceptance(mp_view.getSliderSelfExploration().getValue());
-				}
-				break;
-
-			default:
-				System.err.println("ERROR: GlobalTemplateListener failed on code: " + code);
-			}
-
+		public void stateChanged( ChangeEvent ce ) {
+			data.setValue( code, view.getSlider( code ).getValue() );
 		}
 
 	}

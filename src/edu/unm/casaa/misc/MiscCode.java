@@ -43,9 +43,11 @@ public enum MiscCode{
 	SR_MINUS( "SR-", 18 ),
 	SR_NEUTRAL( "SR0", 19 ),
 	SR_PLUS( "SR+", 20 ),
+	SR_PLUS_MINUS( "SR+/-", 51 ), // NOTE - Value out of order, due to client request.
 	CR_MINUS( "CR-", 21 ),
 	CR_NEUTRAL( "CR0", 22 ),
 	CR_PLUS( "CR+", 23 ),
+	CR_PLUS_MINUS( "CR+/-", 52 ), // NOTE - Value out of order, due to client request.
 	RF( "RF", 24 ),
 	SU( "SU", 25 ),
 	ST( "ST", 26 ),
@@ -69,19 +71,11 @@ public enum MiscCode{
 	FN( "FN", 44 ),
 	NC( "NC", 50 );
 
-	private final int 		value;
-	private final String	label;
+	public final int 		value;
+	public final String		label;
 
 	MiscCode( String label, int value ) {
 		this.label = label;
 		this.value = value;
 	}
-
-	public int getValue() {
-        return value;
-    }
-
-    public String getLabel() {
-        return label;
-    }
 };

@@ -22,110 +22,59 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
+
+import edu.unm.casaa.globals.GlobalCode;
 
 /**
  * Stores globals data.
  * @author amanuel
- *
  */
 public class GlobalDataModel {
 
-	private int acceptance;
-	private int empathy;
-	private int direction;
-	private int autonomy;
-	private int collaboration;
-	private int evocation;
-	private int selfExploration;
+	// Map of GlobalCode to value.
+	private HashMap< Integer, Integer > valueMap = new HashMap< Integer, Integer >();
 
-	public GlobalDataModel(){
-		init();
+	public GlobalDataModel() {
+		// Initialize to zero.
+		for( GlobalCode g : GlobalCode.values() ) {
+			valueMap.put( g.value, 0 );
+		}
 	}
 
-	private void init(){
-		//init to GUI settings to start
+	public int getValue( GlobalCode code ) {
+		Integer result = valueMap.get( code.value );
+
+		assert( result != null );
+		return result.intValue();
 	}
 
-	//===============================================================
-	// getters and setters
-	//===============================================================
-
-	public int getAcceptance(){
-		return acceptance;
+	public void	setValue( GlobalCode code, int value ) {
+		valueMap.put( new Integer( code.value ), value );
 	}
 
-	public void setAcceptance(int data){
-		acceptance = data;
+	public String toString() {
+		String result = new String();
+		
+		for( GlobalCode g : GlobalCode.values() ) {
+			result += g.toString() + ":\t" + getValue( g ) + "\n";
+		}
+		return result;
 	}
 
-	public int getEmpathy(){
-		return empathy;
-	}
-
-	public void setEmpathy(int data){
-		empathy = data;
-	}
-
-	public int getDirection(){
-		return direction;
-	}
-
-	public void setDirection(int data){
-		direction = data;
-	}
-
-	public int getAutonomy(){
-		return autonomy;
-	}
-
-	public void setAutonomy(int data){
-		autonomy = data;
-	}
-
-	public int getCollaboration(){
-		return collaboration;
-	}
-
-	public void setCollaboration(int data){
-		collaboration = data;
-	}
-
-	public int getEvocation(){
-		return evocation;
-	}
-
-	public void setEvocation(int data){
-		evocation = data;
-	}
-
-	public int getSelfExploration(){
-		return selfExploration;
-	}
-
-	public void setSelfExploration(int data){
-		selfExploration = data;
-	}
-
-	public String toString(){
-		return ("ACCEPTANCE:\t" + acceptance + "\n" +
-				"EMPATHY:\t" + empathy + "\n" +
-				"DIRECTION:\t" + direction + "\n" +
-				"AUTONOMY:\t" + autonomy + "\n" +
-				"COLLABORATION:\t" + collaboration + "\n" +
-				"EVOCATION:\t" + evocation + "\n" +
-				"SELF_EXPLORATION:\t" + selfExploration + "\n");
-	}
-
-	public void writeToFile(File file){
+	public void writeToFile( File file, String filenameAudio, String notes ) {
 		PrintWriter writer = null;
 		try {
-			writer = new PrintWriter( new FileWriter(file, false));
-			writer.println("Global Ratings\n\n");
-			writer.println(this.toString());
-		} catch (IOException e) {
+			writer = new PrintWriter( new FileWriter( file, false ) );
+			writer.println( "Global Ratings\n" );
+			writer.println( "Audio File:\t" + filenameAudio );
+			writer.println( toString() );
+			if( !"".equals( notes ) ) {
+				writer.println( "Notes:\n" + notes );
+			}
+		} catch( IOException e ) {
 			e.printStackTrace();
-		}
-		finally{
+		} finally {
 			writer.close();
 		}
 	}

@@ -48,7 +48,7 @@ public class MiscTemplateUiService extends TemplateUiService{
 			JButton button = view.getButtonMiscCode( m );
 
 			button.addMouseListener( getMiscButtonListener( m ) );
-			button.setToolTipText( Integer.toString( m.getValue() ) );
+			button.setToolTipText( "" + m.value );
 		}
 		
 		view.getCheckBoxPauseUncoded().addMouseListener( new MouseAdapter() {

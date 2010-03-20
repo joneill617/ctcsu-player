@@ -109,18 +109,18 @@ public class UtteranceList {
 	 * @param file
 	 * @param filenameAudio
 	 */
-	public void writeToFile(File file, String filenameAudio){
+	public void writeToFile( File file, String filenameAudio ) {
 		PrintWriter writer = null;
+
 		try {
-			writer = new PrintWriter(new FileWriter(file, false)); //change to true if caching is implemented
-			writer.println("Audio File:\t" + filenameAudio);
-			for( int i = 0; i < list.size(); i++ ){
-				writer.println(list.get(i).toString());
+			writer = new PrintWriter( new FileWriter( file, false ) );
+			writer.println( "Audio File:\t" + filenameAudio );
+			for( int i = 0; i < list.size(); i++ ) {
+				writer.println( list.get( i ).toString() );
 			}
-		} catch (IOException e) {
+		} catch( IOException e ) {
 			e.printStackTrace();
-		}
-		finally{
+		} finally {
 			writer.close();
 		}
 	}
@@ -130,7 +130,7 @@ public class UtteranceList {
 	 * @param file
 	 * @return filenameAudio
 	 */
-	public String loadFromFile(File file){
+	public String loadFromFile( File file ) {
 		list.clear(); // Clear existing contents.
 
 		Scanner in = null;
@@ -143,18 +143,18 @@ public class UtteranceList {
 		if( !in.hasNext() ){
 			return ("ERROR: No Audio File Listed");
 		}
-		//eat the audio filename line
+		// Eat the audio filename line.
 		String 			filenameAudio 	= in.nextLine();
 		StringTokenizer headReader 		= new StringTokenizer(filenameAudio, "\t");
 
-		headReader.nextToken(); //eat line heading "Audio Filename:"
+		headReader.nextToken(); // Eat line heading "Audio Filename:"
 		filenameAudio = headReader.nextToken();
 		if( (filenameAudio.trim()).equalsIgnoreCase("") ){
 			return ("ERROR: No Audio File Listed");
 		}
 		while( in.hasNextLine() ){
-			//TODO: MISC is hard-coded
-			//MISC format: int order, String startTime, String EndTime,
+			// NOTE: MISC is hard-coded
+			// MISC format: int order, String startTime, String EndTime,
 			//				int startBytes, int endBytes,
 			//				int code, String codename
 			String 			nextStr 	= in.nextLine();
@@ -162,8 +162,7 @@ public class UtteranceList {
 			int 			lineSize 	= st.countTokens();  //5 = parsed only, 7 = coded
 			int 			order 		= new Integer(st.nextToken()).intValue();
 
-			//TODO: place a check for "null" in start and end fields 
-			//		to report to the user.
+			// TODO: Place a check for "null" in start and end fields to report to the user.
 			String 			start 		= st.nextToken();
 			String 			end 		= st.nextToken();
 			int 			stBytes 	= new Integer(st.nextToken()).intValue();

@@ -19,10 +19,14 @@ This source code file is part of the CASAA Treatment Coding System Utility
 package edu.unm.casaa.globals;
 
 import java.awt.Dimension;
+import java.util.HashMap;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
 
 /**
@@ -32,280 +36,125 @@ import javax.swing.border.TitledBorder;
  */
 public class GlobalTemplateView extends JPanel {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	
-	//====================================================================
-	// Fields
-	//====================================================================
-	//Window Constants and Variables
+
+	// Window constants and variables.
 	private static final int PANEL_WIDTH	= 600;
 	private static final int PANEL_HEIGHT	= 450;
 
-	//GUI Components and Constants
-	private TitledBorder borderWindow		= null;
+	// GUI components and constants.
 	private JPanel panelSliders				= null;
 	private JPanel panelLeftSliders			= null;
 	private JPanel panelRightSliders		= null;
-	private Dimension dimMainPanel			= null;
+	private static final int TEXT_ROWS		= 6;
+	private static final int TEXT_COLUMNS	= 60;
+	private JScrollPane textScrollPane		= null;
+	private JTextArea textArea				= null;
+	private Dimension dimMainPanel			= new Dimension( PANEL_WIDTH, PANEL_HEIGHT );
 	
-	//Sliders
-	private JSlider sliderAcceptance		= null;
-	private TitledBorder borderSlAccept		= null;
-	private JSlider sliderEmpathy			= null;
-	private TitledBorder borderSlEmpath		= null;
-	private JSlider sliderDirection			= null;
-	private TitledBorder borderSlDirect		= null;
-	private JSlider sliderAutonomy			= null;
-	private TitledBorder borderSlAutono		= null;
-	private JSlider sliderCollaboration		= null;
-	private TitledBorder borderSlCollab		= null;
-	private JSlider sliderEvocation			= null;
-	private TitledBorder borderSlEvocat		= null;
-	private JSlider sliderSelfExploration	= null;
-	private TitledBorder borderSlSelfExp	= null;
+	// Sliders.
+	private HashMap< Integer, JSlider > sliderGlobalCode = new HashMap< Integer, JSlider >();
 	
-	//Slider Set-up Constants
+	// Slider constants.
 	private static final int SLIDER_MIN		= 1;
 	private static final int SLIDER_MAX		= 5;
 	private static final int SLIDER_INIT	= 3;
-	
-	
-	//====================================================================
-	// Constructor and Initialization Methods
-	//====================================================================
-	
-	public GlobalTemplateView(){
+
+	public GlobalTemplateView() {
 		init();
 	}
 	
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void init(){
-		this.setBorder(getBorderWindow());
-		this.setMaximumSize(getDimMainPanel());
-		this.setMinimumSize(getDimMainPanel());
-		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		this.add(getPanelSliders());
-		this.setVisible(true);
+	private void init() {
+		setBorder( createBorderWindow() );
+		setMaximumSize( dimMainPanel );
+		setMinimumSize( dimMainPanel );
+		setLayout( new BoxLayout( this, BoxLayout.Y_AXIS ) );
+		add( getPanelSliders() );
+		add( Box.createRigidArea( new Dimension( 0, 10 ) ) );
+		add( getTextScrollPane() );
+		setVisible( true );
 	}
 
-	//====================================================================
-	// Getter and Setter Methods
-	//====================================================================
-	
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	//Sliders
-	public JSlider getSliderAcceptance(){
-		if( sliderAcceptance == null ){
-			sliderAcceptance = new JSlider(SLIDER_MIN, SLIDER_MAX, SLIDER_INIT);
-			sliderAcceptance.setSnapToTicks(true);
-			sliderAcceptance.setMajorTickSpacing(1);
-			sliderAcceptance.setPaintTicks(true);
-			sliderAcceptance.setPaintTrack(true);
-			sliderAcceptance.setPaintLabels(true);
-			sliderAcceptance.setBorder(getBorderSlAccept());
+	public JSlider getSlider( GlobalCode code ) {
+		JSlider slider = sliderGlobalCode.get( code.value );
+
+		// Create slider (and border) if it does not yet exist.
+		if( slider == null ) {
+			slider = new JSlider( SLIDER_MIN, SLIDER_MAX, SLIDER_INIT );
+			slider.setSnapToTicks( true );
+			slider.setMajorTickSpacing( 1 );
+			slider.setPaintTicks( true );
+			slider.setPaintTrack( true );
+			slider.setPaintLabels( true );
+
+			TitledBorder border = BorderFactory.createTitledBorder( code.label );
+
+			border.setTitleJustification( TitledBorder.LEADING );
+			slider.setBorder( border );
+			sliderGlobalCode.put( code.value, slider );
 		}
-		return sliderAcceptance;
-	}
-	
-	private TitledBorder getBorderSlAccept(){
-		if( borderSlAccept == null ){
-			borderSlAccept = BorderFactory.createTitledBorder("Acceptance");
-			borderSlAccept.setTitleJustification(TitledBorder.LEADING);
-		}
-		return borderSlAccept;
+		return slider;
 	}
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JSlider getSliderEmpathy(){
-		if( sliderEmpathy == null ){
-			sliderEmpathy = new JSlider(SLIDER_MIN, SLIDER_MAX, SLIDER_INIT);
-			sliderEmpathy.setSnapToTicks(true);
-			sliderEmpathy.setMajorTickSpacing(1);
-			sliderEmpathy.setPaintTicks(true);
-			sliderEmpathy.setPaintTrack(true);
-			sliderEmpathy.setPaintLabels(true);
-			sliderEmpathy.setBorder(getBorderSlEmpath());
-		}
-		return sliderEmpathy;
-	}
-	
-	private TitledBorder getBorderSlEmpath(){
-		if( borderSlEmpath == null ){
-			borderSlEmpath = BorderFactory.createTitledBorder("Empathy");
-			borderSlEmpath.setTitleJustification(TitledBorder.LEADING);
-		}
-		return borderSlEmpath;
+	// Get notes written in text area.
+	public String getNotes() {
+		return getTextArea().getText();
 	}
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JSlider getSliderDirection(){
-		if( sliderDirection == null ){
-			sliderDirection = new JSlider(SLIDER_MIN, SLIDER_MAX, SLIDER_INIT);
-			sliderDirection.setSnapToTicks(true);
-			sliderDirection.setMajorTickSpacing(1);
-			sliderDirection.setPaintTicks(true);
-			sliderDirection.setPaintTrack(true);
-			sliderDirection.setPaintLabels(true);
-			sliderDirection.setBorder(getBorderSlDirect());
-		}
-		return sliderDirection;
-	}
-	
-	private TitledBorder getBorderSlDirect(){
-		if( borderSlDirect == null ){
-			borderSlDirect = BorderFactory.createTitledBorder("Direction");
-			borderSlDirect.setTitleJustification(TitledBorder.LEADING);
-		}
-		return borderSlDirect;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JSlider getSliderAutonomy(){
-		if( sliderAutonomy == null ){
-			sliderAutonomy = new JSlider(SLIDER_MIN, SLIDER_MAX, SLIDER_INIT);
-			sliderAutonomy.setSnapToTicks(true);
-			sliderAutonomy.setMajorTickSpacing(1);
-			sliderAutonomy.setPaintTicks(true);
-			sliderAutonomy.setPaintTrack(true);
-			sliderAutonomy.setPaintLabels(true);
-			sliderAutonomy.setBorder(getBorderSlAutono());
-		}
-		return sliderAutonomy;
-	}
-	
-	private TitledBorder getBorderSlAutono(){
-		if( borderSlAutono == null ){
-			borderSlAutono = BorderFactory.createTitledBorder("Autonomy");
-			borderSlAutono.setTitleJustification(TitledBorder.LEADING);
-		}
-		return borderSlAutono;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JSlider getSliderCollaboration(){
-		if( sliderCollaboration == null ){
-			sliderCollaboration = new JSlider(SLIDER_MIN, SLIDER_MAX, SLIDER_INIT);
-			sliderCollaboration.setSnapToTicks(true);
-			sliderCollaboration.setMajorTickSpacing(1);
-			sliderCollaboration.setPaintTicks(true);
-			sliderCollaboration.setPaintTrack(true);
-			sliderCollaboration.setPaintLabels(true);
-			sliderCollaboration.setBorder(getBorderSlCollab());
-		}
-		return sliderCollaboration;
-	}
-	
-	private TitledBorder getBorderSlCollab(){
-		if( borderSlCollab == null ){
-			borderSlCollab = BorderFactory.createTitledBorder("Collaboration");
-			borderSlCollab.setTitleJustification(TitledBorder.LEADING);
-		}
-		return borderSlCollab;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JSlider getSliderEvocation(){
-		if( sliderEvocation == null ){
-			sliderEvocation = new JSlider(SLIDER_MIN, SLIDER_MAX, SLIDER_INIT);
-			sliderEvocation.setSnapToTicks(true);
-			sliderEvocation.setMajorTickSpacing(1);
-			sliderEvocation.setPaintTicks(true);
-			sliderEvocation.setPaintTrack(true);
-			sliderEvocation.setPaintLabels(true);
-			sliderEvocation.setBorder(getBorderSlEvocat());
-		}
-		return sliderEvocation;
-	}
-	
-	private TitledBorder getBorderSlEvocat(){
-		if( borderSlEvocat == null ){
-			borderSlEvocat = BorderFactory.createTitledBorder("Evocation");
-			borderSlEvocat.setTitleJustification(TitledBorder.LEADING);
-		}
-		return borderSlEvocat;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JSlider getSliderSelfExploration(){
-		if( sliderSelfExploration == null ){
-			sliderSelfExploration = new JSlider(SLIDER_MIN, SLIDER_MAX, 1);
-			sliderSelfExploration.setSnapToTicks(true);
-			sliderSelfExploration.setMajorTickSpacing(1);
-			sliderSelfExploration.setPaintTicks(true);
-			sliderSelfExploration.setPaintTrack(true);
-			sliderSelfExploration.setPaintLabels(true);
-			sliderSelfExploration.setBorder(getBorderSlSelfExp());
-		}
-		return sliderSelfExploration;
-	}
-	
-	private TitledBorder getBorderSlSelfExp(){
-		if( borderSlSelfExp == null ){
-			borderSlSelfExp = BorderFactory.createTitledBorder("Self Exploration");
-			borderSlSelfExp.setTitleJustification(TitledBorder.LEADING);
-		}
-		return borderSlSelfExp;
-	}
-	
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	//Panels and Borders
-	private JPanel getPanelSliders(){
-		if( panelSliders == null ){
+	private JPanel getPanelSliders() {
+		if( panelSliders == null ) {
 			panelSliders = new JPanel();
-			panelSliders.setMaximumSize(getDimMainPanel());
-			panelSliders.setMinimumSize(getDimMainPanel());
-			panelSliders.setLayout(new BoxLayout(panelSliders, BoxLayout.X_AXIS));
-			//panelSliders.setLayout(new FlowLayout());
-			panelSliders.add(getLeftPanelSliders());
-			panelSliders.add(getRightPanelSliders());
+			panelSliders.setMaximumSize( dimMainPanel );
+			panelSliders.setMinimumSize( dimMainPanel );
+			panelSliders.setLayout( new BoxLayout( panelSliders, BoxLayout.X_AXIS ) );
+			panelSliders.add( getLeftPanelSliders() );
+			panelSliders.add( getRightPanelSliders() );
 		}
 		return panelSliders;
 	}
-	
-	private TitledBorder getBorderWindow(){
-		if( borderWindow == null ){
-			borderWindow = BorderFactory.createTitledBorder("Global Ratings");
-			borderWindow.setTitleJustification(TitledBorder.CENTER);		
-		}
-		return borderWindow;
+
+	private TitledBorder createBorderWindow() {
+		TitledBorder border = BorderFactory.createTitledBorder( "Global Ratings" );
+
+		border.setTitleJustification( TitledBorder.CENTER );		
+		return border;
 	}
 	
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private JPanel getLeftPanelSliders(){
-		if( panelLeftSliders == null ){
+	private JPanel getLeftPanelSliders() {
+		if( panelLeftSliders == null ) {
 			panelLeftSliders = new JPanel();
-			panelLeftSliders.setLayout(new BoxLayout(panelLeftSliders, BoxLayout.Y_AXIS));
-			panelLeftSliders.add(getSliderAcceptance());
-			panelLeftSliders.add(getSliderEmpathy());
-			panelLeftSliders.add(getSliderDirection());
-			panelLeftSliders.add(getSliderAutonomy());
+			panelLeftSliders.setLayout( new BoxLayout( panelLeftSliders, BoxLayout.Y_AXIS ) );
+			panelLeftSliders.add( getSlider( GlobalCode.ACCEPTANCE ) );
+			panelLeftSliders.add( getSlider( GlobalCode.EMPATHY ) );
+			panelLeftSliders.add( getSlider( GlobalCode.DIRECTION ) );
+			panelLeftSliders.add( getSlider( GlobalCode.AUTONOMY ) );
 		}
 		return panelLeftSliders;
 	}
 	
-	private JPanel getRightPanelSliders(){
-		if( panelRightSliders == null ){
+	private JPanel getRightPanelSliders() {
+		if( panelRightSliders == null ) {
 			panelRightSliders = new JPanel();
-			panelRightSliders.setLayout(new BoxLayout(panelRightSliders, BoxLayout.Y_AXIS));
-			panelRightSliders.add(getSliderCollaboration());
-			panelRightSliders.add(getSliderEvocation());
-			panelRightSliders.add(getSliderSelfExploration());
+			panelRightSliders.setLayout( new BoxLayout( panelRightSliders, BoxLayout.Y_AXIS ) );
+			panelRightSliders.add( getSlider( GlobalCode.COLLABORATION ) );
+			panelRightSliders.add( getSlider( GlobalCode.EVOCATION ) );
+			panelRightSliders.add( getSlider( GlobalCode.SELF_EXPLORATION ) );
 		}
 		return panelRightSliders;
 	}
-	
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private Dimension getDimMainPanel(){
-		if( dimMainPanel == null ){
-			dimMainPanel = new Dimension(PANEL_WIDTH, PANEL_HEIGHT);
-		}
-		return dimMainPanel;
-	}
-	
 
-	
+	private JScrollPane getTextScrollPane() {
+		if( textScrollPane == null ) {
+			textScrollPane = new JScrollPane( getTextArea() );
+		}
+		return textScrollPane;
+	}
+
+	private JTextArea getTextArea() {
+		if( textArea == null ) {
+			textArea = new JTextArea( TEXT_ROWS, TEXT_COLUMNS );
+			textArea.setLineWrap( true );
+		}
+		return textArea;
+	}
 }
