@@ -91,14 +91,14 @@ public class ParserTemplateView extends JPanel {
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void init(){
-		this.setBorder(getBorderWindow());
-		this.setMaximumSize(getDimMainPanel());
-		this.setMinimumSize(getDimMainPanel());
-		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		this.add(getPanelLastText());
-		this.add(getPanelCurrentText());
-		this.add(getPanelButtons());
-		this.setVisible(true);
+		setBorder(getBorderWindow());
+		setMaximumSize(getDimMainPanel());
+		setMinimumSize(getDimMainPanel());
+		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		add(getPanelLastText());
+		add(getPanelCurrentText());
+		add(getPanelButtons());
+		setVisible(true);
 	}
 
 	//====================================================================

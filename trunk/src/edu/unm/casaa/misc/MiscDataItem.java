@@ -152,7 +152,7 @@ public class MiscDataItem implements Utterance {
 	public void setMiscCode(int code) {
 		// Search for enum with matching value.
 		for( MiscCode m : MiscCode.values() ) {
-			if( m.getValue() == code ) {
+			if( m.value == code ) {
 				this.miscCode = m;
 				return;
 			}
@@ -190,8 +190,8 @@ public class MiscDataItem implements Utterance {
 					endTime 	+ "\t" +
 					startBytes	+ "\t" +
 					endBytes	+ "\t" +
-					miscCode.getValue() 	+ "\t" +
-					miscCode.getLabel());
+					miscCode.value 	+ "\t" +
+					miscCode.label);
 	}
 	
 	public String writeParsed(){
