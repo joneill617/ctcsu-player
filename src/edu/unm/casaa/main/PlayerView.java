@@ -98,7 +98,6 @@ public class PlayerView extends JFrame {
 	private JSlider sliderPan					= null;
 	private JLabel labelPlayerStatus			= null;
 	private JLabel labelTime					= null;
-//	private JLabel labelAudioFilename			= null;
 
 	private JMenuBar menuBarPlayer				= null;
 	private JMenu menuFile						= null;
@@ -502,17 +501,6 @@ public class PlayerView extends JFrame {
 		getLabelPlayerStatus().setText(strStatus);
 	}
 
-/*	private JLabel getLabelAudioFilename(){
-		if( labelAudioFilename == null ){
-			labelAudioFilename = new JLabel("Audio Filename");
-		}
-		return labelAudioFilename;
-	}
-
-	public void setLabelAudioFilename(String strFilename){
-		getLabelAudioFilename().setText(strFilename);
-	}
-*/
 	private JLabel getLabelTime(){
 		if( labelTime == null ){
 			labelTime = new JLabel("Time");
