@@ -38,6 +38,15 @@ public class BasicPlayerEventLauncher extends Thread
     private Collection<Object> listeners = null;
     private Object source = null;
 
+	//====================================================================
+    // Changed for CASAA, 2010
+    // Events are reported by launchers that run in separate threads, so it
+    // is possible for listeners to receive events out of order.  Therefore,
+    // each event is now assigned an index from the launcher, so listeners can
+    // track event order.
+    private static int s_index = 0;
+    private int index = s_index++;
+
     /**
      * Contructor.
      * @param code
@@ -66,7 +75,7 @@ public class BasicPlayerEventLauncher extends Thread
             while (it.hasNext())
             {
                 BasicPlayerListener bpl = (BasicPlayerListener) it.next();
-                BasicPlayerEvent event = new BasicPlayerEvent(source, code, position, value, description);
+                BasicPlayerEvent event = new BasicPlayerEvent(source, code, position, value, description, index);
                 bpl.stateUpdated(event);
             }
         }
