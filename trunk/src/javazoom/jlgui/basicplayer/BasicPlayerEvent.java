@@ -45,6 +45,14 @@ public class BasicPlayerEvent
     private Object source = null;
     private Object description = null;
 
+	//====================================================================
+    // Changed for CASAA, 2010
+    // Events are reported by launchers that run in separate threads, so it
+    // is possible for listeners to receive events out of order.  Therefore,
+    // each event is now assigned an incrementing index, so listeners can
+    // track order.
+    private int index = 0;
+
     /**
      * Constructor
      * @param source of the event
@@ -53,13 +61,14 @@ public class BasicPlayerEvent
      * @param value opitional control value
      * @param desc optional description
      */
-    public BasicPlayerEvent(Object source, int code, int position, double value, Object desc)
+    public BasicPlayerEvent(Object source, int code, int position, double value, Object desc, int index)
     {
         this.value = value;
         this.position = position;
         this.source = source;
         this.code = code;
         this.description = desc;
+        this.index = index;
     }
 
     /**
@@ -101,6 +110,13 @@ public class BasicPlayerEvent
     public Object getSource()
     {
         return source;
+    }
+
+	//====================================================================
+    // Changed for CASAA, 2010
+    public int getIndex()
+    {
+    	return index;
     }
 
     public String toString()
