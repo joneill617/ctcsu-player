@@ -16,22 +16,25 @@ This source code file is part of the CASAA Treatment Coding System Utility
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package edu.unm.casaa.utterance;
+package edu.unm.casaa.main;
 
-import javax.swing.JPanel;
+import java.awt.event.ActionEvent;
 
-import edu.unm.casaa.main.ActionTable;
-import edu.unm.casaa.main.TemplateUiService;
+import javax.swing.AbstractAction;
 
-public class ParserTemplateUiService extends TemplateUiService{
+class MainControllerAction extends AbstractAction {
 
-	private ParserTemplateView view = null;
+	private static final long 	serialVersionUID 	= 1L;
+	private MainController 		mc 					= null;
+	private String				actionCommand		= null;
 
-	public ParserTemplateUiService( ActionTable actionTable ) {
-		view = new ParserTemplateView( actionTable );
+	public MainControllerAction( MainController mc, String text, String actionCommand ) {
+		super( text );
+		this.mc 			= mc;
+		this.actionCommand	= actionCommand;
 	}
-	
-	public JPanel getTemplateView() {
-		return view;
+
+	public void actionPerformed( ActionEvent e ) {
+		mc.handleAction( actionCommand ); // Pass to MainController.
 	}
 }

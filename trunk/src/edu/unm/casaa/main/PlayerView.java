@@ -27,6 +27,7 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -34,6 +35,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -49,9 +51,6 @@ import javax.swing.border.TitledBorder;
  */
 public class PlayerView extends JFrame {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	//====================================================================
@@ -134,17 +133,15 @@ public class PlayerView extends JFrame {
 	private static final int PAN_INIT_VAL		= 0;
 	private TitledBorder borderPan				= null;
 
+	private ActionTable		actionTable			= new ActionTable(); // Communication between GUI and MainController.
 
 	//====================================================================
 	// Constructor and Initialization Methods
 	//====================================================================
 
-	public PlayerView(){
-		init();
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void init(){
+	public PlayerView( ActionTable actionTable ) {
+		assert( actionTable != null );
+		this.actionTable = actionTable;
 		setLookAndFeel();
 		getFrameParentWindow().getContentPane().setLayout(new BorderLayout());
 		getFrameParentWindow().getContentPane().add(getTopLayoutPanel(), BorderLayout.NORTH);
@@ -158,15 +155,33 @@ public class PlayerView extends JFrame {
 	//====================================================================
 
 	/**
+	 * Returns a new player button using given action and optional key binding.
+	 * @param actionCommand
+	 * @param keyBinding - See KeyStroke docs for string format.
+	 * @return a JButton used to start playing the audio file
+	 */
+	private JButton newPlayerButton( String actionCommand, String keyBinding ) {
+		JButton button = new JButton( actionTable.get( actionCommand ) );
+
+		button.setPreferredSize( getDimPlayerButtonSize() );
+		if( !"".equals( keyBinding ) ) {
+			button.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( KeyStroke.getKeyStroke( keyBinding ), "pressed" );
+			button.getActionMap().put( "pressed", button.getAction() );
+		}
+		return button;
+	}
+
+	private JButton newPlayerButton( String actionCommand ) {
+		return newPlayerButton( actionCommand, "" );
+	}
+
+	/**
 	 * Returns the Player's Play Button
 	 * @return a JButton used to start playing the audio file
 	 */
-	public JButton getButtonPlay(){
-		if( buttonPlay == null ){
-			buttonPlay = new JButton("Play");
-			buttonPlay.setPreferredSize(getDimPlayerButtonSize());
-			buttonPlay.setActionCommand("play");
-			//buttonPlay.setToolTipText("Start Playing the Audio File");
+	public JButton getButtonPlay() {
+		if( buttonPlay == null ) {
+			buttonPlay = newPlayerButton( "play" );
 		}
 		return buttonPlay;
 	}
@@ -176,12 +191,9 @@ public class PlayerView extends JFrame {
 	 * Returns the Player's Stop Button
 	 * @return a JButton used to stop playing the audio file
 	 */
-	public JButton getButtonStop(){
-		if( buttonStop == null ){
-			buttonStop = new JButton("Stop");
-			buttonStop.setPreferredSize(getDimPlayerButtonSize());
-			buttonStop.setActionCommand("stop");
-			//buttonStop.setToolTipText("Stop Playing the Audio File");
+	public JButton getButtonStop() {
+		if( buttonStop == null ) {
+			buttonStop = newPlayerButton( "stop" );
 		}
 		return buttonStop;
 	}
@@ -193,10 +205,7 @@ public class PlayerView extends JFrame {
 	 */
 	public JButton getButtonPause(){
 		if( buttonPause == null ){
-			buttonPause = new JButton("Pause");
-			buttonPause.setPreferredSize(getDimPlayerButtonSize());
-			buttonPause.setActionCommand("pause");
-			//buttonPause.setToolTipText("Pause Playing of the Audio File");
+			buttonPause = newPlayerButton( "pause" );
 		}
 		return buttonPause;
 	}
@@ -208,10 +217,7 @@ public class PlayerView extends JFrame {
 	 */
 	public JButton getButtonReplay(){
 		if( buttonReplay == null ){
-			buttonReplay = new JButton("Replay");
-			buttonReplay.setPreferredSize(getDimPlayerButtonSize());
-			buttonReplay.setActionCommand("replay");
-			//buttonReplay.setToolTipText("Jumps the audio back a few seconds");
+			buttonReplay = newPlayerButton( "replay" );
 		}
 		return buttonReplay;
 	}
@@ -223,10 +229,7 @@ public class PlayerView extends JFrame {
 	 */
 	public JButton getButtonBackup(){
 		if( buttonBackup == null ){
-			buttonBackup = new JButton("Backup");
-			buttonBackup.setPreferredSize(getDimPlayerButtonSize());
-			buttonBackup.setActionCommand("backup");
-			//buttonBackup.setToolTipText("Saves current work to file");
+			buttonBackup = newPlayerButton( "backup" );
 		}
 		return buttonBackup;
 	}

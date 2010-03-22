@@ -56,7 +56,7 @@ import javazoom.jlgui.basicplayer.BasicPlayerListener;
 
 /*
  Design notes:
- - Save to file whenever we modify data (i.e. utterances), unless that modification leaves
+ - Save to file whenever we modify data (e.g. utterances), unless that modification leaves
    data in an incomplete state (e.g. parse started, but not yet ended).
  */
 
@@ -68,7 +68,7 @@ TODO - Carl
   - Grey out current display.
  */
 
-public class MainController implements BasicPlayerListener, ActionListener {
+public class MainController implements BasicPlayerListener {
 
 	//====================================================================
 	// Fields
@@ -82,7 +82,10 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	};
 
 	// GUI
-	private PlayerView 			playerView 			= new PlayerView();
+
+	private ActionTable			actionTable			= new ActionTable(); // Communication between GUI and MainController.
+
+	private PlayerView 			playerView 			= null;
 	private JPanel 				templateView		= null;
 	private TemplateUiService 	templateUI			= null;
 
@@ -115,6 +118,8 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	//====================================================================
 
 	public MainController() {
+		buildActionTable();
+		playerView = new PlayerView( actionTable );
 		basicPlayer.addBasicPlayerListener( this );
 		registerPlayerViewListeners();
 		// Handle window closing events.
@@ -176,26 +181,21 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		}
 	}
 
-	//====================================================================
-	// ActionListener interface
-	//====================================================================
-
-	public void actionPerformed( ActionEvent e ) {
-		String command = e.getActionCommand();
-
-		if( "parseStart".equals( command ) ) {
+	// Callbacks for GUI actions.
+	public void handleAction( String action ) {
+		if( "parseStart".equals( action ) ) {
 			parseStart();
-		} else if( "parseEnd".equals( command ) ) {
+		} else if( "parseEnd".equals( action ) ) {
 			parseEnd();
-		} else if( "play".equals( command ) ) {
+		} else if( "play".equals( action ) ) {
 			handleActionPlay();
-		} else if( "pause".equals( command ) ) {
+		} else if( "pause".equals( action ) ) {
 			handleActionPause();
-		} else if( "stop".equals( command ) ) {
+		} else if( "stop".equals( action ) ) {
 			handleActionStop();
-		} else if( "replay".equals( command ) ) {
+		} else if( "replay".equals( action ) ) {
 			handleActionReplay();
-		} else if( "backup".equals( command ) ) {
+		} else if( "backup".equals( action ) ) {
 			handleActionBackup();
 		}
 	}
@@ -204,7 +204,21 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	// Private Helper Methods
 	//====================================================================
 
-	public void display( String msg ) {
+	private void mapAction( String text, String command ) {		
+		actionTable.put( command, new MainControllerAction( this, text, command ) );
+	}
+
+	private void buildActionTable() {
+		mapAction( "Start", "parseStart" );
+		mapAction( "End", "parseEnd" );
+		mapAction( "Play", "play" );
+		mapAction( "Pause", "pause" );
+		mapAction( "Stop", "stop" );
+		mapAction( "Replay", "replay" );
+		mapAction( "Backup", "backup" );
+	}
+
+	private void display( String msg ) {
 		System.out.println( msg );
 	}
 
@@ -367,6 +381,8 @@ public class MainController implements BasicPlayerListener, ActionListener {
 		playerView.getSliderSeek().setEnabled( allowSeek && filenameAudio != null );
 		playerView.getButtonStop().setEnabled( allowSeek && filenameAudio != null );
 
+		// TODO - Carl - Enable/disable actions in actionTable, rather than buttons.
+		
 		// NOTE - Carl - Enable/disable feature for these buttons (play, pause, replay, stop, backup)
 		// has not been requested yet.
 		playerView.getButtonPlay().setEnabled( filenameAudio != null );
@@ -452,12 +468,6 @@ public class MainController implements BasicPlayerListener, ActionListener {
 	}
 
 	private void registerPlayerViewListeners() {
-		// Player GUI listeners.
-		playerView.getButtonPlay().addActionListener( this );
-		playerView.getButtonStop().addActionListener( this );
-		playerView.getButtonPause().addActionListener( this );
-		playerView.getButtonReplay().addActionListener( this );
-		playerView.getButtonBackup().addActionListener( this );
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		//Pan Slider
@@ -1024,7 +1034,7 @@ public class MainController implements BasicPlayerListener, ActionListener {
 			// No template view.
 			break;
 		case PARSE:
-			templateUI 		= new ParserTemplateUiService( this );
+			templateUI 		= new ParserTemplateUiService( actionTable );
 			templateView 	= templateUI.getTemplateView();
 			break;
 		case CODE:

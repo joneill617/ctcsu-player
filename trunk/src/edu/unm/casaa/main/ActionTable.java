@@ -16,22 +16,28 @@ This source code file is part of the CASAA Treatment Coding System Utility
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package edu.unm.casaa.utterance;
+package edu.unm.casaa.main;
 
-import javax.swing.JPanel;
+import java.util.HashMap;
 
-import edu.unm.casaa.main.ActionTable;
-import edu.unm.casaa.main.TemplateUiService;
+import javax.swing.Action;
 
-public class ParserTemplateUiService extends TemplateUiService{
+// Wrapper for a String->Action map.  Asserts input and output is non-null.
+public class ActionTable {
+	private HashMap< String, Action > map = new HashMap< String, Action >();
 
-	private ParserTemplateView view = null;
-
-	public ParserTemplateUiService( ActionTable actionTable ) {
-		view = new ParserTemplateView( actionTable );
+	public void	put( String key, Action action ) {
+		assert( action != null );
+		assert( key != null );
+		map.put( key, action );
 	}
-	
-	public JPanel getTemplateView() {
-		return view;
+
+	// Get action mapped to given name.
+	public Action get( String key ) {
+		assert( key != null );
+		Action result = map.get( key );
+		
+		assert( result != null ) : key;
+		return result;
 	}
-}
+};
