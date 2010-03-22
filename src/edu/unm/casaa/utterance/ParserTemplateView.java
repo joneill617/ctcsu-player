@@ -24,15 +24,18 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.KeyEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.border.TitledBorder;
+
+import edu.unm.casaa.main.ActionTable;
 
 public class ParserTemplateView extends JPanel {
 
@@ -81,16 +84,15 @@ public class ParserTemplateView extends JPanel {
 	private static final int LAST_COLS		= 60;
 	private TitledBorder borderLast			= null;
 	
+	private ActionTable		actionTable		= new ActionTable(); // Communication between GUI and MainController.
+
 	//====================================================================
 	// Constructor and Initialization Methods
 	//====================================================================
-	
-	public ParserTemplateView(){
-		init();
-	}
-	
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void init(){
+
+	public ParserTemplateView( ActionTable actionTable ) {
+		assert( actionTable != null );
+		this.actionTable = actionTable;
 		setBorder(getBorderWindow());
 		setMaximumSize(getDimMainPanel());
 		setMinimumSize(getDimMainPanel());
@@ -107,10 +109,10 @@ public class ParserTemplateView extends JPanel {
 
 	public JButton getButtonStartParse(){
 		if( buttonStartParse == null ){
-			buttonStartParse = new JButton("Start Parse");
-			buttonStartParse.setPreferredSize(getDimButtonSize());
-			buttonStartParse.setMnemonic(KeyEvent.VK_S);
-			buttonStartParse.setActionCommand("parseStart");
+			buttonStartParse = new JButton( actionTable.get( "parseStart" ) );
+			buttonStartParse.setPreferredSize( getDimButtonSize() );
+			buttonStartParse.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( KeyStroke.getKeyStroke( "S" ), "pressed" );
+			buttonStartParse.getActionMap().put( "pressed", buttonStartParse.getAction() );
 			/*buttonStartParse.setToolTipText("Start Parsing the Current Utterance\n\n" +
 					"Pressing this button a second time will end the current utterance, \n" +
 					"and begin parsing a second utterance.");*/
@@ -121,10 +123,10 @@ public class ParserTemplateView extends JPanel {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	public JButton getButtonEndParse(){
 		if( buttonEndParse == null ){
-			buttonEndParse = new JButton("End Parse");
-			buttonEndParse.setPreferredSize(getDimButtonSize());
-			buttonEndParse.setMnemonic(KeyEvent.VK_E);
-			buttonEndParse.setActionCommand("parseEnd");
+			buttonEndParse = new JButton( actionTable.get( "parseEnd" ) );
+			buttonEndParse.setPreferredSize( getDimButtonSize() );
+			buttonEndParse.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( KeyStroke.getKeyStroke( "E" ), "pressed" );
+			buttonEndParse.getActionMap().put( "pressed", buttonEndParse.getAction() );
 			/*buttonEndParse.setToolTipText("End Parsing the Current Utterance\n\n" +
 							"Pressing this button will end the current utterance.");*/
 		}
