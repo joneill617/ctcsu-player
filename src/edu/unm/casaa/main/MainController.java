@@ -196,8 +196,6 @@ public class MainController implements BasicPlayerListener {
 			handleActionStop();
 		} else if( "replay".equals( action ) ) {
 			handleActionReplay();
-		} else if( "backup".equals( action ) ) {
-			handleActionBackup();
 		}
 	}
 
@@ -216,7 +214,6 @@ public class MainController implements BasicPlayerListener {
 		mapAction( "Pause", "pause" );
 		mapAction( "Stop", "stop" );
 		mapAction( "Replay", "replay" );
-		mapAction( "Backup", "backup" );
 	}
 
 	private void display( String msg ) {
@@ -382,12 +379,11 @@ public class MainController implements BasicPlayerListener {
 		playerView.getSliderSeek().setEnabled( allowSeek && filenameAudio != null );
 		playerView.getButtonStop().setEnabled( allowSeek && filenameAudio != null );
 
-		// NOTE - Carl - Enable/disable feature for these buttons (play, pause, replay, stop, backup)
+		// NOTE - Carl - Enable/disable feature for these buttons (play, pause, replay, stop)
 		// has not been requested yet.
 		playerView.getButtonPlay().setEnabled( filenameAudio != null );
 		playerView.getButtonPause().setEnabled( filenameAudio != null );
 		playerView.getButtonReplay().setEnabled( mode == Mode.PARSE || mode == Mode.CODE );
-		playerView.getButtonBackup().setEnabled( mode == Mode.PARSE || mode == Mode.CODE || mode == Mode.GLOBALS );
 	}
 
 	// Synchronize both the GUI (slider, time display) and current utterance index with the
@@ -593,26 +589,6 @@ public class MainController implements BasicPlayerListener {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleActionStop() {
 		playerStop();
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private synchronized void handleActionBackup() {
-		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ) {
-			playerPause();
-		} else if( basicPlayer.getStatus() != BasicPlayer.PAUSED &&
-				   basicPlayer.getStatus() != BasicPlayer.OPENED &&
-				   basicPlayer.getStatus() != BasicPlayer.STOPPED ) {
-			showBackupErrorDialog();
-			return;
-		}
-
-		if( isParsingUtterance() ) {
-			parseEnd();
-			saveCurrentTextFile( false );
-		}
-
-		saveCurrentTextFile( true );
-		showBackupCompleteDialog();
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -959,23 +935,6 @@ public class MainController implements BasicPlayerListener {
 				"The Data Queue failed to load.\n" + 
 				"Please verify the text file is properly formatted.",
 				"Data Queue Loading Error", JOptionPane.ERROR_MESSAGE);
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void showBackupErrorDialog(){
-		JOptionPane.showMessageDialog(playerView,
-				"The Data Queue failed to backup to file.\n" + 
-				"Backup can only be called while player is playing or paused\n" +
-				"while using the parsing or coding features.",
-				"Backup Error", JOptionPane.ERROR_MESSAGE);
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void showBackupCompleteDialog(){
-		JOptionPane.showMessageDialog(playerView,
-				"The backup to file is complete.\n" + 
-				"Please press Pause or Play to resume.",
-				"Backup Complete", JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

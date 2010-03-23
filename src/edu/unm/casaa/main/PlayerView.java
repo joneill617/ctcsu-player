@@ -92,7 +92,6 @@ public class PlayerView extends JFrame {
 	private JButton buttonStop					= null;
 	private JButton buttonPause					= null;
 	private JButton buttonReplay				= null;
-	private JButton buttonBackup				= null;
 	private JSlider sliderSeek					= null;
 	private JSlider sliderGain					= null;
 	private JSlider sliderPan					= null;
@@ -223,18 +222,6 @@ public class PlayerView extends JFrame {
 		return buttonReplay;
 	}
 	
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	/**
-	 * Returns the Player's Replay Button
-	 * @return a JButton used to rewind the audio file ten seconds
-	 */
-	public JButton getButtonBackup(){
-		if( buttonBackup == null ){
-			buttonBackup = newPlayerButton( "backup" );
-		}
-		return buttonBackup;
-	}
-
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	/**
 	 * Returns the Player's Pan Slider
@@ -466,7 +453,6 @@ public class PlayerView extends JFrame {
 			panelPlayerControls.add(getButtonStop());
 			panelPlayerControls.add(getButtonPause());
 			panelPlayerControls.add(getButtonReplay());
-			panelPlayerControls.add(getButtonBackup());
 		}
 		return panelPlayerControls;
 	}
