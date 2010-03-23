@@ -24,6 +24,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.KeyEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -111,7 +112,8 @@ public class ParserTemplateView extends JPanel {
 		if( buttonStartParse == null ){
 			buttonStartParse = new JButton( actionTable.get( "parseStart" ) );
 			buttonStartParse.setPreferredSize( getDimButtonSize() );
-			buttonStartParse.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( KeyStroke.getKeyStroke( "S" ), "pressed" );
+			buttonStartParse.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put(
+					KeyStroke.getKeyStroke( KeyEvent.VK_COMMA, 0 ), "pressed" );
 			buttonStartParse.getActionMap().put( "pressed", buttonStartParse.getAction() );
 			/*buttonStartParse.setToolTipText("Start Parsing the Current Utterance\n\n" +
 					"Pressing this button a second time will end the current utterance, \n" +
@@ -125,7 +127,8 @@ public class ParserTemplateView extends JPanel {
 		if( buttonEndParse == null ){
 			buttonEndParse = new JButton( actionTable.get( "parseEnd" ) );
 			buttonEndParse.setPreferredSize( getDimButtonSize() );
-			buttonEndParse.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( KeyStroke.getKeyStroke( "E" ), "pressed" );
+			buttonEndParse.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put(
+					KeyStroke.getKeyStroke( KeyEvent.VK_PERIOD, 0 ), "pressed" );
 			buttonEndParse.getActionMap().put( "pressed", buttonEndParse.getAction() );
 			/*buttonEndParse.setToolTipText("End Parsing the Current Utterance\n\n" +
 							"Pressing this button will end the current utterance.");*/

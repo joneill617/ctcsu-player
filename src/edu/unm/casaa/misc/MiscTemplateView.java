@@ -67,11 +67,11 @@ public class MiscTemplateView extends JPanel {
 	private JPanel panelCurrentText			= null;
 	private JPanel panelNextText			= null;
 	private JPanel panelTherapistControls	= null;
-	private static final int ROWS_THERAPIST	= 9;
+	private static final int ROWS_THERAPIST	= 8;
 	private static final int COLS_THERAPIST	= 4;
 	private TitledBorder borderTherapist	= null;
 	private JPanel panelClientControls		= null;
-	private static final int ROWS_CLIENT	= 9;
+	private static final int ROWS_CLIENT	= 8;
 	private static final int COLS_CLIENT	= 2;
 	private TitledBorder borderClient		= null;
 	private static final int BUTTON_HOR_GAP	= 5;
@@ -174,15 +174,11 @@ public class MiscTemplateView extends JPanel {
 					COLS_THERAPIST,
 					BUTTON_HOR_GAP,
 					BUTTON_VER_GAP));
-			panelTherapistControls.setBorder(getBorderTherapist());			
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.CQ_MINUS));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.CQ_NEUTRAL));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.CQ_PLUS));
-			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
+			panelTherapistControls.setBorder(getBorderTherapist());
 
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.OQ_MINUS));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.CQ_NEUTRAL));
 			panelTherapistControls.add(getButtonMiscCode(MiscCode.OQ_NEUTRAL));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.OQ_PLUS));
+			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
 			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
 
 			panelTherapistControls.add(getButtonMiscCode(MiscCode.SR_MINUS));
@@ -196,28 +192,28 @@ public class MiscTemplateView extends JPanel {
 			panelTherapistControls.add(getButtonMiscCode(MiscCode.CR_PLUS_MINUS));
 
 			panelTherapistControls.add(getButtonMiscCode(MiscCode.ADP));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.ADW));
 			panelTherapistControls.add(getButtonMiscCode(MiscCode.AF));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.EC));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.RCP));
+
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.RF));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.SU));
+			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
 			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
 
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.ADW));
 			panelTherapistControls.add(getButtonMiscCode(MiscCode.CO));
 			panelTherapistControls.add(getButtonMiscCode(MiscCode.DI));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.EC));
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.RCW));
+			
+			panelTherapistControls.add(getButtonMiscCode(MiscCode.WA));
+			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
+			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
 			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
 
 			panelTherapistControls.add(getButtonMiscCode(MiscCode.FA));
 			panelTherapistControls.add(getButtonMiscCode(MiscCode.FI));
 			panelTherapistControls.add(getButtonMiscCode(MiscCode.GI));
-			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
-
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.RCP));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.RCW));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.RF));
-			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
-
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.ST));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.SU));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.WA));
 			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
 		}
 		return panelTherapistControls;
@@ -256,8 +252,6 @@ public class MiscTemplateView extends JPanel {
 			
 			panelClientControls.add(getButtonMiscCode(MiscCode.FN));
 			panelClientControls.add(getButtonMiscCode(MiscCode.NC));
-
-			panelClientControls.add(getCheckBoxPauseUncoded());
 		}
 		return panelClientControls;
 	}
@@ -278,7 +272,13 @@ public class MiscTemplateView extends JPanel {
 			panelButtons = new JPanel();
 			panelButtons.setBorder(getBorderButtons());
 			panelButtons.setLayout(new FlowLayout());
-			panelButtons.add(getPanelTherapistControls());
+
+			JPanel panelLeft = new JPanel();
+
+			panelLeft.setLayout(new BoxLayout(panelLeft, BoxLayout.Y_AXIS));
+			panelLeft.add(getPanelTherapistControls());
+			panelLeft.add(getCheckBoxPauseUncoded());
+			panelButtons.add(panelLeft);
 			panelButtons.add(getPanelClientControls());
 		}
 		return panelButtons;

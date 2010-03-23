@@ -66,6 +66,7 @@ TODO - Carl
   - Display empty field for current.  I don't like this.
     or
   - Grey out current display.
+- Make sure we save global ratings whenever they change, so we don't lose data in case of crash.
  */
 
 public class MainController implements BasicPlayerListener {
@@ -381,8 +382,6 @@ public class MainController implements BasicPlayerListener {
 		playerView.getSliderSeek().setEnabled( allowSeek && filenameAudio != null );
 		playerView.getButtonStop().setEnabled( allowSeek && filenameAudio != null );
 
-		// TODO - Carl - Enable/disable actions in actionTable, rather than buttons.
-		
 		// NOTE - Carl - Enable/disable feature for these buttons (play, pause, replay, stop, backup)
 		// has not been requested yet.
 		playerView.getButtonPlay().setEnabled( filenameAudio != null );
@@ -1104,7 +1103,7 @@ public class MainController implements BasicPlayerListener {
 
 		assert( miscCode != MiscCode.INVALID );
 
-		// TODO - Carl - If between utterances, should we ignore code?  Should buttons be disabled?
+		// TODO - If between utterances, should we ignore code?  Should buttons be disabled?
 		// Should we assign code to current utterance (which will not have started playing yet), or
 		// previous (which has already been coded)?
 
