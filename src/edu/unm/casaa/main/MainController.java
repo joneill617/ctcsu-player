@@ -60,15 +60,6 @@ import javazoom.jlgui.basicplayer.BasicPlayerListener;
    data in an incomplete state (e.g. parse started, but not yet ended).
  */
 
-/*
-TODO - Carl
-- When coding, how should we handle time between utterances?  Check how original build handled this.
-  - Display empty field for current.  I don't like this.
-    or
-  - Grey out current display.
-- Make sure we save global ratings whenever they change, so we don't lose data in case of crash.
- */
-
 public class MainController implements BasicPlayerListener {
 
 	//====================================================================
@@ -197,6 +188,12 @@ public class MainController implements BasicPlayerListener {
 		} else if( "replay".equals( action ) ) {
 			handleActionReplay();
 		}
+	}
+
+	// Callback when global data changes.
+	public void globalDataChanged() {
+		assert( templateView instanceof GlobalTemplateView );
+		saveSession();
 	}
 
 	//====================================================================
@@ -373,17 +370,19 @@ public class MainController implements BasicPlayerListener {
 		setTemplateView( mode );
 
 		// Disable seek slider and stop during parsing/coding, since manipulating the
-		// audio position would allow play-back to get out of sync with parsing/coding.
+		// audio position would allow playback to get out of sync with parsing/coding.
 		boolean allowSeek = (mode == Mode.PLAYBACK || mode == Mode.GLOBALS);
 
 		playerView.getSliderSeek().setEnabled( allowSeek && filenameAudio != null );
 		playerView.getButtonStop().setEnabled( allowSeek && filenameAudio != null );
-
-		// NOTE - Carl - Enable/disable feature for these buttons (play, pause, replay, stop)
-		// has not been requested yet.
 		playerView.getButtonPlay().setEnabled( filenameAudio != null );
 		playerView.getButtonPause().setEnabled( filenameAudio != null );
 		playerView.getButtonReplay().setEnabled( mode == Mode.PARSE || mode == Mode.CODE );
+
+		// If entering GLOBALS mode, ping callback so we'll save the file.
+		if( mode == Mode.GLOBALS ) {
+			globalDataChanged();
+		}
 	}
 
 	// Synchronize both the GUI (slider, time display) and current utterance index with the
@@ -840,8 +839,6 @@ public class MainController implements BasicPlayerListener {
 	private synchronized void saveIfNeeded() {
 		if( isParsingUtterance() ) {
 			parseEnd();
-		} else if( templateView instanceof GlobalTemplateView ) {
-			saveSession(); // Assume we need to save.  IMPROVE - Save only when data changes.
 		}
 	}
 
@@ -1000,7 +997,7 @@ public class MainController implements BasicPlayerListener {
 			templateView 	= templateUI.getTemplateView();
 			break;
 		case GLOBALS:
-			templateUI 		= new GlobalTemplateUiService();
+			templateUI 		= new GlobalTemplateUiService( this );
 			templateView 	= templateUI.getTemplateView();
 			break;
 		default:
@@ -1232,8 +1229,7 @@ public class MainController implements BasicPlayerListener {
 	public void setController( BasicController controller ) {}
 
 	public void progress( int bytesread, long microseconds, byte[] pcmdata,
-						  Map< Object, Object > properties )
-	{
+						  Map< Object, Object > properties ) {
 		progressReported = true; // Will be handled in main thread's run().
 	}
 
@@ -1286,7 +1282,7 @@ public class MainController implements BasicPlayerListener {
 				playerStatus = "UNKNOWN";
 			}
 
-			// If status has changed, and no conceptually later event has already changed the status,
+			// If status has changed, and no later-ordered event has already changed the status,
 			// apply this event's changes.
 			if( !playerStatus.equals( oldStatus ) ) {
 				if( event.getIndex() >= statusChangeEventIndex ) {
