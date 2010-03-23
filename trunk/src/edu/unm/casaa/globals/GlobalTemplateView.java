@@ -150,7 +150,7 @@ public class GlobalTemplateView extends JPanel {
 		return textScrollPane;
 	}
 
-	private JTextArea getTextArea() {
+	public JTextArea getTextArea() {
 		if( textArea == null ) {
 			textArea = new JTextArea( TEXT_ROWS, TEXT_COLUMNS );
 			textArea.setLineWrap( true );
