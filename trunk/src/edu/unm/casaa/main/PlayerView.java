@@ -21,6 +21,7 @@ package edu.unm.casaa.main;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.event.KeyEvent;
 import java.util.Hashtable;
 
 import javax.swing.BorderFactory;
@@ -157,22 +158,22 @@ public class PlayerView extends JFrame {
 	/**
 	 * Returns a new player button using given action and optional key binding.
 	 * @param actionCommand
-	 * @param keyBinding - See KeyStroke docs for string format.
+	 * @param keyBinding - if non-null, assign given key stroke as key binding.
 	 * @return a JButton used to start playing the audio file
 	 */
-	private JButton newPlayerButton( String actionCommand, String keyBinding ) {
+	private JButton newPlayerButton( String actionCommand, KeyStroke keyBinding ) {
 		JButton button = new JButton( actionTable.get( actionCommand ) );
 
 		button.setPreferredSize( getDimPlayerButtonSize() );
-		if( !"".equals( keyBinding ) ) {
-			button.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( KeyStroke.getKeyStroke( keyBinding ), "pressed" );
+		if( keyBinding != null ) {
+			button.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( keyBinding, "pressed" );
 			button.getActionMap().put( "pressed", button.getAction() );
 		}
 		return button;
 	}
 
 	private JButton newPlayerButton( String actionCommand ) {
-		return newPlayerButton( actionCommand, "" );
+		return newPlayerButton( actionCommand, null );
 	}
 
 	/**
@@ -181,7 +182,7 @@ public class PlayerView extends JFrame {
 	 */
 	public JButton getButtonPlay() {
 		if( buttonPlay == null ) {
-			buttonPlay = newPlayerButton( "play" );
+			buttonPlay = newPlayerButton( "play", KeyStroke.getKeyStroke( KeyEvent.VK_P, 0 ) );
 		}
 		return buttonPlay;
 	}
@@ -193,7 +194,7 @@ public class PlayerView extends JFrame {
 	 */
 	public JButton getButtonStop() {
 		if( buttonStop == null ) {
-			buttonStop = newPlayerButton( "stop" );
+			buttonStop = newPlayerButton( "stop", KeyStroke.getKeyStroke( KeyEvent.VK_S, 0 ) );
 		}
 		return buttonStop;
 	}
@@ -205,7 +206,7 @@ public class PlayerView extends JFrame {
 	 */
 	public JButton getButtonPause(){
 		if( buttonPause == null ){
-			buttonPause = newPlayerButton( "pause" );
+			buttonPause = newPlayerButton( "pause", KeyStroke.getKeyStroke( KeyEvent.VK_R, 0 ) );
 		}
 		return buttonPause;
 	}

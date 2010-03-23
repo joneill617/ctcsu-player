@@ -31,12 +31,12 @@ public class MiscTemplateUiService extends TemplateUiService{
 	
 	private MainController control 	= null;
 	private MiscTemplateView view 	= null;
-	
+
 	public MiscTemplateUiService( MainController control ) {
 		this.control = control;
 		init();
 	}
-	
+
 	private void init() {
 		view = new MiscTemplateView();
 		

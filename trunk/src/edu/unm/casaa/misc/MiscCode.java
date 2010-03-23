@@ -18,6 +18,8 @@ This source code file is part of the CASAA Treatment Coding System Utility
 
 package edu.unm.casaa.misc;
 
+// NOTE: MiscCode values are not all in contiguous order.  This is by design (i.e. at client's request).
+
 public enum MiscCode{ 
 	// Uninitialized code.
 	INVALID( "INVALID", 0 ),
@@ -32,25 +34,20 @@ public enum MiscCode{
 	FA( "FA", 7 ),
 	FI( "FI", 8 ),
 	GI( "GI", 9 ),
-	CQ_MINUS( "CQ-", 10 ),
 	CQ_NEUTRAL( "CQ0", 11 ),
-	CQ_PLUS( "CQ+", 12 ),
-	OQ_MINUS( "OQ-", 13 ),
 	OQ_NEUTRAL( "OQ0", 14 ),
-	OQ_PLUS( "OQ+", 15 ),
 	RCP( "RCP", 16 ),
 	RCW( "RCW", 17 ),
 	SR_MINUS( "SR-", 18 ),
 	SR_NEUTRAL( "SR0", 19 ),
 	SR_PLUS( "SR+", 20 ),
-	SR_PLUS_MINUS( "SR+/-", 51 ), // NOTE - Value out of order, due to client request.
+	SR_PLUS_MINUS( "SR+/-", 51 ),
 	CR_MINUS( "CR-", 21 ),
 	CR_NEUTRAL( "CR0", 22 ),
 	CR_PLUS( "CR+", 23 ),
-	CR_PLUS_MINUS( "CR+/-", 52 ), // NOTE - Value out of order, due to client request.
+	CR_PLUS_MINUS( "CR+/-", 52 ),
 	RF( "RF", 24 ),
 	SU( "SU", 25 ),
-	ST( "ST", 26 ),
 	WA( "WA", 27 ),
 
 	// Client codes.
