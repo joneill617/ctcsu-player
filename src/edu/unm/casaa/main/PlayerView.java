@@ -59,7 +59,7 @@ public class PlayerView extends JFrame {
 	//====================================================================
 
 	//Window Constants and Variables
-	private String strWindowTitle = "CTCSU | The CASAA Treatment Coding System Utility | v0.9.5";
+	private String strWindowTitle = "CTCSU | The CASAA Treatment Coding System Utility | v" + Version.versionString();
 	private String strNativeLF					= null;
 	private static final int X_LOCATION			= 100;
 	private static final int Y_LOCATION			= 5;
