@@ -73,9 +73,9 @@ public class AboutWindowView extends JFrame {
 			textPane = new JEditorPane();
 			textPane.setText(
 					"CTCSU | The CASAA Treatment Coding System Utility\n\n" +
-					"Version 0.9.5\n\n" +
+					"Version " + Version.versionString() + "\n\n" +
 					"Copyright (C) 2009\n\n" +
-					"Actively under development by:\n" +
+					"Original developer:\n" +
 					"Alex Manuel - amanuel@unm.edu\n" +
 					"http://www.cs.unm.edu/~amanuel/casaa/\n\n\n" +
 					"This application is being developed to assist\n" +
