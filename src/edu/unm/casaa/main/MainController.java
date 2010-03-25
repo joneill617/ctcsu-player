@@ -75,15 +75,15 @@ public class MainController implements BasicPlayerListener {
 
 	// GUI
 
-	private ActionTable			actionTable			= new ActionTable(); // Communication between GUI and MainController.
+	private ActionTable			actionTable				= new ActionTable(); // Communication between GUI and MainController.
 
-	private PlayerView 			playerView 			= null;
-	private JPanel 				templateView		= null;
-	private TemplateUiService 	templateUI			= null;
+	private PlayerView 			playerView 				= null;
+	private JPanel 				templateView			= null;
+	private TemplateUiService 	templateUI				= null;
 
-	private String 				filenameParse		= null;
-	private String 				filenameMisc		= null;
-	private String 				filenameGlobals		= null;
+	private String 				filenameParse			= null;
+	private String 				filenameMisc			= null;
+	private String 				filenameGlobals			= null;
 
 	// Audio Player back-end
 	private BasicPlayer 		basicPlayer				= new BasicPlayer();
