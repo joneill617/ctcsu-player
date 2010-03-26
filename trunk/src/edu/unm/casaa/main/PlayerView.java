@@ -181,7 +181,7 @@ public class PlayerView extends JFrame {
 	 */
 	public JButton getButtonPlay() {
 		if( buttonPlay == null ) {
-			buttonPlay = newPlayerButton( "play", KeyStroke.getKeyStroke( KeyEvent.VK_P, 0 ) );
+			buttonPlay = newPlayerButton( "play" );
 		}
 		return buttonPlay;
 	}
@@ -205,7 +205,7 @@ public class PlayerView extends JFrame {
 	 */
 	public JButton getButtonPause(){
 		if( buttonPause == null ){
-			buttonPause = newPlayerButton( "pause", KeyStroke.getKeyStroke( KeyEvent.VK_R, 0 ) );
+			buttonPause = newPlayerButton( "pause", KeyStroke.getKeyStroke( KeyEvent.VK_P, 0 ) );
 		}
 		return buttonPause;
 	}
@@ -217,7 +217,7 @@ public class PlayerView extends JFrame {
 	 */
 	public JButton getButtonReplay(){
 		if( buttonReplay == null ){
-			buttonReplay = newPlayerButton( "replay" );
+			buttonReplay = newPlayerButton( "replay", KeyStroke.getKeyStroke( KeyEvent.VK_R, 0 ) );
 		}
 		return buttonReplay;
 	}
