@@ -574,6 +574,9 @@ public class BasicPlayer implements BasicController, Runnable
                 // the CASAA Treatment Coding System Utility.
                 //log.info("pausePlayback() completed");
                 notifyEvent(BasicPlayerEvent.PAUSED, getEncodedStreamPosition(), -1, null);
+                //====================================================================
+                // Drain line to reduce audio glitch when resuming playback.  CASAA, March 2010.
+            	m_line.drain();
             }
         }
     }
