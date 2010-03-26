@@ -304,6 +304,8 @@ public class MainController implements BasicPlayerListener {
 		long	bytes	= (long) (t * basicPlayer.getEncodedLength());
 
 		try {
+			// Stop before seeking, to minimize lag.
+			basicPlayer.stop();
 			basicPlayer.seek( bytes );
 		} catch( BasicPlayerException e ) {
 			displayPlayerException( e );
@@ -597,6 +599,9 @@ public class MainController implements BasicPlayerListener {
 		} else if( basicPlayer.getStatus() == BasicPlayer.PAUSED ) {
 			skipWaitingForCode();
 			playerResume();
+		} else if( basicPlayer.getStatus() == BasicPlayer.STOPPED ||
+				   basicPlayer.getStatus() == BasicPlayer.OPENED ) {
+			playerPlay();
 		}
 	}
 
@@ -1010,12 +1015,25 @@ public class MainController implements BasicPlayerListener {
 	//====================================================================
 	// Parser Template Handlers
 
+	private int streamPosition() {
+		int position = basicPlayer.getEncodedStreamPosition();
+
+		// If playback has reached end of file, position will be -1.
+		// In that case, use length - 1.
+		if( position < 0 ) {
+			int length = basicPlayer.getEncodedLength() - 1;
+
+			position = (length > 0) ? (length - 1) : 0;
+		}
+		return position;
+	}
+
 	public synchronized void parseStart() {
 		if( isParsingUtterance() ) {
 			parseEnd();
 		}
 		// Record start data.
-		int 	startPosition	= basicPlayer.getEncodedStreamPosition();
+		int 	startPosition	= streamPosition();
 		String 	startString		= TimeCode.toString( startPosition / basicPlayer.getBytesPerSecond() );
 
 		// Create a new utterance.
@@ -1030,19 +1048,17 @@ public class MainController implements BasicPlayerListener {
 
 	// End parse, reading bytes position from basicPlayer.
 	public synchronized void parseEnd() {
-		parseEnd( basicPlayer.getEncodedStreamPosition() );
+		parseEnd( streamPosition() );
 	}
 
 	// End parse at given byte position.
 	public synchronized void parseEnd( int endBytes ) {
 		assert( endBytes >= 0 );
 
-		// Record end data to current utterance.
+		// Record end data to current utterance (if we have one).
 		Utterance 	current 	= getCurrentUtterance();
 
-		if( current == null ) {
-			showParsingErrorDialog();
-		} else {
+		if( current != null ) {
 			String	endString	= TimeCode.toString( endBytes / basicPlayer.getBytesPerSecond() );
 
 			current.setEndTime( endString );
@@ -1073,18 +1089,20 @@ public class MainController implements BasicPlayerListener {
 		utterance.setMiscCode( miscCode );
 		saveSession();
 
-		// Go to next utterance (which may be null).
-		currentUtterance++;
-		utterance = getCurrentUtterance();
-
-		// If paused, waiting for a code, seek to start of new current utterance and resume playback.
+		// If paused, waiting for a code, seek to start of next utterance and resume playback.
 		if( waitingForCode ) {
+			currentUtterance++;
+			utterance = getCurrentUtterance();
+
+			/* TMP - Carl - Disable this seek, as it exacerbates the audio glitch on resume.
 			if( utterance == null ) {
 				playerSeek( getLastUtterance().getEndBytes() ); // We'll always have a last utterance at this point, else the above check for utterance == null would cause us to exit.
 			} else {
 				playerSeek( utterance.getStartBytes() );
 			}
+			*/
 			playerResume();
+
 			waitingForCode = false;
 		}
 		updateUtteranceDisplays();
@@ -1102,7 +1120,7 @@ public class MainController implements BasicPlayerListener {
 		if( getCurrentUtterance() == null ) {
 			playerSeek( 0 );
 		} else {
-			playerSeek( getCurrentUtterance().getEndBytes() ); // Seek to end of current parsed utterance, so we're ready to start next (i.e. to replace the one we just removed).
+			playerSeek( getCurrentUtterance().getStartBytes() ); // Seek to start of current parsed utterance.
 		}
 
 		updateUtteranceDisplays();
@@ -1199,7 +1217,13 @@ public class MainController implements BasicPlayerListener {
 					playerSeek( getLastUtterance().getEndBytes() );
 				}
 			} else {
-				playerSeek( getCurrentUtterance().getStartBytes() );
+				// Special case - if we haven't coded any utterances yet, always seek to zero.
+				// Else seek to start of first uncoded utterance.
+				if( currentUtterance == 0 ) {
+					playerSeek( 0 );
+				} else {
+					playerSeek( getCurrentUtterance().getStartBytes() );
+				}
 			}
 		}
 		else if( templateView == null ) {
