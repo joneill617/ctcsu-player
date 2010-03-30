@@ -32,6 +32,9 @@ public interface Utterance {
 	public boolean isCoded();
 	public MiscCode getMiscCode();
 	
+	// Strip end data, so isParsed() will return false.  Preserves start data.
+	public void	stripEndData();
+
 	// Enum and start time will be initialized by derived class constructor.
 	public void	setEnum(int index);
 	public void setEndTime(String end);	
@@ -39,10 +42,9 @@ public interface Utterance {
 	public void setMiscCode(int code);
 	public void setMiscCode(MiscCode code);
 	
-	//output order should be tab-delimited:
-	//order startCode endCode [codeCode codeString] "\r\n"
-	//the section in [] is only if utterance has been coded
+	// Output order should be tab-delimited:
+	// order startCode endCode [codeCode codeString] "\r\n"
+	// The section in [] is written only if utterance has been coded.
 	public String writeParsed();
 	public String writeCoded();
-	
 }

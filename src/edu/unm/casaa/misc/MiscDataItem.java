@@ -28,12 +28,12 @@ import edu.unm.casaa.utterance.Utterance;
  */
 public class MiscDataItem implements Utterance {
 
-	private int orderEnum		= -1;
-	private String startTime	= null;
-	private int startBytes		= -1;
-	private String endTime		= null;
-	private int endBytes		= -1;
-	private MiscCode miscCode	= MiscCode.INVALID;
+	private int 		orderEnum	= -1;
+	private String 		startTime	= null;
+	private int 		startBytes	= -1;
+	private String 		endTime		= null;
+	private int 		endBytes	= -1;
+	private MiscCode 	miscCode	= MiscCode.INVALID;
 	
 	/**
 	 * Constructor requires the order from the data queue,
@@ -119,7 +119,15 @@ public class MiscDataItem implements Utterance {
 	public boolean isCoded() {
 		return miscCode != MiscCode.INVALID;
 	}
-	
+
+	/**
+	 * Strip end data.
+	 */
+	public void	stripEndData() {
+		endBytes 	= -1;
+		endTime		= null;
+	}
+
 	/**
 	 * Returns the MISC code for this utterance.
 	 * Returns MiscCode.INVALID if value wasn't set.
@@ -176,14 +184,13 @@ public class MiscDataItem implements Utterance {
 	 * @return a string representation of this utterance
 	 */
 	public String toString(){
-		if( miscCode == MiscCode.INVALID ){
+		if( isCoded() ) {
+			return writeCoded();
+		} else {
 			return writeParsed();
 		}
-		else{
-			return writeCoded();
-		}
 	}
-	
+
 	public String writeCoded(){
 		return ("" + orderEnum 	+ "\t" +
 					startTime 	+ "\t" +
