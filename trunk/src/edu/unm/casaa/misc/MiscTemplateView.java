@@ -354,6 +354,10 @@ public class MiscTemplateView extends JPanel {
 		getTextFieldStartTime().setText(utteranceString);
 	}
 
+	public void setTextFieldStartTimeColor(Color color){
+		getTextFieldStartTime().setForeground(color);
+	}
+
 	private JLabel getLabelStart(){
 		if( labelStart == null ){
 			labelStart = new JLabel("Starting TimeCode");

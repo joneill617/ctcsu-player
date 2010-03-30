@@ -116,7 +116,18 @@ public class UtteranceList {
 			writer = new PrintWriter( new FileWriter( file, false ) );
 			writer.println( "Audio File:\t" + filenameAudio );
 			for( int i = 0; i < list.size(); i++ ) {
-				writer.println( list.get( i ).toString() );
+				Utterance utterance = list.get( i );
+
+				if( utterance.isCoded() ) {
+					writer.println( utterance.writeCoded() );
+				} else if( utterance.isParsed() ) {
+					writer.println( utterance.writeParsed() );
+				} else {
+					// If not coded or parsed, utterance is incomplete.  This should
+					// only happen if we're on the last utterance in list.
+					assert( i + 1 == list.size() );
+					break;
+				}
 			}
 		} catch( IOException e ) {
 			e.printStackTrace();

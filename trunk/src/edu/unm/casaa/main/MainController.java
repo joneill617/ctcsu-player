@@ -18,6 +18,7 @@ This source code file is part of the CASAA Treatment Coding System Utility
 
 package edu.unm.casaa.main;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -358,14 +359,6 @@ public class MainController implements BasicPlayerListener {
 		handleSliderPan();
 	}
 
-	// If player is paused, waiting for a code, go to next utterance and clear waitingForCode flag.
-	private synchronized void skipWaitingForCode() {
-		if( waitingForCode ) {
-			currentUtterance++;
-			updateUtteranceDisplays();
-		}
-	}
-
 	// Switch modes.  Hides/shows relevant UI.
 	// PRE: filenameAudio is set.
 	private void setMode( Mode mode ) {
@@ -404,22 +397,20 @@ public class MainController implements BasicPlayerListener {
 				// Pause on uncoded condition.
 				assert( current != null );
 				if( pauseOnUncoded && !current.isCoded() && 
-						(basicPlayer.getStatus() == BasicPlayer.PLAYING) ) {
+					(basicPlayer.getStatus() == BasicPlayer.PLAYING) ) {
 					playerPause();
 					waitingForCode = true;
 				}
 	
-				// Move to next utterance.  NOTE: If pauseOnUncoded is disabled, user can leave
-				// utterances uncoded and move on to later utterances.
+				// Move to next utterance.  IMPROVE: If pauseOnUncoded is disabled, it is possible for
+				// user to leave utterances uncoded and move on to later utterances.  It would be better
+				// to always use pauseOnUncoded behavior.
 				if( current.isCoded() || !pauseOnUncoded ) {
 					currentUtterance++;
-					if( getCurrentUtterance() == null ) {
-						playerPause(); // End of parsed utterances.
-					}
-					updateUtteranceDisplays();
 				}
 			}
 		}
+		updateUtteranceDisplays();
 		progressReported = false; // Clear flag once (current) progress report is applied.
 	}
 
@@ -579,7 +570,9 @@ public class MainController implements BasicPlayerListener {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Player Handlers
 	private synchronized void handleActionPlay() {
-		skipWaitingForCode();
+		if( waitingForCode ) {
+			return; // Ignore play button when waiting for code.
+		}
 		if( basicPlayer.getStatus() == BasicPlayer.PAUSED ) {
 			playerResume();
 		} else {
@@ -594,10 +587,12 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleActionPause() {
+		if( waitingForCode ) {
+			return; // Ignore pause button when waiting for code.
+		}
 		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ) {
 			playerPause();
 		} else if( basicPlayer.getStatus() == BasicPlayer.PAUSED ) {
-			skipWaitingForCode();
 			playerResume();
 		} else if( basicPlayer.getStatus() == BasicPlayer.STOPPED ||
 				   basicPlayer.getStatus() == BasicPlayer.OPENED ) {
@@ -1015,6 +1010,7 @@ public class MainController implements BasicPlayerListener {
 	//====================================================================
 	// Parser Template Handlers
 
+	// Get current playback position, in bytes.
 	private int streamPosition() {
 		int position = basicPlayer.getEncodedStreamPosition();
 
@@ -1028,6 +1024,7 @@ public class MainController implements BasicPlayerListener {
 		return position;
 	}
 
+	// Start parse.
 	public synchronized void parseStart() {
 		if( isParsingUtterance() ) {
 			parseEnd();
@@ -1075,35 +1072,31 @@ public class MainController implements BasicPlayerListener {
 
 		assert( miscCode != MiscCode.INVALID );
 
-		// TODO - If between utterances, should we ignore code?  Should buttons be disabled?
-		// Should we assign code to current utterance (which will not have started playing yet), or
-		// previous (which has already been coded)?
-
-		// Assign code to current utterance.
+		// Assign code to current utterance, if one exists.
 		Utterance utterance = getCurrentUtterance();
 
 		if( utterance == null ) {
 			return; // No current utterance.
 		}
 
+		// If playback position is not within current utterance (i.e. it is between utterances),
+		// ignore code.  NOTE: We don't test end bytes because a) when waitingForCode, we will be
+		// past end of current utterance and b) when not waitingForCode, we advance utterance index
+		// as soon as we pass end of one utterance.
+		int playbackPosition = streamPosition();
+
+		if( playbackPosition < utterance.getStartBytes() ) {
+			return;
+		}
+
 		utterance.setMiscCode( miscCode );
 		saveSession();
 
-		// If paused, waiting for a code, seek to start of next utterance and resume playback.
+		// If paused, waiting for a code, advance utterance index and resume playback.
 		if( waitingForCode ) {
 			currentUtterance++;
-			utterance = getCurrentUtterance();
-
-			/* TMP - Carl - Disable this seek, as it exacerbates the audio glitch on resume.
-			if( utterance == null ) {
-				playerSeek( getLastUtterance().getEndBytes() ); // We'll always have a last utterance at this point, else the above check for utterance == null would cause us to exit.
-			} else {
-				playerSeek( utterance.getStartBytes() );
-			}
-			*/
-			playerResume();
-
 			waitingForCode = false;
+			playerResume();
 		}
 		updateUtteranceDisplays();
 	}
@@ -1117,10 +1110,15 @@ public class MainController implements BasicPlayerListener {
 			currentUtterance = 0;
 		}
 
-		if( getCurrentUtterance() == null ) {
+		Utterance utterance = getCurrentUtterance();
+
+		if( utterance == null ) {
 			playerSeek( 0 );
 		} else {
 			playerSeek( getCurrentUtterance().getStartBytes() ); // Seek to start of current parsed utterance.
+
+			// Strip end data from current utterance, so it will register as not parsed.
+			utterance.stripEndData();
 		}
 
 		updateUtteranceDisplays();
@@ -1155,10 +1153,6 @@ public class MainController implements BasicPlayerListener {
 			Utterance 			next 	= getNextUtterance();
 			Utterance 			prev	= getPreviousUtterance();
 
-			// TODO: Visual indication when in between utterances (i.e. past end of current utterance,
-			// but not yet at start of next utterance).  We want to prevent the user from accidentally
-			// changing the code on an utterance that has ended.
-
 			if( next == null ) {
 				view.setTextFieldNext("");
 			} else {
@@ -1184,6 +1178,13 @@ public class MainController implements BasicPlayerListener {
 				}
 				view.setTextFieldStartTime(current.getStartTime());
 				view.setTextFieldEndTime(current.getEndTime());
+
+				// Visual indication when in between utterances.
+				if( streamPosition() < current.getStartBytes() ) {
+					view.setTextFieldStartTimeColor( Color.RED );
+				} else {
+					view.setTextFieldStartTimeColor( Color.BLACK );
+				}
 			}
 		}
 	}
