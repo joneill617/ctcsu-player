@@ -45,7 +45,7 @@ public class GlobalTemplateUiService extends TemplateUiService {
 			JSlider slider = view.getSlider( g );
 
 			slider.addChangeListener( new GlobalTemplateSliderListener( g ) );
-			data.setValue( g, slider.getValue() ); // Initialize data to slider value.
+			slider.setValue( data.getValue( g ) ); // Initialize slider to data value.
 		}
 
 		// Add document listener to text area, so we can save file when text data changes (as we do with sliders).
