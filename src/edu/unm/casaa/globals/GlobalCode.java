@@ -22,7 +22,7 @@ public enum GlobalCode {
 	ACCEPTANCE( "Acceptance", 0 ),
 	EMPATHY( "Empathy", 1 ),
 	DIRECTION( "Direction", 2 ),
-	AUTONOMY( "Autonomy", 3 ),
+	AUTONOMY( "Autonomy Support", 3 ),
 	COLLABORATION( "Collaboration", 4 ),
 	EVOCATION( "Evocation", 5 ),
 	SELF_EXPLORATION( "Self Exploration", 6 );
@@ -33,5 +33,16 @@ public enum GlobalCode {
 	GlobalCode( String label, int value ) {
 		this.label = label;
 		this.value = value;
+	}
+
+	/**
+	 * Get initial (default) value for this code.
+	 */
+	public int defaultValue() {
+		if( this == SELF_EXPLORATION ) {
+			return 1;
+		} else {
+			return 3;
+		}
 	}
 };

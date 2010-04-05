@@ -36,9 +36,9 @@ public class GlobalDataModel {
 	private HashMap< Integer, Integer > valueMap = new HashMap< Integer, Integer >();
 
 	public GlobalDataModel() {
-		// Initialize to zero.
+		// Initialize to default values as defined by GlobalCode.
 		for( GlobalCode g : GlobalCode.values() ) {
-			valueMap.put( g.value, 0 );
+			valueMap.put( g.value, g.defaultValue() );
 		}
 	}
 
