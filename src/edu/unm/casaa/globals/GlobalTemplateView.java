@@ -19,7 +19,6 @@ This source code file is part of the CASAA Treatment Coding System Utility
 package edu.unm.casaa.globals;
 
 import java.awt.Dimension;
-import java.awt.Rectangle;
 import java.util.HashMap;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -138,13 +137,13 @@ public class GlobalTemplateView extends JPanel {
 			panelRightSliders = new JPanel();
 			panelRightSliders.setLayout( new BoxLayout( panelRightSliders, BoxLayout.Y_AXIS ) );
 			panelRightSliders.add( getSlider( GlobalCode.COLLABORATION ) );
+			panelRightSliders.add( getSlider( GlobalCode.EVOCATION ) );
 
 			// Use preferred size of one already created slider as spacing in layout.
 			Dimension	size	= getSlider( GlobalCode.COLLABORATION ).getPreferredSize();
 
 			panelRightSliders.add( Box.createRigidArea( size ) ); // Spacing.
 			
-			panelRightSliders.add( getSlider( GlobalCode.EVOCATION ) );
 			panelRightSliders.add( getSlider( GlobalCode.SELF_EXPLORATION ) );
 		}
 		return panelRightSliders;
