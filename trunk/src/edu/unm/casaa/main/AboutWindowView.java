@@ -29,12 +29,9 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 public class AboutWindowView extends JFrame {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	
-	//GUI Components
+	// GUI Components.
 	private JFrame frameParentWindow		= null;
 	private ImageIcon iconParentWindow		= null;
 	private JEditorPane textPane 			= null;
@@ -72,7 +69,7 @@ public class AboutWindowView extends JFrame {
 		if( textPane == null ){
 			textPane = new JEditorPane();
 			textPane.setText(
-					"CTCSU | The CASAA Treatment Coding System Utility\n\n" +
+					"CACTI | The CASAA Application for Coding Treatment Interactions\n\n" +
 					"Version " + Version.versionString() + "\n\n" +
 					"Copyright (C) 2009\n\n" +
 					"Original developer:\n" +
