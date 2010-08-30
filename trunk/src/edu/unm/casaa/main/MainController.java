@@ -87,7 +87,7 @@ public class MainController implements BasicPlayerListener {
 	private String 				filenameGlobals			= null;
 
 	// Audio Player back-end
-	private BasicPlayer 		basicPlayer				= new BasicPlayer();
+	private BasicPlayer 		player					= new BasicPlayer();
 	private String 				playerStatus 			= "";
 
 	private String 				filenameAudio			= null;
@@ -113,7 +113,7 @@ public class MainController implements BasicPlayerListener {
 	public MainController() {
 		buildActionTable();
 		playerView = new PlayerView( actionTable );
-		basicPlayer.addBasicPlayerListener( this );
+		player.addBasicPlayerListener( this );
 		registerPlayerViewListeners();
 		// Handle window closing events.
 		playerView.getFrameParentWindow().addWindowListener( new WindowAdapter() {
@@ -280,7 +280,7 @@ public class MainController implements BasicPlayerListener {
 	// Seek player as close as possible to requested bytes.  Updates slider and time display.
 	private synchronized void playerSeek( int bytes ) {
 		try {
-			basicPlayer.seek( bytes );
+			player.seek( bytes );
 		} catch( BasicPlayerException e ) {
 			showAudioFileNotSeekableDialog();
 			displayPlayerException( e );
@@ -298,16 +298,16 @@ public class MainController implements BasicPlayerListener {
 	// Seek player to position defined by slider.  Updates time display, but not slider
 	// (as that would create a feedback cycle).
 	private synchronized void playerSeekToSlider() {
-		if( basicPlayer.getStatus() == BasicPlayer.UNKNOWN ) {
+		if( player.getStatus() == BasicPlayer.UNKNOWN ) {
 			return;
 		}
 		double 	t 		= playerView.getSliderSeek().getValue() / (double) PlayerView.SEEK_MAX_VAL;
-		long	bytes	= (long) (t * basicPlayer.getEncodedLength());
+		long	bytes	= (long) (t * player.getEncodedLength());
 
 		try {
 			// Stop before seeking, to minimize lag.
-			basicPlayer.stop();
-			basicPlayer.seek( bytes );
+			player.stop();
+			player.seek( bytes );
 		} catch( BasicPlayerException e ) {
 			displayPlayerException( e );
 		}
@@ -323,7 +323,7 @@ public class MainController implements BasicPlayerListener {
 	// Pause/resume/stop/play player.  These wrappers are here to clean up exception handling.
 	private synchronized void playerPause() {
 		try {
-			basicPlayer.pause();
+			player.pause();
 		} catch( BasicPlayerException e ) {
 			displayPlayerException( e );
 		}
@@ -331,7 +331,7 @@ public class MainController implements BasicPlayerListener {
 
 	private synchronized void playerStop() {
 		try {
-			basicPlayer.stop();
+			player.stop();
 		} catch( BasicPlayerException e ) {
 			displayPlayerException( e );
 		}
@@ -341,7 +341,7 @@ public class MainController implements BasicPlayerListener {
 
 	private synchronized void playerResume() {
 		try {
-			basicPlayer.resume();
+			player.resume();
 		} catch( BasicPlayerException e ) {
 			displayPlayerException( e );
 		}
@@ -351,7 +351,7 @@ public class MainController implements BasicPlayerListener {
 
 	private synchronized void playerPlay() {
 		try {
-			basicPlayer.play();
+			player.play();
 		} catch( BasicPlayerException e ) {
 			displayPlayerException( e );
 		}
@@ -390,14 +390,14 @@ public class MainController implements BasicPlayerListener {
 		if( templateView instanceof MiscTemplateView ) {
 			Utterance	current	= getCurrentUtterance();
 			Utterance	next	= getNextUtterance();
-			int 		bytes 	= basicPlayer.getEncodedStreamPosition();
+			int 		bytes 	= player.getEncodedStreamPosition();
 	
 			if( (current != null && bytes > current.getEndBytes()) ||
 				(next != null && bytes >= next.getStartBytes()) ) {
 				// Pause on uncoded condition.
 				assert( current != null );
 				if( pauseOnUncoded && !current.isCoded() && 
-					(basicPlayer.getStatus() == BasicPlayer.PLAYING) ) {
+					(player.getStatus() == BasicPlayer.PLAYING) ) {
 					playerPause();
 					waitingForCode = true;
 				}
@@ -417,7 +417,7 @@ public class MainController implements BasicPlayerListener {
 	// Handle end of media (i.e. audio playback reached end).
 	private synchronized void applyEOM() {
 		if( isParsingUtterance() ) {
-			// Specify end bytes manually from record, as basicPlayer will now report -1 for
+			// Specify end bytes manually from record, as player will now report -1 for
 			// encoded stream position.
 			parseEnd( endOfMediaPosition );
 		}
@@ -443,7 +443,7 @@ public class MainController implements BasicPlayerListener {
 	private boolean loadAudioFile( String filename ) {
 		filenameAudio	= filename;
 		try {
-			basicPlayer.open( new File( filenameAudio ) );
+			player.open( new File( filenameAudio ) );
 			updateTimeDisplay();
 			updateSeekSliderDisplay();
 			return true;
@@ -573,7 +573,7 @@ public class MainController implements BasicPlayerListener {
 		if( waitingForCode ) {
 			return; // Ignore play button when waiting for code.
 		}
-		if( basicPlayer.getStatus() == BasicPlayer.PAUSED ) {
+		if( player.getStatus() == BasicPlayer.PAUSED ) {
 			playerResume();
 		} else {
 			playerPlay();
@@ -590,12 +590,12 @@ public class MainController implements BasicPlayerListener {
 		if( waitingForCode ) {
 			return; // Ignore pause button when waiting for code.
 		}
-		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ) {
+		if( player.getStatus() == BasicPlayer.PLAYING ) {
 			playerPause();
-		} else if( basicPlayer.getStatus() == BasicPlayer.PAUSED ) {
+		} else if( player.getStatus() == BasicPlayer.PAUSED ) {
 			playerResume();
-		} else if( basicPlayer.getStatus() == BasicPlayer.STOPPED ||
-				   basicPlayer.getStatus() == BasicPlayer.OPENED ) {
+		} else if( player.getStatus() == BasicPlayer.STOPPED ||
+				   player.getStatus() == BasicPlayer.OPENED ) {
 			playerPlay();
 		}
 	}
@@ -642,8 +642,8 @@ public class MainController implements BasicPlayerListener {
 			return;
 		}
 
-		int		position	= basicPlayer.getEncodedStreamPosition();
-		int		length		= basicPlayer.getEncodedLength();
+		int		position	= player.getEncodedStreamPosition();
+		int		length		= player.getEncodedLength();
 		double 	t			= 0;
 		
 		if( length > 0 ) {
@@ -661,9 +661,9 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleSliderPan() {
-		if( basicPlayer.hasPanControl() ) {
+		if( player.hasPanControl() ) {
 			try {
-				basicPlayer.setPan( playerView.getSliderPan().getValue() / 10.0 );
+				player.setPan( playerView.getSliderPan().getValue() / 10.0 );
 			} catch( BasicPlayerException e ) {
 				displayPlayerException( e );
 			}
@@ -672,9 +672,9 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleSliderGain() {
-		if( basicPlayer.hasGainControl() ) {
+		if( player.hasGainControl() ) {
 			try {
-				basicPlayer.setGain( playerView.getSliderGain().getValue() / 100.0 );
+				player.setGain( playerView.getSliderGain().getValue() / 100.0 );
 			} catch( BasicPlayerException e ) {
 				displayPlayerException( e );
 			}
@@ -685,7 +685,7 @@ public class MainController implements BasicPlayerListener {
 	// Menu Handlers
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleNewParseFile() {
-		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ) {
+		if( player.getStatus() == BasicPlayer.PLAYING ) {
 			playerPause();
 		}
 		saveIfNeeded();
@@ -709,7 +709,7 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleNewCodeFile() {
-		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ) {
+		if( player.getStatus() == BasicPlayer.PLAYING ) {
 			playerPause();
 		}
 		saveIfNeeded();
@@ -741,7 +741,7 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleNewGlobalRatings(){
-		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ) {
+		if( player.getStatus() == BasicPlayer.PLAYING ) {
 			playerPause();
 		}
 		saveIfNeeded();
@@ -765,7 +765,7 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleLoadParseFile(){
-		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ) {
+		if( player.getStatus() == BasicPlayer.PLAYING ) {
 			playerPause();
 		}
 		saveIfNeeded();
@@ -794,7 +794,7 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleLoadCodeFile(){
-		if( basicPlayer.getStatus() == BasicPlayer.PLAYING ) {
+		if( player.getStatus() == BasicPlayer.PLAYING ) {
 			playerPause();
 		}
 		saveIfNeeded();
@@ -950,10 +950,10 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void updateTimeDisplay() {
-		if( basicPlayer.getBytesPerSecond() != 0 ) {
+		if( player.getBytesPerSecond() != 0 ) {
 			// Handles constant bit-rates only.
-			int 	bytes 		= basicPlayer.getEncodedStreamPosition();
-			int		seconds		= bytes / basicPlayer.getBytesPerSecond();
+			int 	bytes 		= player.getEncodedStreamPosition();
+			int		seconds		= bytes / player.getBytesPerSecond();
 
 			playerView.setLabelTime( "Time:  " + TimeCode.toString( seconds ) );
 		} else {
@@ -1012,12 +1012,12 @@ public class MainController implements BasicPlayerListener {
 
 	// Get current playback position, in bytes.
 	private int streamPosition() {
-		int position = basicPlayer.getEncodedStreamPosition();
+		int position = player.getEncodedStreamPosition();
 
 		// If playback has reached end of file, position will be -1.
 		// In that case, use length - 1.
 		if( position < 0 ) {
-			int length = basicPlayer.getEncodedLength() - 1;
+			int length = player.getEncodedLength() - 1;
 
 			position = (length > 0) ? (length - 1) : 0;
 		}
@@ -1031,7 +1031,7 @@ public class MainController implements BasicPlayerListener {
 		}
 		// Record start data.
 		int 	startPosition	= streamPosition();
-		String 	startString		= TimeCode.toString( startPosition / basicPlayer.getBytesPerSecond() );
+		String 	startString		= TimeCode.toString( startPosition / player.getBytesPerSecond() );
 
 		// Create a new utterance.
 		int 		order 	= getUtteranceList().size();
@@ -1043,7 +1043,7 @@ public class MainController implements BasicPlayerListener {
 		updateUtteranceDisplays();
 	}
 
-	// End parse, reading bytes position from basicPlayer.
+	// End parse, reading bytes position from player.
 	public synchronized void parseEnd() {
 		parseEnd( streamPosition() );
 	}
@@ -1056,7 +1056,7 @@ public class MainController implements BasicPlayerListener {
 		Utterance 	current 	= getCurrentUtterance();
 
 		if( current != null ) {
-			String	endString	= TimeCode.toString( endBytes / basicPlayer.getBytesPerSecond() );
+			String	endString	= TimeCode.toString( endBytes / player.getBytesPerSecond() );
 
 			current.setEndTime( endString );
 			current.setEndBytes( endBytes );
@@ -1315,7 +1315,7 @@ public class MainController implements BasicPlayerListener {
 
 					File	file	= new File( filenameAudio );
 					String	str		= playerStatus.concat( ":  " + file.getName() + "  |  Total Time = " +
-							TimeCode.toString( basicPlayer.getSecondsPerFile() ) );
+							TimeCode.toString( player.getSecondsPerFile() ) );
 			
 					playerView.setLabelPlayerStatus( str );
 				}
