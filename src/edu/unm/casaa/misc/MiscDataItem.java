@@ -181,27 +181,13 @@ public class MiscDataItem implements Utterance {
 	 * Returns the string value for this utterance,
 	 * based on whether it has received a MISC code or not.
 	 * This is used for writing the utterance to a File.
-	 * @return a string representation of this utterance for use in file.
+	 * @return a string representation of this utterance
 	 */
 	public String toString(){
 		if( isCoded() ) {
 			return writeCoded();
 		} else {
 			return writeParsed();
-		}
-	}
-
-	public String toStringForDisplay(){
-		if( isCoded() ) {
-			return ("" + orderEnum 	+ "\t" +
-					startTime 	+ "\t" +
-					endTime 	+ "\t" +
-					miscCode.value 	+ "\t" +
-					miscCode.label);
-		} else {
-			return ("" + orderEnum 	+ "\t" +
-					startTime 	+ "\t" +
-					endTime);
 		}
 	}
 

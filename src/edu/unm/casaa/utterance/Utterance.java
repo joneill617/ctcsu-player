@@ -47,11 +47,4 @@ public interface Utterance {
 	// The section in [] is written only if utterance has been coded.
 	public String writeParsed();
 	public String writeCoded();
-
-	/**
-	 * Returns the string value for this utterance, for use in display.
-	 * Excludes byte codes, since these are not particularly useful for users.
-	 * @return a string representation of this utterance for use in display.
-	 */
-	public String toStringForDisplay();
 }
