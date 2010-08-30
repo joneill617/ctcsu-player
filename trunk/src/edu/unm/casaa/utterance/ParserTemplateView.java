@@ -38,15 +38,14 @@ import javax.swing.border.TitledBorder;
 
 import edu.unm.casaa.main.ActionTable;
 
+import edu.unm.casaa.main.Style;
+
 public class ParserTemplateView extends JPanel {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	
+
 	//====================================================================
 	// Fields
 	//====================================================================
@@ -59,7 +58,7 @@ public class ParserTemplateView extends JPanel {
 	private Dimension dimMainPanel			= null;
 	private JPanel panelButtons				= null;
 	private JPanel panelCurrentText			= null;
-	private JPanel panelLastText			= null;
+	private JPanel panelPrevText			= null;
 	
 	// Buttons
 	private JButton buttonStartParse		= null;
@@ -80,10 +79,10 @@ public class ParserTemplateView extends JPanel {
 	private JLabel labelEnd					= null;
 	private TitledBorder borderTextFields	= null;
 	
-	// Last utterance display.
-	private JTextField textFieldLast		= null;
-	private static final int LAST_COLS		= 60;
-	private TitledBorder borderLast			= null;
+	// Previous utterance display.
+	private JTextField textFieldPrev		= null;
+	private static final int PREV_COLS		= 60;
+	private TitledBorder borderPrev			= null;
 	
 	private ActionTable		actionTable		= new ActionTable(); // Communication between GUI and MainController.
 
@@ -98,7 +97,7 @@ public class ParserTemplateView extends JPanel {
 		setMaximumSize(getDimMainPanel());
 		setMinimumSize(getDimMainPanel());
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		add(getPanelLastText());
+		add(getPanelPrevText());
 		add(getPanelCurrentText());
 		add(getPanelButtons());
 		setVisible(true);
@@ -141,6 +140,7 @@ public class ParserTemplateView extends JPanel {
 		if( textFieldOrder == null ){
 			textFieldOrder = new JTextField(ORDER_COLS);
 			textFieldOrder.setEditable(false);
+			Style.configureStrongText( textFieldOrder );
 		}
 		return textFieldOrder;
 	}
@@ -162,6 +162,7 @@ public class ParserTemplateView extends JPanel {
 		if( textFieldStartTime == null ){
 			textFieldStartTime = new JTextField(TIME_COLS);
 			textFieldStartTime.setEditable(false);
+			Style.configureStrongText( textFieldStartTime );
 		}
 		return textFieldStartTime;
 	}
@@ -172,7 +173,7 @@ public class ParserTemplateView extends JPanel {
 	
 	private JLabel getLabelStart(){
 		if( labelStart == null ){
-			labelStart = new JLabel("Starting TimeCode");
+			labelStart = new JLabel("Start Time");
 			labelStart.setLabelFor(getTextFieldStartTime());
 		}
 		return labelStart;
@@ -183,6 +184,7 @@ public class ParserTemplateView extends JPanel {
 		if( textFieldEndTime == null ){
 			textFieldEndTime = new JTextField(TIME_COLS);
 			textFieldEndTime.setEditable(false);
+			Style.configureStrongText( textFieldEndTime );
 		}
 		return textFieldEndTime;
 	}
@@ -193,23 +195,24 @@ public class ParserTemplateView extends JPanel {
 	
 	private JLabel getLabelEnd(){
 		if( labelEnd == null ){
-			labelEnd = new JLabel("Ending TimeCode");
+			labelEnd = new JLabel("End Time");
 			labelEnd.setLabelFor(getTextFieldEndTime());
 		}
 		return labelEnd;
 	}
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private JTextField getTextFieldLast(){
-		if( textFieldLast == null ){
-			textFieldLast = new JTextField(LAST_COLS);
-			textFieldLast.setEditable(false);
+	private JTextField getTextFieldPrev(){
+		if( textFieldPrev == null ){
+			textFieldPrev = new JTextField(PREV_COLS);
+			textFieldPrev.setEditable(false);
+			Style.configureLightText( textFieldPrev );
 		}
-		return textFieldLast;
+		return textFieldPrev;
 	}
 	
-	public void setTextFieldLast(String utteranceString){
-		getTextFieldLast().setText(utteranceString);
+	public void setTextFieldPrev(String utteranceString){
+		getTextFieldPrev().setText(utteranceString);
 	}
 	
 	public String toString(){
@@ -315,22 +318,22 @@ public class ParserTemplateView extends JPanel {
 	}
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private JPanel getPanelLastText(){
-		if( panelLastText == null ){
-			panelLastText = new JPanel();
-			panelLastText.setBorder(getBorderLast());
-			panelLastText.setLayout(new BorderLayout());
-			panelLastText.add(getTextFieldLast(), BorderLayout.CENTER);
+	private JPanel getPanelPrevText(){
+		if( panelPrevText == null ){
+			panelPrevText = new JPanel();
+			panelPrevText.setBorder(getBorderPrev());
+			panelPrevText.setLayout(new BorderLayout());
+			panelPrevText.add(getTextFieldPrev(), BorderLayout.CENTER);
 		}
-		return panelLastText;
+		return panelPrevText;
 	}
 	
-	private TitledBorder getBorderLast(){
-		if( borderLast == null ){
-			borderLast = BorderFactory.createTitledBorder("Last Utterance");
-			borderLast.setTitleJustification(TitledBorder.LEADING);
+	private TitledBorder getBorderPrev(){
+		if( borderPrev == null ){
+			borderPrev = BorderFactory.createTitledBorder("Previous Utterance");
+			borderPrev.setTitleJustification(TitledBorder.LEADING);
 		}
-		return borderLast;
+		return borderPrev;
 	}
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
