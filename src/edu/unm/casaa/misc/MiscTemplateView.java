@@ -57,7 +57,7 @@ public class MiscTemplateView extends JPanel {
 	private static final int PANEL_WIDTH	= 600;
 	private static final int PANEL_HEIGHT	= 450;
 
-	// GUI Components and Constants
+	//GUI Components and Constants
 	private TitledBorder borderWindow		= null;
 	private Dimension dimMainPanel			= null;
 
@@ -81,7 +81,7 @@ public class MiscTemplateView extends JPanel {
 	private static final int BUTTON_HEIGHT	= 24;
 	private TitledBorder borderButtons		= null;
 
-	// User Feedback Components
+	//User Feedback Components
 	private JTextField textFieldOrder		= null;
 	private static final int ORDER_COLS		= 9;
 	private JLabel labelOrder				= null;
