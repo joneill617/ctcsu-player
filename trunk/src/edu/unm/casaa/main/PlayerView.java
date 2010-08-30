@@ -58,7 +58,7 @@ public class PlayerView extends JFrame {
 	// Fields
 	//====================================================================
 
-	//Window Constants and Variables
+	// Window Constants and Variables
 	private String strWindowTitle = "CACTI | The CASAA Application for Coding Treatment Interactions | v" + Version.versionString();
 	private String strNativeLF					= null;
 	private static final int X_LOCATION			= 100;
@@ -69,7 +69,7 @@ public class PlayerView extends JFrame {
 	private Dimension dimMIN					= null;
 	private ImageIcon iconParentWindow			= null;
 
-	//GUI Components
+	// GUI Components
 	private JFrame frameParentWindow				= null;
 	private JPanel topLayoutPanel					= null;
 	private static final int TOP_PANEL_WIDTH		= 600;
@@ -84,7 +84,7 @@ public class PlayerView extends JFrame {
 	private JPanel panelFileInfo					= null;
 	private JPanel panelGainPan						= null;
 
-	//Player Controls
+	// Player Controls
 	private Dimension dimPlayerButtonSize		= null;
 	private static final int BUTTON_WIDTH		= 100;
 	private static final int BUTTON_HEIGHT		= 25;
@@ -115,7 +115,7 @@ public class PlayerView extends JFrame {
 	private JMenuItem menuItemAbout				= null;
 
 
-	//Slider Control Constants
+	// Slider Control Constants
 	private static final int SEEK_MIN_VAL		= 0;
 	public static final int SEEK_MAX_VAL		= 1000;
 	private static final int SEEK_INIT_VAL		= 0;
