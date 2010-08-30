@@ -1145,7 +1145,7 @@ public class MainController implements BasicPlayerListener {
 			if( prev == null ) {
 				view.setTextFieldPrev("");
 			} else {
-				view.setTextFieldPrev(prev.toStringForDisplay());
+				view.setTextFieldPrev(prev.toString());
 			}
 		} else if( templateView instanceof MiscTemplateView ) {
 			MiscTemplateView 	view 	= (MiscTemplateView) templateView;
@@ -1156,12 +1156,12 @@ public class MainController implements BasicPlayerListener {
 			if( next == null ) {
 				view.setTextFieldNext("");
 			} else {
-				view.setTextFieldNext(next.toStringForDisplay());
+				view.setTextFieldNext(next.toString());
 			}
 			if( prev == null ) {
 				view.setTextFieldPrev("");
 			} else {
-				view.setTextFieldPrev(prev.toStringForDisplay());
+				view.setTextFieldPrev(prev.toString());
 			}
 
 			if( current == null ) {
