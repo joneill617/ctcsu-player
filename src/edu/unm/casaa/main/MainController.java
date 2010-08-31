@@ -56,6 +56,13 @@ import javazoom.jlgui.basicplayer.BasicPlayerException;
 import javazoom.jlgui.basicplayer.BasicPlayerListener;
 
 /*
+ * TODO:
+ *  Interface:
+ *  - We should label the current mode (parse, code, globals).
+ *  - We should label the file (e.g. foo.parse, foo.casaa) we're editing.
+ */
+
+/*
  Design notes:
  - Save to file whenever we modify data (e.g. utterances), unless that modification leaves
    data in an incomplete state (e.g. parse started, but not yet ended).
@@ -76,7 +83,7 @@ public class MainController implements BasicPlayerListener {
 
 	// GUI
 
-	private ActionTable			actionTable				= new ActionTable(); // Communication between GUI and MainController.
+	private ActionTable			actionTable				= null; // Communication between GUI and MainController.
 
 	private PlayerView 			playerView 				= null;
 	private JPanel 				templateView			= null;
@@ -89,6 +96,7 @@ public class MainController implements BasicPlayerListener {
 	// Audio Player back-end
 	private BasicPlayer 		player					= new BasicPlayer();
 	private String 				playerStatus 			= "";
+	private int					bytesPerSecond			= 0; // Cached when we load audio file.
 
 	private String 				filenameAudio			= null;
 
@@ -107,12 +115,25 @@ public class MainController implements BasicPlayerListener {
 	private int 				statusChangeEventIndex 	= 0; // Track highest player event index that changed our displayed status, since events can be reported out of order.
 
 	//====================================================================
-	// Main, Constructor and Initialization Methods
+	// Main
+	//====================================================================
+
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	/**
+	 * @param args
+	 */
+	public static void main( String[] args ) {
+		MainController mc = new MainController();
+
+		mc.run();
+	}
+
+	//====================================================================
+	// Constructor and Initialization Methods
 	//====================================================================
 
 	public MainController() {
-		buildActionTable();
-		playerView = new PlayerView( actionTable );
+		playerView = new PlayerView( this );
 		player.addBasicPlayerListener( this );
 		registerPlayerViewListeners();
 		// Handle window closing events.
@@ -126,29 +147,9 @@ public class MainController implements BasicPlayerListener {
 		setMode( Mode.PLAYBACK );
 	}
 
-	private void actionExit() {
-		saveIfNeeded();
-		System.exit( 0 );
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	/**
-	 * @param args
-	 */
-	public static void main( String[] args ) {
-		MainController mc = new MainController();
-
-		mc.run();
-	}
-
 	//====================================================================
 	// MainController interface
 	//====================================================================
-
-	public synchronized void setPauseOnUncoded( boolean value ) {
-		pauseOnUncoded 	= value;
-		waitingForCode	= false;
-	}
 
 	// Run update loop.
 	public void run() {
@@ -197,21 +198,53 @@ public class MainController implements BasicPlayerListener {
 		saveSession();
 	}
 
+	public synchronized void setPauseOnUncoded( boolean value ) {
+		pauseOnUncoded 	= value;
+		waitingForCode	= false;
+	}
+
+	public ActionTable getActionTable() {
+		if( actionTable == null ) {
+			actionTable = new ActionTable();
+			mapAction( "Start", "parseStart" );
+			mapAction( "End", "parseEnd" );
+			mapAction( "Play", "play" );
+			mapAction( "Pause", "pause" );
+			mapAction( "Stop", "stop" );
+			mapAction( "Replay", "replay" );
+		}
+		return actionTable;
+	}
+
+	// TMP - CARL
+	public int numUtterances() {
+		return getUtteranceList().size();
+	}
+	public Utterance utterance( int index ) {
+		return getUtteranceList().get( index );
+	}
+	private void utteranceListChanged() {
+		playerView.getTimeline().repaint();
+	}
+	public int getBytesPerSecond() {
+		return bytesPerSecond;
+	}
+	public int getAudioLength() {
+		return player.getEncodedLength();
+	}
+	// TMP
+
 	//====================================================================
 	// Private Helper Methods
 	//====================================================================
 
-	private void mapAction( String text, String command ) {		
-		actionTable.put( command, new MainControllerAction( this, text, command ) );
+	private void actionExit() {
+		saveIfNeeded();
+		System.exit( 0 );
 	}
 
-	private void buildActionTable() {
-		mapAction( "Start", "parseStart" );
-		mapAction( "End", "parseEnd" );
-		mapAction( "Play", "play" );
-		mapAction( "Pause", "pause" );
-		mapAction( "Stop", "stop" );
-		mapAction( "Replay", "replay" );
+	private void mapAction( String text, String command ) {		
+		actionTable.put( command, new MainControllerAction( this, text, command ) );
 	}
 
 	private void display( String msg ) {
@@ -223,7 +256,8 @@ public class MainController implements BasicPlayerListener {
 		e.printStackTrace();
 	}
 
-	private synchronized Utterance getCurrentUtterance() {
+	// TMP - Carl - Make this public, so Timeline can access.
+	public synchronized Utterance getCurrentUtterance() {
 		assert( currentUtterance >= 0 );
 		if( currentUtterance < getUtteranceList().size() ) {
 			return getUtteranceList().get( currentUtterance );
@@ -442,8 +476,10 @@ public class MainController implements BasicPlayerListener {
 	// Returns true on success.
 	private boolean loadAudioFile( String filename ) {
 		filenameAudio	= filename;
+		bytesPerSecond	= 0;
 		try {
 			player.open( new File( filenameAudio ) );
+			bytesPerSecond = player.getBytesPerSecond();
 			updateTimeDisplay();
 			updateSeekSliderDisplay();
 			return true;
@@ -733,6 +769,7 @@ public class MainController implements BasicPlayerListener {
 
 			// Load the parse and audio files.
 			filenameAudio = getUtteranceList().loadFromFile( new File( filenameMisc ) );
+			utteranceListChanged();
 			loadAudioFile( filenameAudio );
 			setMode( Mode.CODE );
 			postLoad();
@@ -781,6 +818,7 @@ public class MainController implements BasicPlayerListener {
 			filenameParse 		= chooser.getSelectedFile().getAbsolutePath();
 			// Load the parse file.
 			filenameAudio = getUtteranceList().loadFromFile(new File( filenameParse ));
+			utteranceListChanged();
 			if( filenameAudio.equalsIgnoreCase("ERROR: No Audio File Listed") ){
 				showAudioFileNotFoundDialog();
 				return;
@@ -808,7 +846,8 @@ public class MainController implements BasicPlayerListener {
 			currentUtterance	= 0;
 			waitingForCode		= false;
 			filenameMisc 		= chooser.getSelectedFile().getAbsolutePath();
-			filenameAudio = getUtteranceList().loadFromFile(new File(filenameMisc)); // Load the code file.
+			filenameAudio 		= getUtteranceList().loadFromFile(new File(filenameMisc)); // Load the code file.
+			utteranceListChanged();
 			loadAudioFile( filenameAudio ); // Load the audio file.
 			setMode( Mode.CODE );
 			postLoad();
@@ -950,10 +989,13 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void updateTimeDisplay() {
-		if( player.getBytesPerSecond() != 0 ) {
+		// TMP
+		playerView.getTimeline().repaint();
+		// TMP
+		if( bytesPerSecond != 0 ) {
 			// Handles constant bit-rates only.
 			int 	bytes 		= player.getEncodedStreamPosition();
-			int		seconds		= bytes / player.getBytesPerSecond();
+			int		seconds		= bytes / bytesPerSecond;
 
 			playerView.setLabelTime( "Time:  " + TimeCode.toString( seconds ) );
 		} else {
@@ -1011,7 +1053,7 @@ public class MainController implements BasicPlayerListener {
 	// Parser Template Handlers
 
 	// Get current playback position, in bytes.
-	private int streamPosition() {
+	public int streamPosition() {
 		int position = player.getEncodedStreamPosition();
 
 		// If playback has reached end of file, position will be -1.
@@ -1030,8 +1072,9 @@ public class MainController implements BasicPlayerListener {
 			parseEnd();
 		}
 		// Record start data.
+		assert( bytesPerSecond > 0 );
 		int 	startPosition	= streamPosition();
-		String 	startString		= TimeCode.toString( startPosition / player.getBytesPerSecond() );
+		String 	startString		= TimeCode.toString( startPosition / bytesPerSecond );
 
 		// Create a new utterance.
 		int 		order 	= getUtteranceList().size();
@@ -1056,7 +1099,8 @@ public class MainController implements BasicPlayerListener {
 		Utterance 	current 	= getCurrentUtterance();
 
 		if( current != null ) {
-			String	endString	= TimeCode.toString( endBytes / player.getBytesPerSecond() );
+			assert( bytesPerSecond > 0 );
+			String	endString	= TimeCode.toString( endBytes / bytesPerSecond );
 
 			current.setEndTime( endString );
 			current.setEndBytes( endBytes );
@@ -1127,6 +1171,10 @@ public class MainController implements BasicPlayerListener {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Update utterance displays (e.g. current, last, etc) in active template view.
 	private synchronized void updateUtteranceDisplays() {
+		// TMP
+		playerView.getTimeline().repaint();
+		// TMP
+
 		if( templateView instanceof ParserTemplateView ) {
 			ParserTemplateView 	view 	= (ParserTemplateView) templateView;
 			Utterance			current	= getCurrentUtterance();

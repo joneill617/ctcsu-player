@@ -83,6 +83,7 @@ public class PlayerView extends JFrame {
 	private JPanel panelPlayerControls				= null;
 	private JPanel panelFileInfo					= null;
 	private JPanel panelGainPan						= null;
+	private Timeline timeline						= null;
 
 	// Player Controls
 	private Dimension dimPlayerButtonSize		= null;
@@ -133,19 +134,22 @@ public class PlayerView extends JFrame {
 	private static final int PAN_INIT_VAL		= 0;
 	private TitledBorder borderPan				= null;
 
-	private ActionTable		actionTable			= new ActionTable(); // Communication between GUI and MainController.
+	private MainController	control				= null;
 
 	//====================================================================
 	// Constructor and Initialization Methods
 	//====================================================================
 
-	public PlayerView( ActionTable actionTable ) {
-		assert( actionTable != null );
-		this.actionTable = actionTable;
+	public PlayerView( MainController control ) {
+		assert( control != null );
+		this.control = control;
 		setLookAndFeel();
 		getFrameParentWindow().getContentPane().setLayout(new BorderLayout());
 		getFrameParentWindow().getContentPane().add(getTopLayoutPanel(), BorderLayout.NORTH);
 		getFrameParentWindow().getContentPane().add(getBottomLayoutPanel(), BorderLayout.CENTER);
+
+		// TODO - CARL - pack?  Maybe in a number of places?  Is this the most top-level widget?
+
 		getFrameParentWindow().setLocation(X_LOCATION, Y_LOCATION);
 		getFrameParentWindow().setVisible(true);
 	}
@@ -161,7 +165,7 @@ public class PlayerView extends JFrame {
 	 * @return a JButton used to start playing the audio file
 	 */
 	private JButton newPlayerButton( String actionCommand, KeyStroke keyBinding ) {
-		JButton button = new JButton( actionTable.get( actionCommand ) );
+		JButton button = new JButton( control.getActionTable().get( actionCommand ) );
 
 		button.setPreferredSize( getDimPlayerButtonSize() );
 		if( keyBinding != null ) {
@@ -465,8 +469,19 @@ public class PlayerView extends JFrame {
 			panelFileInfo.add(getLabelTime());
 			panelFileInfo.add(getLabelPlayerStatus());
 			panelFileInfo.add(getSliderSeek());
+
+			// TMP - Carl.  TODO - We want this as part of parse and code interface, but not play or globals.
+			panelFileInfo.add(getTimeline());
+			// TMP
 		}
 		return panelFileInfo;
+	}
+
+	public Timeline getTimeline() {
+		if( timeline == null ){
+			timeline = new Timeline( control );
+		}
+		return timeline;
 	}
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
