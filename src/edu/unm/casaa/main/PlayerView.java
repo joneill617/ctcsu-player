@@ -91,6 +91,7 @@ public class PlayerView extends JFrame {
 	private static final int BUTTON_HEIGHT		= 25;
 	private JButton buttonPlay					= null;
 	private JButton buttonReplay				= null;
+	private JButton buttonRewind5s				= null;
 	private JSlider sliderSeek					= null;
 	private JSlider sliderGain					= null;
 	private JSlider sliderPan					= null;
@@ -191,7 +192,7 @@ public class PlayerView extends JFrame {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	/**
 	 * Returns the Player's Replay Button
-	 * @return a JButton used to rewind the audio file ten seconds
+	 * @return a JButton used to undo last parse or code.
 	 */
 	public JButton getButtonReplay(){
 		if( buttonReplay == null ){
@@ -200,6 +201,18 @@ public class PlayerView extends JFrame {
 		return buttonReplay;
 	}
 	
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	/**
+	 * Returns the Player's Rewind5s Button
+	 * @return a JButton used to rewind the audio file five seconds
+	 */
+	public JButton getButtonRewind5s(){
+		if( buttonRewind5s == null ){
+			buttonRewind5s = newPlayerButton( "rewind5s", KeyStroke.getKeyStroke( KeyEvent.VK_5, 0 ) );
+		}
+		return buttonRewind5s;
+	}
+
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	/**
 	 * Returns the Player's Pan Slider
@@ -429,6 +442,7 @@ public class PlayerView extends JFrame {
 			panelPlayerControls.setLayout(new FlowLayout());
 			panelPlayerControls.add(getButtonPlay());
 			panelPlayerControls.add(getButtonReplay());
+			panelPlayerControls.add(getButtonRewind5s());
 		}
 		return panelPlayerControls;
 	}

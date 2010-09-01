@@ -57,7 +57,10 @@ import javazoom.jlgui.basicplayer.BasicPlayerListener;
 
 /*
  * TODO:
- *  Interface:
+ * Optimize:
+ *  - Avoid double-repainting timeline, which currently happens when both
+ *   updateUtteranceDisplays and updateTimeDisplay are called.
+ * Interface:
  *  - We should label the current mode (parse, code, globals).
  *  - We should label the file (e.g. foo.parse, foo.casaa) we're editing.
  */
@@ -185,6 +188,8 @@ public class MainController implements BasicPlayerListener {
 			handleActionPlay();
 		} else if( "replay".equals( action ) ) {
 			handleActionReplay();
+		} else if( "rewind5s".equals( action ) ) {
+			handleActionRewind5s();
 		}
 	}
 
@@ -206,6 +211,7 @@ public class MainController implements BasicPlayerListener {
 			mapAction( "End", "parseEnd" );
 			mapAction( "Play/Pause", "play" );
 			mapAction( "Replay", "replay" );
+			mapAction( "Rewind 5s", "rewind5s" );
 		}
 		return actionTable;
 	}
@@ -385,13 +391,11 @@ public class MainController implements BasicPlayerListener {
 	private void setMode( Mode mode ) {
 		setTemplateView( mode );
 
-		// Disable seek slider and stop during parsing/coding, since manipulating the
-		// audio position would allow playback to get out of sync with parsing/coding.
-		boolean allowSeek = (mode == Mode.PLAYBACK || mode == Mode.GLOBALS);
-
-		playerView.getSliderSeek().setEnabled( allowSeek && filenameAudio != null );
+		playerView.getSliderSeek().setEnabled( filenameAudio != null );
 		playerView.getButtonPlay().setEnabled( filenameAudio != null );
 		playerView.getButtonReplay().setEnabled( mode == Mode.PARSE || mode == Mode.CODE );
+		playerView.getButtonRewind5s().setEnabled( mode == Mode.PARSE || mode == Mode.CODE );
+		playerView.getTimeline().setVisible( mode == Mode.PARSE || mode == Mode.CODE );
 
 		// If entering GLOBALS mode, ping callback so we'll save the file.
 		if( mode == Mode.GLOBALS ) {
@@ -635,6 +639,22 @@ public class MainController implements BasicPlayerListener {
 			showParsingErrorDialog();
 		}
 		saveSession();
+		updateTimeDisplay();
+		updateSeekSliderDisplay();
+	}
+
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	private synchronized void handleActionRewind5s(){
+		// Rewind playback position 5 seconds, without affecting utterances.
+		assert( bytesPerSecond > 0 );
+
+		int pos = streamPosition();
+		
+		pos -= 5 * bytesPerSecond;
+		pos = Math.max( pos, 0 ); // Clamp to beginning of file.
+
+		playerSeek( pos );
+		updateUtteranceDisplays();
 		updateTimeDisplay();
 		updateSeekSliderDisplay();
 	}
@@ -1034,6 +1054,13 @@ public class MainController implements BasicPlayerListener {
 
 	// Start parse.
 	public synchronized void parseStart() {
+		// Ignore parseStart if we've rewound earlier than last parse start.
+		Utterance last = getLastUtterance();
+
+		if( last != null && streamPosition() < last.getStartBytes() ) {
+			return;
+		}
+
 		if( isParsingUtterance() ) {
 			parseEnd();
 		}
@@ -1052,7 +1079,7 @@ public class MainController implements BasicPlayerListener {
 		updateUtteranceDisplays();
 	}
 
-	// End parse, reading bytes position from player.
+	// End parse, reading byte position from player.
 	public synchronized void parseEnd() {
 		parseEnd( streamPosition() );
 	}
@@ -1060,6 +1087,13 @@ public class MainController implements BasicPlayerListener {
 	// End parse at given byte position.
 	public synchronized void parseEnd( int endBytes ) {
 		assert( endBytes >= 0 );
+
+		// Ignore parseEnd if we've rewound earlier than last parse start.
+		Utterance last = getLastUtterance();
+
+		if( last != null && endBytes < last.getStartBytes() ) {
+			return;
+		}
 
 		// Record end data to current utterance (if we have one).
 		Utterance 	current 	= getCurrentUtterance();
