@@ -11,6 +11,8 @@ import javax.swing.JPanel;
 
 import edu.unm.casaa.utterance.Utterance;
 
+// TODO (Carl): Hide/show timeline depending on which mode we're in.
+
 // Timeline is a custom renderer for utterance data.
 public class Timeline extends JPanel {
 	private static final long serialVersionUID = 1L;
