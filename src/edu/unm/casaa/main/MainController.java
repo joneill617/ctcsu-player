@@ -183,10 +183,6 @@ public class MainController implements BasicPlayerListener {
 			parseEnd();
 		} else if( "play".equals( action ) ) {
 			handleActionPlay();
-		} else if( "pause".equals( action ) ) {
-			handleActionPause();
-		} else if( "stop".equals( action ) ) {
-			handleActionStop();
 		} else if( "replay".equals( action ) ) {
 			handleActionReplay();
 		}
@@ -208,9 +204,7 @@ public class MainController implements BasicPlayerListener {
 			actionTable = new ActionTable();
 			mapAction( "Start", "parseStart" );
 			mapAction( "End", "parseEnd" );
-			mapAction( "Play", "play" );
-			mapAction( "Pause", "pause" );
-			mapAction( "Stop", "stop" );
+			mapAction( "Play/Pause", "play" );
 			mapAction( "Replay", "replay" );
 		}
 		return actionTable;
@@ -366,16 +360,6 @@ public class MainController implements BasicPlayerListener {
 		}
 	}
 
-	private synchronized void playerStop() {
-		try {
-			player.stop();
-		} catch( BasicPlayerException e ) {
-			displayPlayerException( e );
-		}
-		updateTimeDisplay();
-		updateSeekSliderDisplay();
-	}
-
 	private synchronized void playerResume() {
 		try {
 			player.resume();
@@ -406,9 +390,7 @@ public class MainController implements BasicPlayerListener {
 		boolean allowSeek = (mode == Mode.PLAYBACK || mode == Mode.GLOBALS);
 
 		playerView.getSliderSeek().setEnabled( allowSeek && filenameAudio != null );
-		playerView.getButtonStop().setEnabled( allowSeek && filenameAudio != null );
 		playerView.getButtonPlay().setEnabled( filenameAudio != null );
-		playerView.getButtonPause().setEnabled( filenameAudio != null );
 		playerView.getButtonReplay().setEnabled( mode == Mode.PARSE || mode == Mode.CODE );
 
 		// If entering GLOBALS mode, ping callback so we'll save the file.
@@ -611,23 +593,6 @@ public class MainController implements BasicPlayerListener {
 	private synchronized void handleActionPlay() {
 		if( waitingForCode ) {
 			return; // Ignore play button when waiting for code.
-		}
-		if( player.getStatus() == BasicPlayer.PAUSED ) {
-			playerResume();
-		} else {
-			playerPlay();
-		}
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private synchronized void handleActionStop() {
-		playerStop();
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private synchronized void handleActionPause() {
-		if( waitingForCode ) {
-			return; // Ignore pause button when waiting for code.
 		}
 		if( player.getStatus() == BasicPlayer.PLAYING ) {
 			playerPause();
