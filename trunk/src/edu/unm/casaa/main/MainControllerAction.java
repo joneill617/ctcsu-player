@@ -22,6 +22,8 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
+// MainControllerAction provides mechanism for key bindings to pass messages
+// to MainController.
 class MainControllerAction extends AbstractAction {
 
 	private static final long 	serialVersionUID 	= 1L;
