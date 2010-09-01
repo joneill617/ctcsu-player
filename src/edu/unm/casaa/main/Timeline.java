@@ -11,8 +11,6 @@ import javax.swing.JPanel;
 
 import edu.unm.casaa.utterance.Utterance;
 
-// TODO (Carl): Hide/show timeline depending on which mode we're in.
-
 // Timeline is a custom renderer for utterance data.
 public class Timeline extends JPanel {
 	private static final long serialVersionUID = 1L;
@@ -96,14 +94,16 @@ public class Timeline extends JPanel {
 		int halfDisplayedBytes	= displayedBytes / 2;
 		int scrollX				= 0;
 
-		if( playbackPosition < halfDisplayedBytes ) {
-			scrollX = 0;
-		} else if( playbackPosition > audioBytes - halfDisplayedBytes ) {
-			scrollX = audioBytes - displayedBytes;
-		} else {
-			scrollX = playbackPosition - halfDisplayedBytes;
+		if( displayedBytes < audioBytes ) {
+			if( playbackPosition > audioBytes - halfDisplayedBytes ) {
+				// End.
+				scrollX = audioBytes - displayedBytes;
+			} else if( playbackPosition > halfDisplayedBytes ) {
+				// Middle.
+				scrollX = playbackPosition - halfDisplayedBytes;
+			}
+			scrollX /= bytesPerPixel;
 		}
-		scrollX /= bytesPerPixel;
 
 		int playbackX		= insets.left + (playbackPosition / bytesPerPixel) - scrollX;
 
