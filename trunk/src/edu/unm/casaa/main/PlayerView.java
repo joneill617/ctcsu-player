@@ -90,8 +90,6 @@ public class PlayerView extends JFrame {
 	private static final int BUTTON_WIDTH		= 100;
 	private static final int BUTTON_HEIGHT		= 25;
 	private JButton buttonPlay					= null;
-	private JButton buttonStop					= null;
-	private JButton buttonPause					= null;
 	private JButton buttonReplay				= null;
 	private JSlider sliderSeek					= null;
 	private JSlider sliderGain					= null;
@@ -188,30 +186,6 @@ public class PlayerView extends JFrame {
 			buttonPlay = newPlayerButton( "play" );
 		}
 		return buttonPlay;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	/**
-	 * Returns the Player's Stop Button
-	 * @return a JButton used to stop playing the audio file
-	 */
-	public JButton getButtonStop() {
-		if( buttonStop == null ) {
-			buttonStop = newPlayerButton( "stop", KeyStroke.getKeyStroke( KeyEvent.VK_S, 0 ) );
-		}
-		return buttonStop;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	/**
-	 * Returns the Player's Pause Button
-	 * @return a JButton used to pause playing of the audio file
-	 */
-	public JButton getButtonPause(){
-		if( buttonPause == null ){
-			buttonPause = newPlayerButton( "pause", KeyStroke.getKeyStroke( KeyEvent.VK_P, 0 ) );
-		}
-		return buttonPause;
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -454,8 +428,6 @@ public class PlayerView extends JFrame {
 			panelPlayerControls = new JPanel();
 			panelPlayerControls.setLayout(new FlowLayout());
 			panelPlayerControls.add(getButtonPlay());
-			panelPlayerControls.add(getButtonStop());
-			panelPlayerControls.add(getButtonPause());
 			panelPlayerControls.add(getButtonReplay());
 		}
 		return panelPlayerControls;
