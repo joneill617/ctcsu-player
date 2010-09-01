@@ -188,6 +188,12 @@ public class MainController implements BasicPlayerListener {
 			handleActionPlay();
 		} else if( "replay".equals( action ) ) {
 			handleActionReplay();
+		} else if( "unparse".equals( action ) ) {
+			handleActionUnparse();
+		} else if( "uncode".equals( action ) ) {
+			handleActionUncode();
+		} else if( "unparseAndReplay".equals( action ) ) {
+			handleActionUnparseAndReplay();
 		} else if( "rewind5s".equals( action ) ) {
 			handleActionRewind5s();
 		}
@@ -211,6 +217,9 @@ public class MainController implements BasicPlayerListener {
 			mapAction( "End", "parseEnd" );
 			mapAction( "Play/Pause", "play" );
 			mapAction( "Replay", "replay" );
+			mapAction( "Unparse", "unparse" );
+			mapAction( "Unparse & Replay", "unparseAndReplay" );
+			mapAction( "Uncode", "uncode" );
 			mapAction( "Rewind 5s", "rewind5s" );
 		}
 		return actionTable;
@@ -393,8 +402,21 @@ public class MainController implements BasicPlayerListener {
 
 		playerView.getSliderSeek().setEnabled( filenameAudio != null );
 		playerView.getButtonPlay().setEnabled( filenameAudio != null );
-		playerView.getButtonReplay().setEnabled( mode == Mode.PARSE || mode == Mode.CODE );
-		playerView.getButtonRewind5s().setEnabled( mode == Mode.PARSE || mode == Mode.CODE );
+
+		// TODO (Carl) - These buttons are not awesome.  A cleaner, more consistent, and intuitive UI would be nice.
+		// For example:
+		//  - Get rid of "rewind 5s" button.  Just use seek bar and timeline.
+		//  - Click an utterance box in timeline to select it.  On select:
+		//    - Rewind playback to utterance start.
+		//  - Clear (or "erase") button.  Does not affect playback position.
+		//    - In PARSE, removes current utterance.
+		//    - In CODE, removes code from current.
+		playerView.getButtonReplay().setVisible( mode == Mode.PARSE || mode == Mode.CODE );
+		playerView.getButtonUnparse().setVisible( mode == Mode.PARSE );
+		playerView.getButtonUnparseAndReplay().setVisible( mode == Mode.PARSE );
+		playerView.getButtonUncode().setVisible( mode == Mode.CODE );
+		playerView.getButtonRewind5s().setEnabled( filenameAudio != null );
+
 		playerView.getTimeline().setVisible( mode == Mode.PARSE || mode == Mode.CODE );
 
 		// If entering GLOBALS mode, ping callback so we'll save the file.
@@ -610,37 +632,43 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleActionReplay(){
-		if( templateView instanceof ParserTemplateView ) {
-			removeLastUtterance();
-		} else if( templateView instanceof MiscTemplateView ) {
+		if( templateView instanceof ParserTemplateView ||
+			templateView instanceof MiscTemplateView ) {
+			// Seek to beginning of current utterance.
 			Utterance utterance = getCurrentUtterance();
 
-			// Strip code from current (may or may not be coded at this point).
-			if( utterance != null ) {
-				utterance.setMiscCode( MiscCode.INVALID );
-			}
+			playerSeek( utterance == null ? 0 : getCurrentUtterance().getStartBytes() );
+		} else {
+			showParsingErrorDialog();
+		}
+		updateTimeDisplay();
+		updateSeekSliderDisplay();
+	}
 
-			// Move to previous utterance, if one exists.
-			if( hasPreviousUtterance() ) {
-				gotoPreviousUtterance();
-				utterance = getCurrentUtterance();
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	private synchronized void handleActionUnparseAndReplay() {
+		handleActionUnparse();
+		handleActionReplay();
+	}
 
-				// Strip code, now that we've stepped back to previous utterance.
-				assert utterance != null;
-				utterance.setMiscCode( MiscCode.INVALID );
-				playerSeek( utterance.getStartBytes() );
-			} else {
-				playerSeek( 0 );
-			}
-
-			waitingForCode = false;
-			updateUtteranceDisplays();
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	private synchronized void handleActionUnparse() {
+		if( templateView instanceof ParserTemplateView ) {
+			removeLastUtterance( false );
 		} else {
 			showParsingErrorDialog();
 		}
 		saveSession();
-		updateTimeDisplay();
-		updateSeekSliderDisplay();
+	}
+
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	private synchronized void handleActionUncode() {
+		if( templateView instanceof MiscTemplateView ) {
+			removeLastCode();
+		} else {
+			showParsingErrorDialog();
+		}
+		saveSession();
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1063,7 +1091,13 @@ public class MainController implements BasicPlayerListener {
 
 		if( isParsingUtterance() ) {
 			parseEnd();
+		} else {
+			// Ignore parseStart if we've rewound earlier than last parse end.
+			if( last != null && streamPosition() < last.getEndBytes() ) {
+				return;
+			}
 		}
+
 		// Record start data.
 		assert( bytesPerSecond > 0 );
 		int 	startPosition	= streamPosition();
@@ -1145,7 +1179,7 @@ public class MainController implements BasicPlayerListener {
 		updateUtteranceDisplays();
 	}
 
-	private synchronized void removeLastUtterance(){
+	private synchronized void removeLastUtterance( boolean seek ){
 		getUtteranceList().removeLast();
 
 		if( getUtteranceList().size() > 0 ) {
@@ -1156,15 +1190,41 @@ public class MainController implements BasicPlayerListener {
 
 		Utterance utterance = getCurrentUtterance();
 
-		if( utterance == null ) {
-			playerSeek( 0 );
-		} else {
-			playerSeek( getCurrentUtterance().getStartBytes() ); // Seek to start of current parsed utterance.
+		// Seek to start of current parsed utterance, if seek requested.
+		if( seek ) {
+			playerSeek( utterance == null ? 0 : getCurrentUtterance().getStartBytes() );
+		}
 
-			// Strip end data from current utterance, so it will register as not parsed.
+		// Strip end data from current utterance, so it will register as not parsed.
+		if( utterance != null ) {
 			utterance.stripEndData();
 		}
 
+		updateUtteranceDisplays();
+	}
+
+	private synchronized void removeLastCode(){
+		Utterance utterance = getCurrentUtterance();
+
+		// Strip code from current (may or may not be coded at this point).
+		if( utterance != null ) {
+			utterance.setMiscCode( MiscCode.INVALID );
+		}
+
+		// Move to previous utterance, if one exists.
+		if( hasPreviousUtterance() ) {
+			gotoPreviousUtterance();
+			utterance = getCurrentUtterance();
+
+			// Strip code, now that we've stepped back to previous utterance.
+			assert utterance != null;
+			utterance.setMiscCode( MiscCode.INVALID );
+			playerSeek( utterance.getStartBytes() );
+		} else {
+			playerSeek( 0 );
+		}
+
+		waitingForCode = false;
 		updateUtteranceDisplays();
 	}
 

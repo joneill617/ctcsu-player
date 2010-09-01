@@ -36,7 +36,7 @@ public class ActionTable {
 	public Action get( String key ) {
 		assert( key != null );
 		Action result = map.get( key );
-		
+
 		assert( result != null ) : key;
 		return result;
 	}

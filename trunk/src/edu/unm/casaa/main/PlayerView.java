@@ -91,6 +91,9 @@ public class PlayerView extends JFrame {
 	private static final int BUTTON_HEIGHT		= 25;
 	private JButton buttonPlay					= null;
 	private JButton buttonReplay				= null;
+	private JButton buttonUnparse				= null;
+	private JButton buttonUnparseAndReplay		= null;
+	private JButton buttonUncode				= null;
 	private JButton buttonRewind5s				= null;
 	private JSlider sliderSeek					= null;
 	private JSlider sliderGain					= null;
@@ -146,9 +149,6 @@ public class PlayerView extends JFrame {
 		getFrameParentWindow().getContentPane().setLayout(new BorderLayout());
 		getFrameParentWindow().getContentPane().add(getTopLayoutPanel(), BorderLayout.NORTH);
 		getFrameParentWindow().getContentPane().add(getBottomLayoutPanel(), BorderLayout.CENTER);
-
-		// TODO - CARL - pack?  Maybe in a number of places?  Is this the most top-level widget?
-
 		getFrameParentWindow().setLocation(X_LOCATION, Y_LOCATION);
 		getFrameParentWindow().setVisible(true);
 	}
@@ -184,7 +184,7 @@ public class PlayerView extends JFrame {
 	 */
 	public JButton getButtonPlay() {
 		if( buttonPlay == null ) {
-			buttonPlay = newPlayerButton( "play" );
+			buttonPlay = newPlayerButton( "play", KeyStroke.getKeyStroke( KeyEvent.VK_P, 0 ) );
 		}
 		return buttonPlay;
 	}
@@ -192,7 +192,7 @@ public class PlayerView extends JFrame {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	/**
 	 * Returns the Player's Replay Button
-	 * @return a JButton used to undo last parse or code.
+	 * @return a JButton used to replay audio from beginning of current utterance.
 	 */
 	public JButton getButtonReplay(){
 		if( buttonReplay == null ){
@@ -203,8 +203,46 @@ public class PlayerView extends JFrame {
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	/**
+	 * Returns the Player's Unparse Button
+	 * @return a JButton used to undo last parse, without affecting playback position.
+	 */
+	public JButton getButtonUnparse(){
+		if( buttonUnparse == null ){
+			buttonUnparse = newPlayerButton( "unparse" );
+		}
+		return buttonUnparse;
+	}
+
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	/**
+	 * Returns the Player's UnparseAndReplay Button
+	 * @return a JButton used to undo last parse, and rewind playback position.
+	 */
+	public JButton getButtonUnparseAndReplay(){
+		if( buttonUnparseAndReplay == null ){
+			buttonUnparseAndReplay = newPlayerButton( "unparseAndReplay", KeyStroke.getKeyStroke( KeyEvent.VK_U, 0 ) );
+		}
+		return buttonUnparseAndReplay;
+	}
+
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	/**
+	 * Returns the Player's Uncode Button
+	 * @return a JButton used to undo last two codes and rewind playback position.
+	 */
+	public JButton getButtonUncode(){
+		if( buttonUncode == null ){
+			// NOTE: Shares "u" key binding with unparseAndReplay, but only one of these two
+			// buttons will be visible at any given time.
+			buttonUncode = newPlayerButton( "uncode", KeyStroke.getKeyStroke( KeyEvent.VK_U, 0 ) );
+		}
+		return buttonUncode;
+	}
+
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	/**
 	 * Returns the Player's Rewind5s Button
-	 * @return a JButton used to rewind the audio file five seconds
+	 * @return a JButton used to rewind the audio file five seconds, without affecting parse.
 	 */
 	public JButton getButtonRewind5s(){
 		if( buttonRewind5s == null ){
@@ -442,6 +480,9 @@ public class PlayerView extends JFrame {
 			panelPlayerControls.setLayout(new FlowLayout());
 			panelPlayerControls.add(getButtonPlay());
 			panelPlayerControls.add(getButtonReplay());
+			panelPlayerControls.add(getButtonUnparse());
+			panelPlayerControls.add(getButtonUnparseAndReplay());
+			panelPlayerControls.add(getButtonUncode());
 			panelPlayerControls.add(getButtonRewind5s());
 		}
 		return panelPlayerControls;
@@ -455,10 +496,7 @@ public class PlayerView extends JFrame {
 			panelFileInfo.add(getLabelTime());
 			panelFileInfo.add(getLabelPlayerStatus());
 			panelFileInfo.add(getSliderSeek());
-
-			// TMP - Carl.  TODO - We want this as part of parse and code interface, but not play or globals.
 			panelFileInfo.add(getTimeline());
-			// TMP
 		}
 		return panelFileInfo;
 	}
