@@ -216,7 +216,7 @@ public class MainController implements BasicPlayerListener {
 		return actionTable;
 	}
 
-	// TMP - CARL
+	// Access utterances.
 	public int numUtterances() {
 		return getUtteranceList().size();
 	}
@@ -226,13 +226,26 @@ public class MainController implements BasicPlayerListener {
 	private void utteranceListChanged() {
 		playerView.getTimeline().repaint();
 	}
+
+	// Get audio bytes per second.
 	public int getBytesPerSecond() {
 		return bytesPerSecond;
 	}
+
+	// Get audio file length, in bytes.
 	public int getAudioLength() {
 		return player.getEncodedLength();
 	}
-	// TMP
+
+	// Get current utterance.  May be null.
+	public synchronized Utterance getCurrentUtterance() {
+		assert( currentUtterance >= 0 );
+		if( currentUtterance < getUtteranceList().size() ) {
+			return getUtteranceList().get( currentUtterance );
+		} else {
+			return null;
+		}
+	}
 
 	//====================================================================
 	// Private Helper Methods
@@ -254,16 +267,6 @@ public class MainController implements BasicPlayerListener {
 	private void displayPlayerException( BasicPlayerException e ) {
 		display( "BasicPlayerException: " + e.getMessage() );
 		e.printStackTrace();
-	}
-
-	// TMP - Carl - Make this public, so Timeline can access.
-	public synchronized Utterance getCurrentUtterance() {
-		assert( currentUtterance >= 0 );
-		if( currentUtterance < getUtteranceList().size() ) {
-			return getUtteranceList().get( currentUtterance );
-		} else {
-			return null;
-		}
 	}
 
 	// Get final utterance in list, or null if list is empty.
@@ -989,9 +992,7 @@ public class MainController implements BasicPlayerListener {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void updateTimeDisplay() {
-		// TMP
 		playerView.getTimeline().repaint();
-		// TMP
 		if( bytesPerSecond != 0 ) {
 			// Handles constant bit-rates only.
 			int 	bytes 		= player.getEncodedStreamPosition();
@@ -1171,9 +1172,7 @@ public class MainController implements BasicPlayerListener {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Update utterance displays (e.g. current, last, etc) in active template view.
 	private synchronized void updateUtteranceDisplays() {
-		// TMP
 		playerView.getTimeline().repaint();
-		// TMP
 
 		if( templateView instanceof ParserTemplateView ) {
 			ParserTemplateView 	view 	= (ParserTemplateView) templateView;
