@@ -15,9 +15,10 @@ import edu.unm.casaa.utterance.Utterance;
 public class Timeline extends JPanel {
 	private static final long serialVersionUID = 1L;
 
-	private Dimension 		dimension = new Dimension( 800, 80 );
+	private Dimension 		dimension 		= new Dimension( 800, 80 );
 	private MainController 	control;
 	private Insets			insets;
+	private int				pixelsPerSecond	= 50; // Determines zoom level.
 
 	public Timeline( MainController control ) {
 		assert( control != null );
@@ -34,16 +35,20 @@ public class Timeline extends JPanel {
 		super.paintComponent( g );
 
 		// Early-out if no audio file is loaded.
-		int audioLength	= control.getAudioLength();
+		int audioBytes = control.getAudioLength();
 
-		if( audioLength <= 0 ) {
+		if( audioBytes <= 0 ) {
 			return;
 		}
 
-		// Adjust clip by border insets, so rendering does not overlap border.
-		Rectangle 	clip 		= g.getClipBounds();
+		// Find component bounds inside border (not affected by clip).
 		int 		innerRight	= getWidth() - insets.right;
 		int 		innerBottom	= getHeight() - insets.bottom;
+		int			innerWidth	= innerRight - insets.left;
+		int			innerHeight	= innerBottom - insets.top;
+
+		// Adjust clip by border insets, so rendering does not overlap border.
+		Rectangle 	clip 		= g.getClipBounds();
 		int 		clipW		= clip.width;
 		int 		clipH		= clip.height;
 		int 		clipX		= clip.x;
@@ -62,54 +67,84 @@ public class Timeline extends JPanel {
 		clipW = Math.min( clipW, innerRight - clipX );
 		clipH = Math.min( clipH, innerBottom - clipY );
 
+		int			clipRight	= clipX + clipW;
+
 		g.setClip( clipX, clipY, clipW, clipH );
 
 		// Timeline.
 		int fontAscent	= g.getFontMetrics().getAscent();
 		int fontHeight	= g.getFontMetrics().getHeight();
-		int centerLineY = insets.top + ((innerBottom - insets.top) / 2);
+		int centerLineY = insets.top + (innerHeight / 2);
 
 		centerLineY += fontHeight / 2; // Shift down, since we have a line of text (time stamps) above boxes.
 
 		g.setColor( Color.GRAY );
-		g.drawLine( insets.left, centerLineY, getWidth() - insets.right, centerLineY );
+		g.drawLine( insets.left, centerLineY, innerRight, centerLineY );
 
 		// Utterances.
-		int	pixelsPerSecond	= 100; // Determines zoom level.
 		int bytesPerSecond 	= control.getBytesPerSecond();
 		int bytesPerPixel	= (int) (bytesPerSecond / (float) pixelsPerSecond);
 
 		assert( bytesPerPixel > 0 );
 
-		// TODO:
-		// - Derive position and size based on component dimensions, and inner area (within border).
-		// - Scroll to appropriate region.
-		//   - Maybe keep current time marker centered on screen (except when we're at beginning/end).
-		// - Handle zoom (this may not actually be configurable).
-		// - Highlight current utterance.
-		int	boxH		= fontHeight + 10; // Include some space around font.
-		int boxY		= centerLineY - (boxH / 2);
+		// Scroll display to keep current time marker centered on screen
+		// (except when we're at beginning/end).
+		int playbackPosition	= control.streamPosition();
+		int displayedBytes		= innerWidth * bytesPerPixel;
+		int halfDisplayedBytes	= displayedBytes / 2;
+		int scrollX				= 0;
+
+		if( playbackPosition < halfDisplayedBytes ) {
+			scrollX = 0;
+		} else if( playbackPosition > audioBytes - halfDisplayedBytes ) {
+			scrollX = audioBytes - displayedBytes;
+		} else {
+			scrollX = playbackPosition - halfDisplayedBytes;
+		}
+		scrollX /= bytesPerPixel;
+
+		int playbackX		= insets.left + (playbackPosition / bytesPerPixel) - scrollX;
+
+		// Derive box positioning and size based on component and font dimensions.
+		int	boxH			= fontHeight + 10; // Include some space around font.
+		int boxY			= centerLineY - (boxH / 2);
 
 		for( int i = 0; i < control.numUtterances(); i++ ) {
 			Utterance 	u 			= control.utterance( i );
+
+			// Draw box from start to end of current utterance.  If utterance end has not
+			// been specified yet (i.e. is not yet parsed), end box at current playback time.
 			int			startBytes	= u.getStartBytes();
-			int			endBytes	= u.isParsed() ? u.getEndBytes() : audioLength;
+			int			endBytes	= u.isParsed() ? u.getEndBytes() : Math.max( startBytes, playbackPosition );
 			int 		boxW 		= (endBytes - startBytes) / bytesPerPixel;
-			int  		boxX 		= insets.left + (startBytes / bytesPerPixel);
+			int  		boxX 		= insets.left + (startBytes / bytesPerPixel) - scrollX;
+
+			// If box is clipped, skip.  NOTE: It is still possible for time stamp and/or label
+			// to be partially visible.
+			if( boxX > clipRight || (boxX + boxW) < clipX )
+				continue;
+
 			Color		borderColor	= new Color( 0.0f, 0.0f, 1.0f ); // Dark blue.
 			Color		boxColor	= new Color( 0.75f, 0.75f, 1.0f ); // Light blue.
 
+			// Highlight current utterance.
 			if( u == control.getCurrentUtterance() ) {
 				borderColor = new Color( 0.0f, 1.0f, 0.0f ); // Dark green.
 				boxColor 	= new Color( 0.75f, 1.0f, 0.75f ); // Light green.
 			}
+
+			// Box.
 			g.setColor( boxColor );
 			g.fillRect( boxX, boxY, boxW, boxH );
 			g.setColor( borderColor );
 			g.drawRect( boxX, boxY, boxW, boxH );
 
 			// Time stamp.
-			g.setColor( Color.BLACK );
+			if( u == control.getCurrentUtterance() ) {
+				g.setColor( Color.BLACK );
+			} else {
+				g.setColor( Color.GRAY );
+			}
 			g.drawString( u.getStartTime(), boxX + 5, boxY - 5 );
 
 			// Label.
@@ -126,13 +161,8 @@ public class Timeline extends JPanel {
 		}
 
 		// Current playback time indicator.
-		// TODO - Can we avoid repainting everything if this is the only thing changing?
-		//   - This might not be a significant optimization, if we need to scroll entire display around as time changes.
-		int position	= control.streamPosition();
-		int timeX		= insets.left + (position / bytesPerPixel);
-
 		g.setColor( Color.GRAY );
-		g.drawLine( timeX, insets.top, timeX, getHeight() - insets.bottom );
+		g.fillRect( playbackX, insets.top, 2, innerHeight );
 
 		// Restore original clip shape, so border is not clipped.
 		g.setClip( clip );
