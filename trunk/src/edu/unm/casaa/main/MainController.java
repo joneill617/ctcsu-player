@@ -351,7 +351,7 @@ public class MainController implements BasicPlayerListener {
 		long	bytes	= (long) (t * player.getEncodedLength());
 
 		try {
-			// Stop before seeking, to minimize lag.
+			// Stop before seeking, to minimize UI lag.
 			player.stop();
 			player.seek( bytes );
 		} catch( BasicPlayerException e ) {
@@ -364,6 +364,8 @@ public class MainController implements BasicPlayerListener {
 
 		// Update time display.
 		updateTimeDisplay();
+
+		playbackPositionChanged();
 	}
 
 	// Pause/resume/stop/play player.  These wrappers are here to clean up exception handling.
@@ -638,6 +640,7 @@ public class MainController implements BasicPlayerListener {
 			Utterance utterance = getCurrentUtterance();
 
 			playerSeek( utterance == null ? 0 : getCurrentUtterance().getStartBytes() );
+			playbackPositionChanged();
 		} else {
 			showParsingErrorDialog();
 		}
@@ -685,6 +688,8 @@ public class MainController implements BasicPlayerListener {
 		updateUtteranceDisplays();
 		updateTimeDisplay();
 		updateSeekSliderDisplay();
+
+		playbackPositionChanged();
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -731,6 +736,12 @@ public class MainController implements BasicPlayerListener {
 				displayPlayerException( e );
 			}
 		}
+	}
+
+	// Callback when user changes playback position manually (i.e. by pressing a button or
+	// dragging the seek bar).
+	private synchronized void playbackPositionChanged() {
+		waitingForCode = false; // Stop waiting for a code if we change playback position.
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
