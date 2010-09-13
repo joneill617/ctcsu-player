@@ -221,6 +221,9 @@ public class PlayerView extends JFrame {
 	public JButton getButtonUnparseAndReplay(){
 		if( buttonUnparseAndReplay == null ){
 			buttonUnparseAndReplay = newPlayerButton( "unparseAndReplay", KeyStroke.getKeyStroke( KeyEvent.VK_U, 0 ) );
+
+			// Button needs more space for label.
+			buttonUnparseAndReplay.setPreferredSize( new Dimension( (int) (BUTTON_WIDTH * 1.5), BUTTON_HEIGHT ) );
 		}
 		return buttonUnparseAndReplay;
 	}
