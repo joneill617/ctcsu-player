@@ -64,7 +64,7 @@ public class MiscTemplateUiService extends TemplateUiService{
 	}
 	
 	//===============================================================
-	// MouseAdapter inner class
+	// MiscTemplateListener
 	//===============================================================
 
 	private class MiscTemplateListener extends MouseAdapter {
