@@ -39,7 +39,7 @@ public interface Utterance {
 	public void	setEnum(int index);
 	public void setEndTime(String end);	
 	public void setEndBytes(int bytes);
-	public void setMiscCode(int code);
+	public void setMiscCodeByValue(int value);
 	public void setMiscCode(MiscCode code);
 	
 	// Output order should be tab-delimited:

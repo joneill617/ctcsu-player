@@ -26,6 +26,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 
+import java.io.File;
 import java.util.HashMap;
 
 import javax.swing.BorderFactory;
@@ -34,10 +35,19 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXParseException;
+
+import edu.unm.casaa.main.MainController;
 import edu.unm.casaa.main.Style;
 
 /**
@@ -66,12 +76,8 @@ public class MiscTemplateView extends JPanel {
 	private JPanel panelCurrentText			= null;
 	private JPanel panelNextText			= null;
 	private JPanel panelTherapistControls	= null;
-	private static final int ROWS_THERAPIST	= 8;
-	private static final int COLS_THERAPIST	= 4;
 	private TitledBorder borderTherapist	= null;
 	private JPanel panelClientControls		= null;
-	private static final int ROWS_CLIENT	= 8;
-	private static final int COLS_CLIENT	= 2;
 	private TitledBorder borderClient		= null;
 	private static final int BUTTON_HOR_GAP	= 5;
 	private static final int BUTTON_VER_GAP	= 4;
@@ -122,6 +128,7 @@ public class MiscTemplateView extends JPanel {
 		setMaximumSize(getDimMainPanel());
 		setMinimumSize(getDimMainPanel());
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		parseUserControls();
 		add(getPanelPrevText());
 		add(getPanelCurrentText());
 		add(getPanelNextText());
@@ -162,95 +169,136 @@ public class MiscTemplateView extends JPanel {
 		return ("MISC");
 	}
 
+	// Parse user controls from XML file.
+	private void parseUserControls() {
+		String	filename 	= "userCodes.xml";
+		File 	file 		= new File( filename );
+
+		if( file.exists() ) {
+			try {
+				DocumentBuilderFactory 	fact 	= DocumentBuilderFactory.newInstance();
+		        DocumentBuilder 		builder = fact.newDocumentBuilder();
+		        Document 				doc 	= builder.parse( filename );
+		        Node 					root	= doc.getDocumentElement();
+
+		        /* Expected format:
+		         * <userCodes>
+		         *   <codes>
+		         *    ...
+		         *   </codes>
+		         *   <controls panel="therapist">
+		         *     ...
+		         *   </controls>
+		         *   <controls panel="client">
+		         *     ...
+		         *   </controls>
+		         * </userCodes>
+		         */
+		        for( Node node = root.getFirstChild(); node != null; node = node.getNextSibling() ) {
+			        if( node.getNodeName().equalsIgnoreCase( "controls" ) ) {
+			        	// Get panel attribute.  Must be "therapist" or "client".
+						NamedNodeMap 	map 		= node.getAttributes();
+						String			panelName	= map.getNamedItem( "panel" ).getTextContent();
+
+						if( panelName.equalsIgnoreCase( "therapist" ) ) {
+				        	parseControlColumn( node, getPanelTherapistControls() );
+						} else if( panelName.equalsIgnoreCase( "client" ) ) {
+							parseControlColumn( node, getPanelClientControls() );
+						}
+			        }
+		        }
+			} catch( SAXParseException e ) {
+				MainController.instance.handleUserCodesParseError( filename, e );
+			} catch( Exception e ) {
+				MainController.instance.handleUserCodesGenericError( filename, e );
+			}
+		} else {
+			MainController.instance.handleUserCodesMissing( filename );
+		}
+	}
+
 	//====================================================================
 	// Private Helper Methods
 	//====================================================================
 
-	private JPanel getPanelTherapistControls(){
-		if( panelTherapistControls == null ){
+	// Parse a column of controls from given XML node.  Add buttons to given panel, and set panel layout.
+	// Each child of given node is expected to be one row of controls.
+	private void parseControlColumn( Node node, JPanel panel ) {
+		// Count actual rows (node children), columns (max of any node child's children),
+		// for use in layout.
+		int numRows = 0;
+		int	maxCols	= 0;
+
+		for( Node row = node.getFirstChild(); row != null; row = row.getNextSibling() ) {
+			if( row.getNodeName().equalsIgnoreCase( "row" ) ) {
+				numRows++;
+			} else {
+				continue;
+			}
+
+			int	colsThisRow = 0;
+
+			for( Node cell = row.getFirstChild(); cell != null; cell = cell.getNextSibling() ) {
+				if( cell.getNodeName().equalsIgnoreCase( "code" ) ||
+					cell.getNodeName().equalsIgnoreCase( "group") ) {
+						colsThisRow++;
+				}
+			}
+			maxCols = Math.max( maxCols, colsThisRow );
+		}
+
+		panel.setLayout( new GridLayout( numRows, maxCols, BUTTON_HOR_GAP, BUTTON_VER_GAP ) );
+
+		// Traverse children, creating a row of buttons for each.
+		for( Node row = node.getFirstChild(); row != null; row = row.getNextSibling() ) {
+			if( !row.getNodeName().equalsIgnoreCase( "row" ) ) {
+				continue;
+			}
+			int	colsThisRow = 0;
+
+			for( Node cell = row.getFirstChild(); cell != null; cell = cell.getNextSibling() ) {
+				// If cell represents a single value, add a button assigned to that code.
+				// If cell represents a group of values, add a button that will open a popup.
+				if( cell.getNodeName().equalsIgnoreCase( "code" ) ) {
+					NamedNodeMap 	map 	= cell.getAttributes();
+					String			label	= map.getNamedItem( "label" ).getTextContent();
+					MiscCode		code	= MiscCode.codeWithLabel( label );
+
+					panel.add( getButtonMiscCode( code ) );
+					colsThisRow++;
+				} else if( cell.getNodeName().equalsIgnoreCase( "group" ) ) {
+					NamedNodeMap 	map 	= cell.getAttributes();
+					String			label	= map.getNamedItem( "label" ).getTextContent();
+
+					// TODO - Generate a popup menu or dialog to select single code from group.
+					// TMP - Placeholder.
+					System.out.println( "  Would add group, label: " + label );
+					panelTherapistControls.add( Box.createRigidArea( getDimButtonSize() ) );
+					// TMP
+
+					colsThisRow++;
+				}
+			}
+
+			// Add spacers to match max number of cells in any row.
+			for( int i = colsThisRow; i < maxCols; i++ ) {
+				panelTherapistControls.add( Box.createRigidArea( getDimButtonSize() ) );
+			}
+		}
+	}
+
+	private JPanel getPanelTherapistControls() {
+		if( panelTherapistControls == null ) {
 			panelTherapistControls = new JPanel();
-			panelTherapistControls.setLayout(new GridLayout(ROWS_THERAPIST,
-					COLS_THERAPIST,
-					BUTTON_HOR_GAP,
-					BUTTON_VER_GAP));
-			panelTherapistControls.setBorder(getBorderTherapist());
-
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.CQ_NEUTRAL));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.OQ_NEUTRAL));
-			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
-			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
-
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.SR_MINUS));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.SR_NEUTRAL));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.SR_PLUS));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.SR_PLUS_MINUS));
-
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.CR_MINUS));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.CR_NEUTRAL));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.CR_PLUS));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.CR_PLUS_MINUS));
-
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.ADP));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.AF));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.EC));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.RCP));
-
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.RF));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.SU));
-			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
-			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
-
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.ADW));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.CO));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.DI));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.RCW));
-			
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.WA));
-			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
-			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
-			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
-
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.FA));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.FI));
-			panelTherapistControls.add(getButtonMiscCode(MiscCode.GI));
-			panelTherapistControls.add(Box.createRigidArea(getDimButtonSize()));
+			panelTherapistControls.setBorder( getBorderTherapist() );
 		}
 		return panelTherapistControls;
 	}
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private JPanel getPanelClientControls(){
 		if( panelClientControls == null ){
 			panelClientControls = new JPanel();
-			panelClientControls.setLayout(new GridLayout(ROWS_CLIENT,
-					COLS_CLIENT,
-					BUTTON_HOR_GAP,
-					BUTTON_VER_GAP));
-			panelClientControls.setBorder(getBorderClient());
-
-			panelClientControls.add(getButtonMiscCode(MiscCode.D_PLUS));
-			panelClientControls.add(getButtonMiscCode(MiscCode.D_MINUS));
-			
-			panelClientControls.add(getButtonMiscCode(MiscCode.A_PLUS));
-			panelClientControls.add(getButtonMiscCode(MiscCode.A_MINUS));
-			
-			panelClientControls.add(getButtonMiscCode(MiscCode.R_PLUS));
-			panelClientControls.add(getButtonMiscCode(MiscCode.R_MINUS));
-			
-			panelClientControls.add(getButtonMiscCode(MiscCode.N_PLUS));
-			panelClientControls.add(getButtonMiscCode(MiscCode.N_MINUS));
-			
-			panelClientControls.add(getButtonMiscCode(MiscCode.C_PLUS));
-			panelClientControls.add(getButtonMiscCode(MiscCode.C_MINUS));
-			
-			panelClientControls.add(getButtonMiscCode(MiscCode.TS_PLUS));
-			panelClientControls.add(getButtonMiscCode(MiscCode.TS_MINUS));
-			
-			panelClientControls.add(getButtonMiscCode(MiscCode.O_PLUS));
-			panelClientControls.add(getButtonMiscCode(MiscCode.O_MINUS));
-			
-			panelClientControls.add(getButtonMiscCode(MiscCode.FN));
-			panelClientControls.add(getButtonMiscCode(MiscCode.NC));
+			panelClientControls.setBorder( getBorderClient() );
 		}
 		return panelClientControls;
 	}
