@@ -25,7 +25,8 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
-
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.HashMap;
 
@@ -35,8 +36,9 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.xml.parsers.DocumentBuilder;
@@ -150,7 +152,7 @@ public class MiscTemplateView extends JPanel {
 			button = new JButton( miscCode.label );
 			button.setPreferredSize( getDimButtonSize() );
 			button.setToolTipText( "" + miscCode.value );
-			buttonMiscCode.put( miscCode.value, button);
+			buttonMiscCode.put( miscCode.value, button );
 		}
 		return button;
 	}
@@ -267,14 +269,33 @@ public class MiscTemplateView extends JPanel {
 					panel.add( getButtonMiscCode( code ) );
 					colsThisRow++;
 				} else if( cell.getNodeName().equalsIgnoreCase( "group" ) ) {
-					NamedNodeMap 	map 	= cell.getAttributes();
-					String			label	= map.getNamedItem( "label" ).getTextContent();
+					// Generate a popup menu to select one code from this group.
+					NamedNodeMap 	groupMap 	= cell.getAttributes();
+					String			groupLabel	= groupMap.getNamedItem( "label" ).getTextContent();
+					JPopupMenu 		popup 		= new JPopupMenu();
 
-					// TODO - Generate a popup menu or dialog to select single code from group.
-					// TMP - Placeholder.
-					System.out.println( "  Would add group, label: " + label );
-					panelTherapistControls.add( Box.createRigidArea( getDimButtonSize() ) );
-					// TMP
+					for( Node member = cell.getFirstChild(); member != null; member = member.getNextSibling() ) {
+						if( !member.getNodeName().equalsIgnoreCase( "code" ) ) {
+							continue;
+						}
+
+						NamedNodeMap 	memberMap 	= member.getAttributes();
+						String			memberLabel	= memberMap.getNamedItem( "label" ).getTextContent();
+						JMenuItem 		item 		= new JMenuItem( memberLabel );
+						MiscCode		code		= MiscCode.codeWithLabel( memberLabel );
+
+						// Add mouse listener, keyed with code for this member in group.
+						item.addMouseListener( new PopupItemListener( code ) );
+						popup.add( item );
+					}
+
+					// Add button to open popup.
+					JButton 		button = new JButton( groupLabel );
+
+					button.setPreferredSize( getDimButtonSize() );
+					button.setToolTipText( "Select from " + groupLabel + "group" );
+					button.addMouseListener( new PopupListener( popup ) );
+					panel.add( button );
 
 					colsThisRow++;
 				}
@@ -605,4 +626,36 @@ public class MiscTemplateView extends JPanel {
 		return dimMainPanel;
 	}
 
+	//===============================================================
+	// PopupListener
+	//===============================================================
+
+	private class PopupListener extends MouseAdapter {
+		private JPopupMenu popup = null;
+
+		public PopupListener( JPopupMenu popup ) {
+			this.popup = popup;
+		}
+
+		public void mousePressed( MouseEvent e ) {
+            popup.show( e.getComponent(), e.getX(), e.getY() );
+	    }
+	}
+
+	//===============================================================
+	// PopupItemListener
+	//===============================================================
+
+	private class PopupItemListener extends MouseAdapter {
+		private MiscCode code;
+		
+		PopupItemListener( MiscCode code ) {
+			this.code = code;
+		}
+		
+		public void mousePressed( MouseEvent e ) {
+			MainController.instance.handleButtonMiscCode( code );
+		}
+				
+	}
 }

@@ -56,14 +56,6 @@
             <code label="SR+/-"/>
         </row>
         <row>
-            <!-- TMP - For testing, group these CR's >
-            <group label="CR">
-                <code label="CR-"/>
-                <code label="CR0"/>
-                <code label="CR+"/>
-                <code label="CR+/-"/>
-            </group>
-            -->
             <code label="CR-"/>
             <code label="CR0"/>
             <code label="CR+"/>
