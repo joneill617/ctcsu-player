@@ -44,7 +44,7 @@ public class UtteranceList {
 	 * @param data
 	 */
 	public void	add( Utterance data ){
-		list.add( data );			
+		list.add( data );
 	}
 
 	/**
@@ -183,7 +183,7 @@ public class UtteranceList {
 			item.setEndTime(end);
 			item.setEndBytes(endBytes);
 			if( lineSize == 7 ){
-				item.setMiscCode(new Integer(st.nextToken()).intValue());
+				item.setMiscCodeByValue( new Integer( st.nextToken() ).intValue() );
 				st.nextToken(); //throw away the code string
 			}
 			add(item);

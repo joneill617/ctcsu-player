@@ -33,15 +33,15 @@ public class MiscDataItem implements Utterance {
 	private int 		startBytes	= -1;
 	private String 		endTime		= null;
 	private int 		endBytes	= -1;
-	private MiscCode 	miscCode	= MiscCode.INVALID;
-	
+	private MiscCode 	miscCode	= new MiscCode();
+
 	/**
 	 * Constructor requires the order from the data queue,
 	 * and the start time from the player.
 	 * @param order the enumerated order for this utterance
 	 * @param start the start time code for this utterance
 	 */
-	public MiscDataItem(int orderEnum, String startTime, int startBytes){
+	public MiscDataItem( int orderEnum, String startTime, int startBytes ) {
 		this.orderEnum 	= orderEnum;
 		this.startTime 	= startTime;
 		this.startBytes = startBytes;
@@ -51,7 +51,7 @@ public class MiscDataItem implements Utterance {
 	 * Set order number where this particular utterance occurs.
 	 * @param index
 	 */
-	public void setEnum(int index){
+	public void setEnum( int index ) {
 		orderEnum = index;
 	}
 
@@ -117,7 +117,7 @@ public class MiscDataItem implements Utterance {
 	 * Return true if this utterance has been coded.
 	 */
 	public boolean isCoded() {
-		return miscCode != MiscCode.INVALID;
+		return miscCode.isValid();
 	}
 
 	/**
@@ -130,7 +130,7 @@ public class MiscDataItem implements Utterance {
 
 	/**
 	 * Returns the MISC code for this utterance.
-	 * Returns MiscCode.INVALID if value wasn't set.
+	 * Returned misc code will have value MiscCode.INVALID if value wasn't set.
 	 * @return the MISC code.
 	 */
 	public MiscCode getMiscCode() {
@@ -141,7 +141,7 @@ public class MiscDataItem implements Utterance {
 	 * Sets the end time code for this utterance.
 	 * @param end the end time code
 	 */
-	public void setEndTime(String end) {
+	public void setEndTime( String end ) {
 		this.endTime = end;
 	}
 
@@ -149,7 +149,7 @@ public class MiscDataItem implements Utterance {
 	 * Sets the end time byte accumulation for this utterance.
 	 * @param end the end time code
 	 */
-	public void setEndBytes(int bytes) {
+	public void setEndBytes( int bytes ) {
 		this.endBytes = bytes;
 	}
 
@@ -157,23 +157,15 @@ public class MiscDataItem implements Utterance {
 	 * Sets the MISC statistical code for this utterance by integer value.
 	 * @param integer code the MISC statistical code
 	 */
-	public void setMiscCode(int code) {
-		// Search for enum with matching value.
-		for( MiscCode m : MiscCode.values() ) {
-			if( m.value == code ) {
-				this.miscCode = m;
-				return;
-			}
-		}
-		// Error - code unrecognized.
-		this.miscCode = MiscCode.INVALID;
+	public void setMiscCodeByValue( int value ) {
+		miscCode = MiscCode.codeWithValue( value );
 	}
 	
 	/**
 	 * Sets the MISC statistical code for this utterance.
 	 * @param name the MISC statistical code
 	 */
-	public void setMiscCode(MiscCode code) {
+	public void setMiscCode( MiscCode code ) {
 		this.miscCode = code;
 	}
 	
@@ -184,11 +176,7 @@ public class MiscDataItem implements Utterance {
 	 * @return a string representation of this utterance
 	 */
 	public String toString(){
-		if( isCoded() ) {
-			return writeCoded();
-		} else {
-			return writeParsed();
-		}
+		return isCoded() ? writeCoded() : writeParsed();
 	}
 
 	public String writeCoded(){

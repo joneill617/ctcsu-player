@@ -39,13 +39,10 @@ public class MiscTemplateUiService extends TemplateUiService{
 
 	private void init() {
 		view = new MiscTemplateView();
-		
-		for( MiscCode m : MiscCode.values() ) {
-			if( m == MiscCode.INVALID ) {
-				continue;
-			}
-			
-			JButton button = view.getButtonMiscCode( m );
+
+		for( int i = 0; i < MiscCode.numCodes(); i++ ) {
+			MiscCode 	m 		= MiscCode.codeAtIndex( i );
+			JButton 	button 	= view.getButtonMiscCode( m );
 
 			button.addMouseListener( getMiscButtonListener( m ) );
 			button.setToolTipText( "" + m.value );

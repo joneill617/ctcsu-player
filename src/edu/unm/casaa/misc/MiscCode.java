@@ -18,61 +18,100 @@ This source code file is part of the CASAA Treatment Coding System Utility
 
 package edu.unm.casaa.misc;
 
-// NOTE: MiscCode values are not all in contiguous order.  This is by design (i.e. at client's request).
+import java.util.Vector;
 
-public enum MiscCode{ 
-	// Uninitialized code.
-	INVALID( "INVALID", 0 ),
+// MiscCode associates a label, such as "CR+/-" or "ADP", with a numeric value.
+public class MiscCode { 
+	private static final long serialVersionUID 	= 1L;
 
-	// Therapist codes.
-	ADP( "ADP", 1 ),
-	ADW( "ADW", 2 ),
-	AF( "AF", 3 ),
-	CO( "CO", 4 ),
-	DI( "DI", 5 ),
-	EC( "EC", 6 ),
-	FA( "FA", 7 ),
-	FI( "FI", 8 ),
-	GI( "GI", 9 ),
-	CQ_NEUTRAL( "CQ0", 11 ),
-	OQ_NEUTRAL( "OQ0", 14 ),
-	RCP( "RCP", 16 ),
-	RCW( "RCW", 17 ),
-	SR_MINUS( "SR-", 18 ),
-	SR_NEUTRAL( "SR0", 19 ),
-	SR_PLUS( "SR+", 20 ),
-	SR_PLUS_MINUS( "SR+/-", 51 ),
-	CR_MINUS( "CR-", 21 ),
-	CR_NEUTRAL( "CR0", 22 ),
-	CR_PLUS( "CR+", 23 ),
-	CR_PLUS_MINUS( "CR+/-", 52 ),
-	RF( "RF", 24 ),
-	SU( "SU", 25 ),
-	WA( "WA", 27 ),
+	public static final int 			INVALID			= 0;
+	public static final MiscCode		INVALID_CODE	= new MiscCode();
 
-	// Client codes.
-	C_PLUS( "C+", 30 ),
-	C_MINUS( "C-", 31 ),
-	R_PLUS( "R+", 32 ),
-	R_MINUS( "R-", 33 ),
-	D_PLUS( "D+", 34 ),
-	D_MINUS( "D-", 35 ),
-	A_PLUS( "A+", 36 ),
-	A_MINUS( "A-", 37 ),
-	N_PLUS( "N+", 38 ),
-	N_MINUS( "N-", 39 ),
-	TS_PLUS( "TS+", 40 ),
-	TS_MINUS( "TS-", 41 ),
-	O_PLUS( "O+", 42 ),
-	O_MINUS( "O-", 43 ),
-	FN( "FN", 44 ),
-	NC( "NC", 50 );
+	// List of available codes.  Built when we parse XML file.
+	private static Vector< MiscCode >	list	= new Vector< MiscCode >();
 
-	public final int 		value;
-	public final String		label;
+	public int 			value	= INVALID;
+	public String		label	= "";
 
-	MiscCode( String label, int value ) {
-		this.label = label;
+	// Class:
+
+	public static void	addCode( int value, String label ) {
+		MiscCode newCode = new MiscCode( value, label );
+
+		// Check that we're not duplicating an existing value or label.
+		for( int i = 0; i < list.size(); i++ ) {
+			MiscCode code = list.get( i );
+
+			if( code.value == newCode.value || code.label.equals( newCode.label ) ) {
+				// TODO - Warning dialog.
+				System.out.println( "Error: new code " + newCode.toDisplayString() + " conflicts with existing code " + code.toDisplayString() );
+				return;
+			}
+		}
+		list.add( newCode );
+	}
+
+	public static int	numCodes() {
+		return list.size();
+	}
+
+	// PRE: index < numCodes().
+	public static MiscCode codeAtIndex( int index ) {
+		return list.get( index );
+	}
+
+	// PRE: code exists with given value.
+	public static MiscCode codeWithValue( int value ) {
+		// Check known codes.
+		if( value == INVALID_CODE.value ) {
+			return INVALID_CODE;
+		}
+		// Check user codes.
+		for( int i = 0; i < list.size(); i++ ) {
+			MiscCode code = list.get( i );
+
+			if( code.value == value ) {
+				return code;
+			}
+		}
+		assert false : "Code with given value not found: " + value;
+		return null;
+	}
+
+	// PRE: code exists with given label.
+	public static MiscCode codeWithLabel( String label ) {
+		// Check known codes.
+		if( label.equals( INVALID_CODE.value ) ) {
+			return INVALID_CODE;
+		}
+		// Check user codes.
+		for( int i = 0; i < list.size(); i++ ) {
+			MiscCode code = list.get( i );
+
+			if( code.label.equals( label ) ) {
+				return code;
+			}
+		}
+		assert false : "Code with given label not found: " + label;
+		return null;
+	}
+
+	// Instance:
+
+	public MiscCode( int value, String label ) {
 		this.value = value;
+		this.label = label;
+	}
+
+	public MiscCode() {
+	}
+
+	public boolean isValid() {
+		return value != INVALID;
+	}
+
+	// Get string representation for use in user dialogs.
+	public String toDisplayString() {
+		return "(label: " + label + ", value: " + value + ")";
 	}
 };
