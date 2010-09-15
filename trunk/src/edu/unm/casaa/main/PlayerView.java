@@ -136,20 +136,18 @@ public class PlayerView extends JFrame {
 	//====================================================================
 
 	public PlayerView() {
-		setTitle( strWindowTitle );
+        setTitle( strWindowTitle );
 
-		setMinimumSize(new Dimension(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT));	
-		setLocation(X_LOCATION, Y_LOCATION);
+        setMinimumSize( new Dimension( WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT ) );
+        setLocation( X_LOCATION, Y_LOCATION );
 
-		setIconImage(new ImageIcon("images/UNM_Color.jpg").getImage());
-		setJMenuBar(getMenuBarPlayer());
-		setResizable(true);
+        setIconImage( new ImageIcon( "images/UNM_Color.jpg" ).getImage() );
+        setJMenuBar( getMenuBarPlayer() );
+        setResizable( true );
 
-		getContentPane().setLayout(new BorderLayout());
-		getContentPane().add(getTopLayoutPanel(), BorderLayout.NORTH);
-		getContentPane().add(getBottomLayoutPanel(), BorderLayout.CENTER);
-		
-		setVisible(true);
+        getContentPane().setLayout( new BorderLayout() );
+        getContentPane().add( getTopLayoutPanel(), BorderLayout.NORTH );
+        getContentPane().add( getBottomLayoutPanel(), BorderLayout.CENTER );
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
