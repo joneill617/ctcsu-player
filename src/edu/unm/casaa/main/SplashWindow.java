@@ -12,23 +12,21 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JWindow;
 
-public class Splash extends JWindow {
+public class SplashWindow extends JWindow {
 
     private static final long serialVersionUID = 1L;
 
-    public Splash() {
+    public SplashWindow() {
         JPanel content = (JPanel) getContentPane();
 
         content.setBackground( Color.white );
 
-        // Set the window's bounds, centering the window.
         Dimension   screen  = Toolkit.getDefaultToolkit().getScreenSize();
         int         width   = Math.min( screen.width / 2, 600 );
         int         height  = Math.min( screen.height / 2, 250 );
-        int         x       = (screen.width - width) / 2;
-        int         y       = (screen.height - height) / 2;
 
-        setBounds( x, y, width, height );
+        setSize( width, height );
+        setLocationRelativeTo( null ); // Center on screen.
 
         // Build the splash screen.
         // TODO - Get contents from UNM.

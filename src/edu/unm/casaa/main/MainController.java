@@ -35,6 +35,7 @@ import java.util.Map;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -95,6 +96,8 @@ public class MainController implements BasicPlayerListener {
 
     private ActionTable          actionTable              = null;             // Communication between GUI and MainController.
 
+    private OptionsWindow        optionsWindow            = null;
+
     private PlayerView           playerView               = null;
     private JPanel               templateView             = null;
     private TemplateUiService    templateUI               = null;
@@ -139,9 +142,9 @@ public class MainController implements BasicPlayerListener {
 	 */
 	public static void main( String[] args ) {
 	    // Create and show splash screen.
-	    Splash splash      = new Splash();
-	    Date   date        = new Date();
-	    long   startTime   = date.getTime();
+	    SplashWindow   splash      = new SplashWindow();
+	    Date           date        = new Date();
+	    long           startTime   = date.getTime();
 
 	    splash.setVisible( true );
 
@@ -459,10 +462,8 @@ public class MainController implements BasicPlayerListener {
 			displayPlayerException(e);
 		}
 
-		// Set player volume and pan according to sliders, after player line is
-		// initialized.
-		handleSliderGain();
-		handleSliderPan();
+		// Set player volume and pan according to sliders, after player line is initialized.
+		getOptionsWindow().applyAudioOptions();
 
 		// Update time and seek slider displays.
 		updateTimeDisplay();
@@ -488,10 +489,8 @@ public class MainController implements BasicPlayerListener {
 			displayPlayerException(e);
 		}
 
-		// Set player volume and pan according to sliders, after player line is
-		// initialized.
-		handleSliderGain();
-		handleSliderPan();
+		// Set player volume and pan according to sliders, after player line is initialized.
+		getOptionsWindow().applyAudioOptions();
 
 		// Update time display.
 		updateTimeDisplay();
@@ -515,8 +514,7 @@ public class MainController implements BasicPlayerListener {
 		} catch (BasicPlayerException e) {
 			displayPlayerException(e);
 		}
-		handleSliderGain();
-		handleSliderPan();
+        getOptionsWindow().applyAudioOptions();
 	}
 
 	private synchronized void playerPlay() {
@@ -525,8 +523,7 @@ public class MainController implements BasicPlayerListener {
 		} catch (BasicPlayerException e) {
 			displayPlayerException(e);
 		}
-		handleSliderGain();
-		handleSliderPan();
+        getOptionsWindow().applyAudioOptions();
 	}
 
 	private void cleanupMode() {
@@ -643,26 +640,6 @@ public class MainController implements BasicPlayerListener {
 	private void registerPlayerViewListeners() {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Pan Slider
-		playerView.getSliderPan().addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent ce) {
-				if (playerView.getSliderPan().getValueIsAdjusting()) {
-					handleSliderPan();
-				}
-			}
-		});
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Gain Slider
-		playerView.getSliderGain().addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent ce) {
-				if (playerView.getSliderGain().getValueIsAdjusting()) {
-					handleSliderGain();
-				}
-			}
-		});
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Seek Slider
 		playerView.getSliderSeek().addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent ce) {
@@ -684,6 +661,14 @@ public class MainController implements BasicPlayerListener {
                 if( selectAndLoadAudioFile() ) {
                     setMode( Mode.PLAYBACK );
                 }
+            }
+        } );
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // File Menu: Options
+        playerView.getMenuItemOptions().addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                getOptionsWindow().setVisible( true );
             }
         } );
 
@@ -862,10 +847,10 @@ public class MainController implements BasicPlayerListener {
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    private synchronized void handleSliderPan() {
+    public synchronized void handleSliderPan( JSlider slider ) {
         if( player.hasPanControl() ) {
             try {
-                player.setPan( playerView.getSliderPan().getValue() / 10.0 );
+                player.setPan( slider.getValue() / 10.0 );
             } catch( BasicPlayerException e ) {
                 displayPlayerException( e );
             }
@@ -873,10 +858,10 @@ public class MainController implements BasicPlayerListener {
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    private synchronized void handleSliderGain() {
+    public synchronized void handleSliderGain( JSlider slider ) {
         if( player.hasGainControl() ) {
             try {
-                player.setGain( playerView.getSliderGain().getValue() / 100.0 );
+                player.setGain( slider.getValue() / 100.0 );
             } catch( BasicPlayerException e ) {
                 displayPlayerException( e );
             }
@@ -890,6 +875,12 @@ public class MainController implements BasicPlayerListener {
 		waitingForCode = false; // Stop waiting for a code if we change playback position.
 	}
 
+	private synchronized OptionsWindow getOptionsWindow() {
+	    if( optionsWindow == null )
+	        optionsWindow = new OptionsWindow();
+
+	    return optionsWindow;
+	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Menu Handlers
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

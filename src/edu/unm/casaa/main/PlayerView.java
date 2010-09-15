@@ -22,7 +22,6 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.KeyEvent;
-import java.util.Hashtable;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -77,7 +76,6 @@ public class PlayerView extends JFrame {
 	private JPanel panelTemplate					= null;
 	private JPanel panelPlayerControls				= null;
 	private JPanel panelFileInfo					= null;
-	private JPanel panelGainPan						= null;
 	private Timeline timeline						= null;
 
 	// Player Controls
@@ -91,14 +89,13 @@ public class PlayerView extends JFrame {
 	private JButton buttonUncode				= null;
 	private JButton buttonRewind5s				= null;
 	private JSlider sliderSeek					= null;
-	private JSlider sliderGain					= null;
-	private JSlider sliderPan					= null;
 	private JLabel labelPlayerStatus			= null;
 	private JLabel labelTime					= null;
 
 	private JMenuBar menuBarPlayer				= null;
 	private JMenu menuFile						= null;
 	private JMenuItem menuItemLoadAudio			= null;	
+    private JMenuItem menuItemOptions           = null;
 	private JMenuItem menuItemExit				= null;
 	private JMenu menuParse						= null;
 	private JMenuItem menuItemNewParse			= null;
@@ -118,18 +115,6 @@ public class PlayerView extends JFrame {
 	public static final int SEEK_MAX_VAL		= 1000;
 	private static final int SEEK_INIT_VAL		= 0;
 	private TitledBorder borderSeek				= null;
-
-	private static final int GAIN_MIN_VAL		= 0;
-	private static final int GAIN_MAX_VAL		= 100;
-	private static final int GAIN_TICK_VAL		= 10;
-	private static final int GAIN_INIT_VAL		= 50;
-	private TitledBorder borderGain				= null;
-
-	private static final int PAN_MIN_VAL		= -10;
-	private static final int PAN_MAX_VAL		= 10;
-	private static final int PAN_TICK_VAL		= 2;
-	private static final int PAN_INIT_VAL		= 0;
-	private TitledBorder borderPan				= null;
 
 	//====================================================================
 	// Constructor and Initialization Methods
@@ -272,41 +257,6 @@ public class PlayerView extends JFrame {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	/**
-	 * Returns the Player's Pan Slider
-	 * @return a JSlider used to control and show the current play position
-	 */
-	public JSlider getSliderPan(){
-		if( sliderPan == null ){
-			//actual control uses -1.0 to 1.0 with 0.0 at center
-			sliderPan = new JSlider(SwingConstants.HORIZONTAL, 
-					PAN_MIN_VAL, PAN_MAX_VAL, PAN_INIT_VAL);
-			//sliderPan.setToolTipText("Pan the Audio");
-			sliderPan.setMajorTickSpacing(PAN_TICK_VAL);
-			sliderPan.setSnapToTicks(true);
-			sliderPan.setPaintTicks(true);
-			Hashtable<Integer, JLabel> tableLabel = 
-				new Hashtable<Integer, JLabel>();
-			tableLabel.put(new Integer(0), new JLabel("Center"));
-			tableLabel.put(new Integer(-10), new JLabel("Left"));
-			tableLabel.put(new Integer(10), new JLabel("Right"));
-			sliderPan.setLabelTable(tableLabel);
-			sliderPan.setPaintLabels(true);
-			sliderPan.setBorder(getBorderPan());
-		}
-		return sliderPan;
-	}
-
-	private Border getBorderPan(){
-		if( borderPan == null ){
-			borderPan = BorderFactory.createTitledBorder(
-			"Balance");
-			borderPan.setTitleJustification(TitledBorder.LEADING);
-		}
-		return borderPan;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	/**
 	 * Returns the Player's Seek Slider
 	 * @return a JSlider used to control and show the current play position
 	 */
@@ -339,49 +289,6 @@ public class PlayerView extends JFrame {
 		getSliderSeek().setValue( value );
 	}
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	/**
-	 * Returns the Player's Gain Slider
-	 * @return a JSlider used to control and show the current play position
-	 */
-	public JSlider getSliderGain(){
-		if( sliderGain == null ){
-			//actual control uses 0.0 to 1.0 in increments of 0.05
-			sliderGain = new JSlider(SwingConstants.HORIZONTAL, 
-					GAIN_MIN_VAL, GAIN_MAX_VAL, 
-					GAIN_INIT_VAL);
-			//sliderGain.setToolTipText("Set the Player's Gain Value");
-			sliderGain.setMajorTickSpacing(GAIN_TICK_VAL);
-			Hashtable<Integer, JLabel> tableLabel = 
-				new Hashtable<Integer, JLabel>();
-			tableLabel.put(new Integer(0), new JLabel("0"));
-			tableLabel.put(new Integer(10), new JLabel("1"));
-			tableLabel.put(new Integer(20), new JLabel("2"));
-			tableLabel.put(new Integer(30), new JLabel("3"));
-			tableLabel.put(new Integer(40), new JLabel("4"));
-			tableLabel.put(new Integer(50), new JLabel("5"));
-			tableLabel.put(new Integer(60), new JLabel("6"));
-			tableLabel.put(new Integer(70), new JLabel("7"));
-			tableLabel.put(new Integer(80), new JLabel("8"));
-			tableLabel.put(new Integer(90), new JLabel("9"));
-			tableLabel.put(new Integer(100), new JLabel("10"));
-			sliderGain.setLabelTable(tableLabel);
-			sliderGain.setPaintTicks(true);
-			sliderGain.setPaintLabels(true);
-			sliderGain.setBorder(getBorderGain());
-		}
-		return sliderGain;
-	}	
-
-	private Border getBorderGain(){
-		if( borderGain == null ){
-			borderGain = BorderFactory.createTitledBorder(
-			"Volume");
-			borderGain.setTitleJustification(TitledBorder.LEADING);
-		}
-		return borderGain;
-	}
-
 	//====================================================================
 	// Private Helper Methods
 	//====================================================================
@@ -396,7 +303,6 @@ public class PlayerView extends JFrame {
 			topLayoutPanel.setBorder(getBorderTop());
 			topLayoutPanel.add(getPanelPlayerControls(), BorderLayout.NORTH);
 			topLayoutPanel.add(getPanelFileInfo(), BorderLayout.CENTER);
-			topLayoutPanel.add(getPanelGainPan(), BorderLayout.SOUTH);
 		}
 		return topLayoutPanel;
 	}
@@ -496,17 +402,6 @@ public class PlayerView extends JFrame {
 		return timeline;
 	}
 	
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private JPanel getPanelGainPan(){
-		if( panelGainPan == null ){
-			panelGainPan = new JPanel();
-			panelGainPan.setLayout(new BoxLayout(panelGainPan, BoxLayout.X_AXIS));
-			panelGainPan.add(getSliderGain());
-			panelGainPan.add(getSliderPan());
-		}
-		return panelGainPan;
-	}
-
 	private JLabel getLabelPlayerStatus(){
 		if( labelPlayerStatus == null ){
 			labelPlayerStatus = new JLabel("Player Status");
@@ -549,6 +444,7 @@ public class PlayerView extends JFrame {
 		if( menuFile == null ){
 			menuFile = new JMenu(" File ");
 			menuFile.add(getMenuItemLoadAudio());
+            menuFile.add(getMenuItemOptions());
 			menuFile.add(getMenuItemExit());
 		}
 		return menuFile;
@@ -561,7 +457,14 @@ public class PlayerView extends JFrame {
 		return menuItemLoadAudio;
 	}
 	
-	public JMenuItem getMenuItemExit(){
+    public JMenuItem getMenuItemOptions(){
+        if( menuItemOptions == null ){
+            menuItemOptions = new JMenuItem("Options");
+        }
+        return menuItemOptions;
+    }
+
+    public JMenuItem getMenuItemExit(){
 		if( menuItemExit == null ){
 			menuItemExit = new JMenuItem("Exit");
 		}
