@@ -81,67 +81,52 @@ public class MainController implements BasicPlayerListener {
 	// Fields
 	// ====================================================================
 
-	enum Mode {
-		PLAYBACK, // Play audio file.
-		PARSE, // Parse audio file.
-		CODE, // Code previously parsed audio file.
-		GLOBALS
-		// Assign overall ratings to an audio file.
-	};
+    enum Mode {
+        PLAYBACK,   // Play audio file.
+        PARSE,      // Parse audio file.
+        CODE,       // Code previously parsed audio file.
+        GLOBALS     // Assign overall ratings to an audio file.
+    };
 
-	public static MainController instance = null; // Singleton.
+    public static MainController instance                 = null;             // Singleton.
 
 	// GUI
 
-	private ActionTable actionTable = null; // Communication between GUI and
-											// MainController.
+    private ActionTable          actionTable              = null;             // Communication between GUI and MainController.
 
-	private PlayerView playerView = null;
-	private JPanel templateView = null;
-	private TemplateUiService templateUI = null;
+    private PlayerView           playerView               = null;
+    private JPanel               templateView             = null;
+    private TemplateUiService    templateUI               = null;
 
-	private String filenameParse = null;
-	private String filenameMisc = null;
-	private String filenameGlobals = null;
+    private String               filenameParse            = null;
+    private String               filenameMisc             = null;
+    private String               filenameGlobals          = null;
 
-	// Audio Player back-end
-	private BasicPlayer player = new BasicPlayer();
-	private String playerStatus = "";
-	private int bytesPerSecond = 0; // Cached when we load audio file.
+    // Audio Player back-end
+    private BasicPlayer          player                   = new BasicPlayer();
+    private String               playerStatus             = "";
+    private int                  bytesPerSecond           = 0;                // Cached when we load audio file.
 
-	private String filenameAudio = null;
+    private String               filenameAudio            = null;
 
-	private UtteranceList utteranceList = null;
-	private int currentUtterance = 0; // Index of utterance selected for parse
-										// or code. May be equal to list size,
-										// in which case current utterance is
-										// null.
+    private UtteranceList        utteranceList            = null;
+    private int                  currentUtterance         = 0;                // Index of utterance selected for parse or code. May be equal to list size, in
+                                                                               // which case current utterance is null.
 
-	private boolean pauseOnUncoded = true; // If true, pause playback in CODE
-											// mode when we reach the end of an
-											// uncoded utterance.
-	private boolean waitingForCode = false; // If true, we've paused playback in
-											// CODE mode, waiting for user to
-											// enter code.
-	private int numSaves = 0; // Number of times we've saved since loading
-								// current session data.
+    private boolean              pauseOnUncoded           = true;             // If true, pause playback in CODE mode when we reach the end of an uncoded
+                                                                               // utterance.
+    private boolean              waitingForCode           = false;            // If true, we've paused playback in CODE mode, waiting for user to enter code.
+    private int                  numSaves                 = 0;                // Number of times we've saved since loading current session data.
+    private int                  numUninterruptedUnparses = 0;                // Number of times user has unparsed without doing anything else.
 
-	// The following variables are used for thread-safe handling of player
-	// callbacks.
-	private boolean progressReported = false; // If true, player thread has
-												// called progress(), and we
-												// will apply change in run().
-	private boolean endOfMediaReported = false; // If true, player thread has
-												// reported EOM, and we will
-												// apply change in run().
-	private int endOfMediaPosition = 0; // Position reported in EOM
-										// notification, when endOfMediaReported
-										// is true.
+    // The following variables are used for thread-safe handling of player callbacks.
+    private boolean              progressReported         = false;            // If true, player thread has called progress(), and we will apply change in
+                                                                               // run().
+    private boolean              endOfMediaReported       = false;            // If true, player thread has reported EOM, and we will apply change in run().
+    private int                  endOfMediaPosition       = 0;                // Position reported in EOM notification, when endOfMediaReported is true.
 
-	private int statusChangeEventIndex = 0; // Track highest player event index
-											// that changed our displayed
-											// status, since events can be
-											// reported out of order.
+    private int                  statusChangeEventIndex   = 0;                // Track highest player event index that changed our displayed status, since
+                                                                               // events can be reported out of order.
 
 	// ====================================================================
 	// Main
@@ -164,23 +149,22 @@ public class MainController implements BasicPlayerListener {
 	public MainController() {
 	}
 
-	public void init() {
-		PlayerView.setLookAndFeel(); // Set look and feel first, so any warning dialogs triggered during initialization look right.
-		parseUserCodes();
-		playerView = new PlayerView();
-		player.addBasicPlayerListener(this);
-		registerPlayerViewListeners();
-		// Handle window closing events.
-		playerView.addWindowListener(
-				new WindowAdapter() {
-					public void windowClosing(WindowEvent e) {
-						actionExit();
-					}
-				});
+    public void init() {
+        PlayerView.setLookAndFeel(); // Set look and feel first, so any warning dialogs triggered during initialization look right.
+        parseUserCodes();
+        playerView = new PlayerView();
+        player.addBasicPlayerListener( this );
+        registerPlayerViewListeners();
+        // Handle window closing events.
+        playerView.addWindowListener( new WindowAdapter() {
+            public void windowClosing( WindowEvent e ) {
+                actionExit();
+            }
+        } );
 
-		// Start in playback mode, with no audio file loaded.
-		setMode(Mode.PLAYBACK);
-	}
+        // Start in playback mode, with no audio file loaded.
+        setMode( Mode.PLAYBACK );
+    }
 
 	// ====================================================================
 	// MainController interface
@@ -190,77 +174,71 @@ public class MainController implements BasicPlayerListener {
 	public void run() {
 		while (true) {
 			try {
-				// Thread-safety: Check for and handle player progress and EOM
-				// notifications.
-				// Because these callbacks come from a separate thread (i.e. the
-				// player thread),
-				// and handling them may call player methods and/or modify our
-				// state, we need to
-				// apply them here from our main thread. We also need to make
-				// sure any of our methods
-				// which are called from the GUI thread, and which can
-				// manipulate our internal state
-				// (i.e. most of our methods) are synchronized to ensure
-				// thread-safety with the methods
-				// we call here.
-				if (progressReported) {
-					applyPlayerProgress();
-				}
-				if (endOfMediaReported) {
-					applyEOM();
-				}
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+                // Thread-safety: Check for and handle player progress and EOM notifications.
+                // Because these callbacks come from a separate thread (i.e. the player thread),
+                // and handling them may call player methods and/or modify our state, we need to
+                // apply them here from our main thread. We also need to make sure any of our methods
+                // which are called from the GUI thread, and which can manipulate our internal state
+                // (i.e. most of our methods) are synchronized to ensure thread-safety with the methods
+                // we call here.
+                if( progressReported )
+                    applyPlayerProgress();
+
+                if( endOfMediaReported )
+                    applyEOM();
+
+                Thread.sleep( 100 );
+            } catch( InterruptedException e ) {
+                e.printStackTrace();
 			}
 		}
 	}
 
 	// Callbacks for GUI actions.
-	public void handleAction(String action) {
-		if ("parseStart".equals(action)) {
-			parseStart();
-		} else if ("parseEnd".equals(action)) {
-			parseEnd();
-		} else if ("play".equals(action)) {
-			handleActionPlay();
-		} else if ("replay".equals(action)) {
-			handleActionReplay();
-		} else if ("unparse".equals(action)) {
-			handleActionUnparse();
-		} else if ("uncode".equals(action)) {
-			handleActionUncode();
-		} else if ("unparseAndReplay".equals(action)) {
-			handleActionUnparseAndReplay();
-		} else if ("rewind5s".equals(action)) {
-			handleActionRewind5s();
-		}
-	}
+    public void handleAction( String action ) {
+        if( "parseStart".equals( action ) ) {
+            parseStart();
+        } else if( "parseEnd".equals( action ) ) {
+            parseEnd();
+        } else if( "play".equals( action ) ) {
+            handleActionPlay();
+        } else if( "replay".equals( action ) ) {
+            handleActionReplay();
+        } else if( "unparse".equals( action ) ) {
+            handleActionUnparse();
+        } else if( "uncode".equals( action ) ) {
+            handleActionUncode();
+        } else if( "unparseAndReplay".equals( action ) ) {
+            handleActionUnparseAndReplay();
+        } else if( "rewind5s".equals( action ) ) {
+            handleActionRewind5s();
+        }
+    }
 
 	// Callback when global data changes.
 	public void globalDataChanged() {
-		assert (templateView instanceof GlobalTemplateView);
+        assert (templateView instanceof GlobalTemplateView);
 		saveSession();
 	}
 
-	public synchronized void setPauseOnUncoded(boolean value) {
-		pauseOnUncoded = value;
-		waitingForCode = false;
-	}
+    public synchronized void setPauseOnUncoded( boolean value ) {
+        pauseOnUncoded = value;
+        waitingForCode = false;
+    }
 
 	public ActionTable getActionTable() {
-		if (actionTable == null) {
-			actionTable = new ActionTable();
-			mapAction("Start", "parseStart");
-			mapAction("End", "parseEnd");
-			mapAction("Play/Pause", "play");
-			mapAction("Replay", "replay");
-			mapAction("Unparse", "unparse");
-			mapAction("Unparse & Replay", "unparseAndReplay");
-			mapAction("Uncode", "uncode");
-			mapAction("Rewind 5s", "rewind5s");
-		}
-		return actionTable;
+        if( actionTable == null ) {
+            actionTable = new ActionTable();
+            mapAction( "Start", "parseStart" );
+            mapAction( "End", "parseEnd" );
+            mapAction( "Play/Pause", "play" );
+            mapAction( "Replay", "replay" );
+            mapAction( "Unparse", "unparse" );
+            mapAction( "Unparse & Replay", "unparseAndReplay" );
+            mapAction( "Uncode", "uncode" );
+            mapAction( "Rewind 5s", "rewind5s" );
+        }
+        return actionTable;
 	}
 
 	// Access utterances.
@@ -268,9 +246,9 @@ public class MainController implements BasicPlayerListener {
 		return getUtteranceList().size();
 	}
 
-	public Utterance utterance(int index) {
-		return getUtteranceList().get(index);
-	}
+    public Utterance utterance( int index ) {
+        return getUtteranceList().get( index );
+    }
 
 	private void utteranceListChanged() {
 		playerView.getTimeline().repaint();
@@ -287,13 +265,12 @@ public class MainController implements BasicPlayerListener {
 	}
 
 	// Get current utterance. May be null.
-	public synchronized Utterance getCurrentUtterance() {
-		assert (currentUtterance >= 0);
-		if (currentUtterance < getUtteranceList().size()) {
-			return getUtteranceList().get(currentUtterance);
-		} else {
-			return null;
-		}
+    public synchronized Utterance getCurrentUtterance() {
+        assert (currentUtterance >= 0);
+        if( currentUtterance < getUtteranceList().size() )
+            return getUtteranceList().get( currentUtterance );
+        else
+            return null;
 	}
 
 	// Handle errors re: user codes XML file. We must be able to find and parse
@@ -338,6 +315,7 @@ public class MainController implements BasicPlayerListener {
 				title,
 				JOptionPane.WARNING_MESSAGE);		
 	}
+
 	// ====================================================================
 	// Private Helper Methods
 	// ====================================================================
@@ -526,31 +504,33 @@ public class MainController implements BasicPlayerListener {
 		handleSliderPan();
 	}
 
+	private void cleanupMode() {
+        utteranceList       = null;
+        currentUtterance    = 0;
+        waitingForCode      = false;
+        resetUnparseCount();
+	}
+
 	// Switch modes. Hides/shows relevant UI.
 	// PRE: filenameAudio is set.
-	private void setMode(Mode mode) {
-		setTemplateView(mode);
+    private void setMode( Mode mode ) {
+        setTemplateView( mode );
 
-		playerView.getSliderSeek().setEnabled(filenameAudio != null);
-		playerView.getButtonPlay().setEnabled(filenameAudio != null);
+        playerView.getSliderSeek().setEnabled( filenameAudio != null );
+        playerView.getButtonPlay().setEnabled( filenameAudio != null );
+        playerView.getButtonReplay().setVisible( mode == Mode.PARSE || mode == Mode.CODE );
+        playerView.getButtonUnparse().setVisible( mode == Mode.PARSE );
+        playerView.getButtonUnparseAndReplay().setVisible( mode == Mode.PARSE );
+        playerView.getButtonUncode().setVisible( mode == Mode.CODE );
+        playerView.getButtonRewind5s().setEnabled( filenameAudio != null );
+        playerView.getTimeline().setVisible( mode == Mode.PARSE || mode == Mode.CODE );
 
-		playerView.getButtonReplay().setVisible(
-				mode == Mode.PARSE || mode == Mode.CODE);
-		playerView.getButtonUnparse().setVisible(mode == Mode.PARSE);
-		playerView.getButtonUnparseAndReplay().setVisible(mode == Mode.PARSE);
-		playerView.getButtonUncode().setVisible(mode == Mode.CODE);
-		playerView.getButtonRewind5s().setEnabled(filenameAudio != null);
+        // Pack window, resizing to match visible interface.
+        playerView.pack();
 
-		playerView.getTimeline().setVisible(
-				mode == Mode.PARSE || mode == Mode.CODE);
-
-		// Pack window, resizing to match visible interface.
-		playerView.pack();
-
-		// If entering GLOBALS mode, ping callback so we'll save the file.
-		if (mode == Mode.GLOBALS) {
-			globalDataChanged();
-		}
+        // If entering GLOBALS mode, ping callback so we'll save the file.
+        if( mode == Mode.GLOBALS )
+            globalDataChanged();
 	}
 
 	// Synchronize both the GUI (slider, time display) and current utterance
@@ -674,116 +654,108 @@ public class MainController implements BasicPlayerListener {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// File Menu: Load Audio File
-		playerView.getMenuItemLoadAudio().addActionListener(
-				new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						if (selectAndLoadAudioFile()) {
-							setMode(Mode.PLAYBACK);
-						}
-					}
-				});
+        playerView.getMenuItemLoadAudio().addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                if( selectAndLoadAudioFile() ) {
+                    setMode( Mode.PLAYBACK );
+                }
+            }
+        } );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// File Menu: Exit
-		playerView.getMenuItemExit().addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				actionExit();
-			}
-		});
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // File Menu: Exit
+        playerView.getMenuItemExit().addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                actionExit();
+            }
+        } );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Parse Utterances Menu: Start New Parse File
-		playerView.getMenuItemNewParse().addActionListener(
-				new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						handleNewParseFile();
-					}
-				});
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // Parse Utterances Menu: Start New Parse File
+        playerView.getMenuItemNewParse().addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                handleNewParseFile();
+            }
+        } );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Parse Utterances Menu: Load Parse File
-		playerView.getMenuItemLoadParse().addActionListener(
-				new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						handleLoadParseFile();
-					}
-				});
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // Parse Utterances Menu: Load Parse File
+        playerView.getMenuItemLoadParse().addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                handleLoadParseFile();
+            }
+        } );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Code Utterances Menu: Start New Code File
-		playerView.getMenuItemNewCode().addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				handleNewCodeFile();
-			}
-		});
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // Code Utterances Menu: Start New Code File
+        playerView.getMenuItemNewCode().addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                handleNewCodeFile();
+            }
+        } );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Code Utterances Menu: Load Code File
-		playerView.getMenuItemLoadCode().addActionListener(
-				new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						handleLoadCodeFile();
-					}
-				});
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // Code Utterances Menu: Load Code File
+        playerView.getMenuItemLoadCode().addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                handleLoadCodeFile();
+            }
+        } );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Global Ratings Menu: Score Global Ratings
-		playerView.getMenuItemCodeGlobals().addActionListener(
-				new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						handleNewGlobalRatings();
-					}
-				});
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // Global Ratings Menu: Score Global Ratings
+        playerView.getMenuItemCodeGlobals().addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                handleNewGlobalRatings();
+            }
+        } );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// About Menu: Help
-		playerView.getMenuItemHelp().addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				showNotImplementedDialog();
-			}
-		});
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // About Menu: Help
+        playerView.getMenuItemHelp().addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                showNotImplementedDialog();
+            }
+        } );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// About Menu: About this Application
-		playerView.getMenuItemAbout().addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				handleAboutWindow();
-			}
-		});
-
-	}
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // About Menu: About this Application
+        playerView.getMenuItemAbout().addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent e ) {
+                handleAboutWindow();
+            }
+        } );
+    }
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Player Handlers
 	private synchronized void handleActionPlay() {
-		if (waitingForCode) {
-			return; // Ignore play button when waiting for code.
-		}
-		if (player.getStatus() == BasicPlayer.PLAYING) {
-			playerPause();
-		} else if (player.getStatus() == BasicPlayer.PAUSED) {
-			playerResume();
-		} else if (player.getStatus() == BasicPlayer.STOPPED
-				|| player.getStatus() == BasicPlayer.OPENED) {
-			playerPlay();
-		}
+        if( waitingForCode )
+            return; // Ignore play button when waiting for code.
+
+        if( player.getStatus() == BasicPlayer.PLAYING ) {
+            playerPause();
+        } else if( player.getStatus() == BasicPlayer.PAUSED ) {
+            playerResume();
+        } else if( player.getStatus() == BasicPlayer.STOPPED ||
+                   player.getStatus() == BasicPlayer.OPENED ) {
+            playerPlay();
+        }
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleActionReplay() {
-		if (templateView instanceof ParserTemplateView
-				|| templateView instanceof MiscTemplateView) {
-			// Seek to beginning of current utterance.
-			Utterance utterance = getCurrentUtterance();
+        if( templateView instanceof ParserTemplateView || templateView instanceof MiscTemplateView ) {
+            // Seek to beginning of current utterance.
+            Utterance utterance = getCurrentUtterance();
 
-			playerSeek(utterance == null ? 0 : getCurrentUtterance()
-					.getStartBytes());
-			playbackPositionChanged();
-		} else {
-			showParsingErrorDialog();
-		}
-		updateTimeDisplay();
-		updateSeekSliderDisplay();
+            playerSeek( utterance == null ? 0 : getCurrentUtterance().getStartBytes() );
+            playbackPositionChanged();
+        } else {
+            showParsingErrorDialog();
+        }
+        updateTimeDisplay();
+        updateSeekSliderDisplay();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -793,24 +765,28 @@ public class MainController implements BasicPlayerListener {
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private synchronized void handleActionUnparse() {
-		if (templateView instanceof ParserTemplateView) {
-			removeLastUtterance(false);
-		} else {
-			showParsingErrorDialog();
-		}
-		saveSession();
-	}
+    private synchronized void handleActionUnparse() {
+        if( templateView instanceof ParserTemplateView ) {
+            if( getUtteranceList().isEmpty() )
+                return; // Nothing to do.
+
+            removeLastUtterance( false );
+            incrementUnparseCount();
+        } else {
+            showParsingErrorDialog();
+        }
+        saveSession();
+    }
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private synchronized void handleActionUncode() {
-		if (templateView instanceof MiscTemplateView) {
-			removeLastCode();
-		} else {
-			showParsingErrorDialog();
-		}
-		saveSession();
-	}
+    private synchronized void handleActionUncode() {
+        if( templateView instanceof MiscTemplateView ) {
+            removeLastCode();
+        } else {
+            showParsingErrorDialog();
+        }
+        saveSession();
+    }
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleActionRewind5s() {
@@ -820,288 +796,267 @@ public class MainController implements BasicPlayerListener {
 		int pos = streamPosition();
 
 		pos -= 5 * bytesPerSecond;
-		pos = Math.max(pos, 0); // Clamp to beginning of file.
+        pos = Math.max( pos, 0 ); // Clamp to beginning of file.
 
-		playerSeek(pos);
-		updateUtteranceDisplays();
-		updateTimeDisplay();
-		updateSeekSliderDisplay();
-
+        playerSeek( pos );
+        updateUtteranceDisplays();
+        updateTimeDisplay();
+        updateSeekSliderDisplay();
 		playbackPositionChanged();
 	}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    private synchronized void incrementUnparseCount() {
+        numUninterruptedUnparses++;
+        if( numUninterruptedUnparses >= 3 ) {
+            showWarning( "Unparse Warning", "You have unparsed 3 times in a row." );
+            numUninterruptedUnparses = 0;
+        }
+    }
+
+    private synchronized void resetUnparseCount() {
+        numUninterruptedUnparses = 0;
+    }
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void updateSeekSliderDisplay() {
 		// Don't set slider position if user is dragging it.
-		if (playerView.getSliderSeek().getValueIsAdjusting()) {
-			return;
-		}
+        if( playerView.getSliderSeek().getValueIsAdjusting() )
+            return;
 
-		int position = player.getEncodedStreamPosition();
-		int length = player.getEncodedLength();
-		double t = 0;
+		int       position    = player.getEncodedStreamPosition();
+		int       length      = player.getEncodedLength();
+		double    t           = (length > 0) ? (position / (double) length) : 0;
 
-		if (length > 0) {
-			t = position / (double) length;
-		}
-
-		if (t >= 1.0) {
-			playerView.setSliderSeek(PlayerView.SEEK_MAX_VAL);
-		} else if (t == 0) {
-			playerView.setSliderSeek(0);
-		} else {
-			playerView.setSliderSeek((int) (t * PlayerView.SEEK_MAX_VAL));
-		}
+        if( t >= 1.0 ) {
+            playerView.setSliderSeek( PlayerView.SEEK_MAX_VAL );
+        } else if( t == 0 ) {
+            playerView.setSliderSeek( 0 );
+        } else {
+            playerView.setSliderSeek( (int) (t * PlayerView.SEEK_MAX_VAL) );
+        }
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private synchronized void handleSliderPan() {
-		if (player.hasPanControl()) {
-			try {
-				player.setPan(playerView.getSliderPan().getValue() / 10.0);
-			} catch (BasicPlayerException e) {
-				displayPlayerException(e);
-			}
-		}
+    private synchronized void handleSliderPan() {
+        if( player.hasPanControl() ) {
+            try {
+                player.setPan( playerView.getSliderPan().getValue() / 10.0 );
+            } catch( BasicPlayerException e ) {
+                displayPlayerException( e );
+            }
+        }
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private synchronized void handleSliderGain() {
-		if (player.hasGainControl()) {
-			try {
-				player.setGain(playerView.getSliderGain().getValue() / 100.0);
-			} catch (BasicPlayerException e) {
-				displayPlayerException(e);
-			}
-		}
-	}
+    private synchronized void handleSliderGain() {
+        if( player.hasGainControl() ) {
+            try {
+                player.setGain( playerView.getSliderGain().getValue() / 100.0 );
+            } catch( BasicPlayerException e ) {
+                displayPlayerException( e );
+            }
+        }
+    }
 
 	// Callback when user changes playback position manually (i.e. by pressing a
 	// button or
 	// dragging the seek bar).
 	private synchronized void playbackPositionChanged() {
-		waitingForCode = false; // Stop waiting for a code if we change playback
-								// position.
+		waitingForCode = false; // Stop waiting for a code if we change playback position.
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Menu Handlers
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleNewParseFile() {
-		if (player.getStatus() == BasicPlayer.PLAYING) {
-			playerPause();
-		}
-		saveIfNeeded();
+        if( player.getStatus() == BasicPlayer.PLAYING )
+            playerPause();
 
-		JFileChooser chooser = new JFileChooser();
+        saveIfNeeded();
 
-		chooser
-				.setDialogTitle("Select Save Directory and Enter a Filename for the PARSE File");
-		chooser.setFileFilter(new FileNameExtensionFilter("PARSE files",
-				"parse"));
-		chooser.setToolTipText("Use \".parse\" as the file extension.");
-		if (chooser.showSaveDialog(playerView) == JFileChooser.APPROVE_OPTION) {
-			if (selectAndLoadAudioFile()) {
-				utteranceList = null;
-				currentUtterance = 0;
-				waitingForCode = false;
-				filenameParse = chooser.getSelectedFile().getAbsolutePath();
-				filenameParse = correctTextFileType(".parse", filenameParse);
-				setMode(Mode.PARSE);
-			}
-		}
+        JFileChooser chooser = new JFileChooser();
+
+        chooser.setDialogTitle( "Select Save Directory and Enter a Filename for the PARSE File" );
+        chooser.setFileFilter( new FileNameExtensionFilter( "PARSE files", "parse" ) );
+        chooser.setToolTipText( "Use \".parse\" as the file extension." );
+        if( chooser.showSaveDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
+            if( selectAndLoadAudioFile() ) {
+                cleanupMode();
+                filenameParse = chooser.getSelectedFile().getAbsolutePath();
+                filenameParse = correctTextFileType( ".parse", filenameParse );
+                utteranceListChanged();
+                setMode( Mode.PARSE );
+            }
+        }
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private synchronized void handleNewCodeFile() {
-		if (player.getStatus() == BasicPlayer.PLAYING) {
-			playerPause();
-		}
-		saveIfNeeded();
+    private synchronized void handleNewCodeFile() {
+        if( player.getStatus() == BasicPlayer.PLAYING )
+            playerPause();
 
-		JFileChooser chooser = new JFileChooser();
+        saveIfNeeded();
 
-		chooser.setDialogTitle("Select a PARSE File to Start Coding");
-		chooser.setFileFilter(new FileNameExtensionFilter("PARSE files",
-				"parse"));
-		if (chooser.showSaveDialog(playerView) == JFileChooser.APPROVE_OPTION) {
-			utteranceList = null;
-			currentUtterance = 0;
-			waitingForCode = false;
-			filenameParse = chooser.getSelectedFile().getAbsolutePath();
-			filenameMisc = correctTextFileType(".casaa", filenameParse);
-			try {
-				copyParseFileToCodeFile();
-			} catch (IOException e) {
-				e.printStackTrace();
-				showFileNotCreatedDialog();
-			}
+        JFileChooser chooser = new JFileChooser();
 
-			// Load the parse and audio files.
-			filenameAudio = getUtteranceList().loadFromFile(
-					new File(filenameMisc));
-			utteranceListChanged();
-			loadAudioFile(filenameAudio);
-			setMode(Mode.CODE);
-			postLoad();
-		}
-	}
+        chooser.setDialogTitle( "Select a PARSE File to Start Coding" );
+        chooser.setFileFilter( new FileNameExtensionFilter( "PARSE files", "parse" ) );
+        if( chooser.showSaveDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
+            cleanupMode();
+            filenameParse   = chooser.getSelectedFile().getAbsolutePath();
+            filenameMisc    = correctTextFileType( ".casaa", filenameParse );
+            try {
+                copyParseFileToCodeFile();
+            } catch( IOException e ) {
+                e.printStackTrace();
+                showFileNotCreatedDialog();
+            }
+
+            // Load the parse and audio files.
+            filenameAudio = getUtteranceList().loadFromFile( new File( filenameMisc ) );
+            utteranceListChanged();
+            loadAudioFile( filenameAudio );
+            setMode( Mode.CODE );
+            postLoad();
+        }
+    }
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleNewGlobalRatings() {
-		if (player.getStatus() == BasicPlayer.PLAYING) {
-			playerPause();
-		}
+        if( player.getStatus() == BasicPlayer.PLAYING )
+            playerPause();
+
 		saveIfNeeded();
 
 		JFileChooser chooser = new JFileChooser();
 
-		chooser.setDialogTitle("Select Save Directory and Enter a Filename");
-		chooser.setFileFilter(new FileNameExtensionFilter("GLOBALS files",
-				"global"));
-		chooser.setToolTipText("Use \".global\" as the file extension.");
-		if (chooser.showSaveDialog(playerView) == JFileChooser.APPROVE_OPTION) {
-			if (selectAndLoadAudioFile()) {
-				utteranceList = null;
-				currentUtterance = 0;
-				waitingForCode = false;
-				filenameGlobals = chooser.getSelectedFile().getAbsolutePath();
-				filenameGlobals = correctTextFileType(".global",
-						filenameGlobals);
-				setMode(Mode.GLOBALS);
+        chooser.setDialogTitle( "Select Save Directory and Enter a Filename" );
+        chooser.setFileFilter( new FileNameExtensionFilter( "GLOBALS files", "global" ) );
+        chooser.setToolTipText( "Use \".global\" as the file extension." );
+        if( chooser.showSaveDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
+            if( selectAndLoadAudioFile() ) {
+                cleanupMode();
+				filenameGlobals     = chooser.getSelectedFile().getAbsolutePath();
+                filenameGlobals     = correctTextFileType( ".global", filenameGlobals );
+                setMode( Mode.GLOBALS );
 			}
 		}
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleLoadParseFile() {
-		if (player.getStatus() == BasicPlayer.PLAYING) {
-			playerPause();
-		}
-		saveIfNeeded();
+        if( player.getStatus() == BasicPlayer.PLAYING )
+            playerPause();
 
-		JFileChooser chooser = new JFileChooser();
+        saveIfNeeded();
 
-		chooser.setDialogTitle("Select a PARSE File to Load");
-		chooser.setFileFilter(new FileNameExtensionFilter("PARSE files",
-				"parse"));
-		if (chooser.showOpenDialog(playerView) == JFileChooser.APPROVE_OPTION) {
-			utteranceList = null;
-			currentUtterance = 0;
-			waitingForCode = false;
-			filenameParse = chooser.getSelectedFile().getAbsolutePath();
-			// Load the parse file.
-			filenameAudio = getUtteranceList().loadFromFile(
-					new File(filenameParse));
-			utteranceListChanged();
-			if (filenameAudio.equalsIgnoreCase("ERROR: No Audio File Listed")) {
-				showAudioFileNotFoundDialog();
-				return;
-			}
-			// Load the audio file.
-			loadAudioFile(filenameAudio);
-			setMode(Mode.PARSE);
-			postLoad();
-		}
+        JFileChooser chooser = new JFileChooser();
+
+        chooser.setDialogTitle( "Select a PARSE File to Load" );
+        chooser.setFileFilter( new FileNameExtensionFilter( "PARSE files", "parse" ) );
+        if( chooser.showOpenDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
+            cleanupMode();
+            filenameParse = chooser.getSelectedFile().getAbsolutePath();
+            // Load the parse file.
+            filenameAudio = getUtteranceList().loadFromFile( new File( filenameParse ) );
+            utteranceListChanged();
+            if( filenameAudio.equalsIgnoreCase( "ERROR: No Audio File Listed" ) ) {
+                showAudioFileNotFoundDialog();
+                return;
+            }
+            // Load the audio file.
+            loadAudioFile( filenameAudio );
+            setMode( Mode.PARSE );
+            postLoad();
+        }
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleLoadCodeFile() {
-		if (player.getStatus() == BasicPlayer.PLAYING) {
-			playerPause();
-		}
-		saveIfNeeded();
+        if( player.getStatus() == BasicPlayer.PLAYING )
+            playerPause();
 
-		JFileChooser chooser = new JFileChooser();
+        saveIfNeeded();
 
-		chooser.setDialogTitle("Select a CASAA Code File to Load");
-		chooser.setFileFilter(new FileNameExtensionFilter("CASAA code files",
-				"casaa"));
-		if (chooser.showOpenDialog(playerView) == JFileChooser.APPROVE_OPTION) {
-			utteranceList = null;
-			currentUtterance = 0;
-			waitingForCode = false;
-			filenameMisc = chooser.getSelectedFile().getAbsolutePath();
-			filenameAudio = getUtteranceList().loadFromFile(
-					new File(filenameMisc)); // Load the code file.
-			utteranceListChanged();
-			loadAudioFile(filenameAudio); // Load the audio file.
-			setMode(Mode.CODE);
-			postLoad();
-		}
+        JFileChooser chooser = new JFileChooser();
+
+        chooser.setDialogTitle( "Select a CASAA Code File to Load" );
+        chooser.setFileFilter( new FileNameExtensionFilter( "CASAA code files", "casaa" ) );
+        if( chooser.showOpenDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
+            cleanupMode();
+            filenameMisc = chooser.getSelectedFile().getAbsolutePath();
+            filenameAudio = getUtteranceList().loadFromFile( new File( filenameMisc ) ); // Load the code file.
+            utteranceListChanged();
+            loadAudioFile( filenameAudio ); // Load the audio file.
+            setMode( Mode.CODE );
+            postLoad();
+        }
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private String correctTextFileType(String fileType, String filename) {
-		if (filename.endsWith(fileType)) {
-			// no changes needed
-			return filename;
-		} else if (fileType.equalsIgnoreCase(".parse")) {
-			// add .parse to parse files that need it
-			return filename.concat(fileType);
-		} else if (filename.endsWith(".parse")
-				&& fileType.equalsIgnoreCase(".casaa")) {
-			// rename file type from .parse to .casaa
-			return filename.substring(0,
-					(filename.length() - ".parse".length())).concat(fileType);
-		} else {
-			return filename.concat(fileType);
-		}
-	}
+    private String correctTextFileType( String fileType, String filename ) {
+        if( filename.endsWith( fileType ) ) {
+            // no changes needed
+            return filename;
+        } else if( fileType.equalsIgnoreCase( ".parse" ) ) {
+            // add .parse to parse files that need it
+            return filename.concat( fileType );
+        } else if( filename.endsWith( ".parse" ) && fileType.equalsIgnoreCase( ".casaa" ) ) {
+            // rename file type from .parse to .casaa
+            return filename.substring( 0, (filename.length() - ".parse".length()) ).concat( fileType );
+        } else {
+            return filename.concat( fileType );
+        }
+    }
 
 	// Save current session (i.e. parsing, coding, etc) if necessary.
-	private synchronized void saveIfNeeded() {
-		if (isParsingUtterance()) {
-			parseEnd();
-		}
-	}
+    private synchronized void saveIfNeeded() {
+        if( isParsingUtterance() ) {
+            parseEnd();
+        }
+    }
 
 	// Save current session. Periodically also save backup copy.
-	private synchronized void saveSession() {
-		// Save normal file.
-		saveCurrentTextFile(false);
+    private synchronized void saveSession() {
+        // Save normal file.
+        saveCurrentTextFile( false );
 
-		// Save backup every n'th normal save.
-		if (numSaves % 10 == 0) {
-			saveCurrentTextFile(true);
-		}
-		numSaves++;
-	}
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private synchronized void saveCurrentTextFile(boolean asBackup) {
-		if (templateView instanceof ParserTemplateView && filenameParse != null) {
-			String filename = filenameParse;
-
-			if (asBackup) {
-				filename += ".backup";
-			}
-			getUtteranceList().writeToFile(new File(filename), filenameAudio);
-		} else if (templateView instanceof MiscTemplateView
-				&& filenameMisc != null) {
-			String filename = filenameMisc;
-
-			if (asBackup) {
-				filename += ".backup";
-			}
-			getUtteranceList().writeToFile(new File(filename), filenameAudio);
-		} else if (templateView instanceof GlobalTemplateView) {
-			String filename = filenameGlobals;
-
-			if (asBackup) {
-				filename += ".backup";
-			}
-			((GlobalTemplateUiService) templateUI).writeGlobalsToFile(new File(
-					filename), filenameAudio);
-		}
-	}
+        // Save backup every n'th normal save.
+        if( numSaves % 10 == 0 ) {
+            saveCurrentTextFile( true );
+        }
+        numSaves++;
+    }
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void handleAboutWindow() {
-		AboutWindowView aboutWindow = new AboutWindowView();
+    private synchronized void saveCurrentTextFile( boolean asBackup ) {
+        if( templateView instanceof ParserTemplateView && filenameParse != null ) {
+            String filename = filenameParse;
 
-		aboutWindow.setFocusable(true);
-	}
+            if( asBackup )
+                filename += ".backup";
+            getUtteranceList().writeToFile( new File( filename ), filenameAudio );
+        } else if( templateView instanceof MiscTemplateView && filenameMisc != null ) {
+            String filename = filenameMisc;
+
+            if( asBackup )
+                filename += ".backup";
+            getUtteranceList().writeToFile( new File( filename ), filenameAudio );
+        } else if( templateView instanceof GlobalTemplateView ) {
+            String filename = filenameGlobals;
+
+            if( asBackup )
+                filename += ".backup";
+            ((GlobalTemplateUiService) templateUI).writeGlobalsToFile( new File( filename ), filenameAudio );
+        }
+    }
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    private void handleAboutWindow() {
+        AboutWindowView aboutWindow = new AboutWindowView();
+
+        aboutWindow.setFocusable( true );
+    }
 
 	// ====================================================================
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1182,47 +1137,47 @@ public class MainController implements BasicPlayerListener {
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void copyParseFileToCodeFile() throws IOException {
-		InputStream in = new FileInputStream(new File(filenameParse));
-		OutputStream out = new FileOutputStream(new File(filenameMisc));
-		byte[] buffer = new byte[1024];
-		int length;
+    private void copyParseFileToCodeFile() throws IOException {
+        InputStream     in      = new FileInputStream( new File( filenameParse ) );
+        OutputStream    out     = new FileOutputStream( new File( filenameMisc ) );
+        byte[]          buffer  = new byte[1024];
+        int             length;
 
-		while ((length = in.read(buffer)) > 0) {
-			out.write(buffer, 0, length);
-		}
-		in.close();
-		out.close();
-	}
+        while( (length = in.read( buffer )) > 0 )
+            out.write( buffer, 0, length );
+
+        in.close();
+        out.close();
+    }
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void setTemplateView(Mode mode) {
-		templateView = null;
-		templateUI = null;
-		System.gc();
+    private void setTemplateView( Mode mode ) {
+        templateView    = null;
+        templateUI      = null;
+        System.gc();
 
-		switch (mode) {
-		case PLAYBACK:
-			// No template view.
-			break;
-		case PARSE:
-			templateUI = new ParserTemplateUiService(actionTable);
-			templateView = templateUI.getTemplateView();
-			break;
-		case CODE:
-			templateUI = new MiscTemplateUiService(this);
-			templateView = templateUI.getTemplateView();
-			break;
-		case GLOBALS:
-			templateUI = new GlobalTemplateUiService(this);
-			templateView = templateUI.getTemplateView();
-			break;
-		default:
-			assert false : "Mode unrecognized: " + mode.toString();
-			break;
-		}
-		playerView.setPanelTemplate(templateView);
-	}
+        switch( mode ) {
+        case PLAYBACK:
+            // No template view.
+            break;
+        case PARSE:
+            templateUI      = new ParserTemplateUiService( actionTable );
+            templateView    = templateUI.getTemplateView();
+            break;
+        case CODE:
+            templateUI      = new MiscTemplateUiService( this );
+            templateView    = templateUI.getTemplateView();
+            break;
+        case GLOBALS:
+            templateUI      = new GlobalTemplateUiService( this );
+            templateView    = templateUI.getTemplateView();
+            break;
+        default:
+            assert false : "Mode unrecognized: " + mode.toString();
+            break;
+        }
+        playerView.setPanelTemplate( templateView );
+    }
 
 	// ====================================================================
 	// Parser Template Handlers
@@ -1233,12 +1188,12 @@ public class MainController implements BasicPlayerListener {
 
 		// If playback has reached end of file, position will be -1.
 		// In that case, use length - 1.
-		if (position < 0) {
-			int length = player.getEncodedLength() - 1;
+        if( position < 0 ) {
+            int length = player.getEncodedLength() - 1;
 
-			position = (length > 0) ? (length - 1) : 0;
-		}
-		return position;
+            position = (length > 0) ? (length - 1) : 0;
+        }
+        return position;
 	}
 
 	// Start parse.
@@ -1246,126 +1201,120 @@ public class MainController implements BasicPlayerListener {
 		// Ignore parseStart if we've rewound earlier than last parse start.
 		Utterance last = getLastUtterance();
 
-		if (last != null && streamPosition() < last.getStartBytes()) {
-			return;
-		}
+        if( last != null && streamPosition() < last.getStartBytes() )
+            return;
 
-		if (isParsingUtterance()) {
-			parseEnd();
-		} else {
-			// Ignore parseStart if we've rewound earlier than last parse end.
-			if (last != null && streamPosition() < last.getEndBytes()) {
-				return;
-			}
-		}
+        if( isParsingUtterance() ) {
+            parseEnd();
+        } else {
+            // Ignore parseStart if we've rewound earlier than last parse end.
+            if( last != null && streamPosition() < last.getEndBytes() ) {
+                return;
+            }
+        }
 
 		// Record start data.
-		assert (bytesPerSecond > 0);
-		int startPosition = streamPosition();
-		String startString = TimeCode.toString(startPosition / bytesPerSecond);
+        assert (bytesPerSecond > 0);
+        int     startPosition   = streamPosition();
+        String  startString     = TimeCode.toString( startPosition / bytesPerSecond );
 
-		// Create a new utterance.
-		int order = getUtteranceList().size();
-		Utterance data = new MiscDataItem(order, startString, startPosition);
+        // Create a new utterance.
+        int         order   = getUtteranceList().size();
+        Utterance   data    = new MiscDataItem( order, startString, startPosition );
 
-		getUtteranceList().add(data);
-		currentUtterance = order; // Select this as current utterance.
+        getUtteranceList().add( data );
+        currentUtterance = order; // Select this as current utterance.
 
-		updateUtteranceDisplays();
+        resetUnparseCount();
+        updateUtteranceDisplays();
 	}
 
 	// End parse, reading byte position from player.
-	public synchronized void parseEnd() {
-		parseEnd(streamPosition());
-	}
+    public synchronized void parseEnd() {
+        parseEnd( streamPosition() );
+    }
 
-	// End parse at given byte position.
-	public synchronized void parseEnd(int endBytes) {
-		assert (endBytes >= 0);
+    // End parse at given byte position.
+    public synchronized void parseEnd( int endBytes ) {
+        assert (endBytes >= 0);
 
 		// Ignore parseEnd if we've rewound earlier than last parse start.
 		Utterance last = getLastUtterance();
 
-		if (last != null && endBytes < last.getStartBytes()) {
-			return;
-		}
+        if( last != null && endBytes < last.getStartBytes() )
+            return;
 
 		// Record end data to current utterance (if we have one).
 		Utterance current = getCurrentUtterance();
 
-		if (current != null) {
-			assert (bytesPerSecond > 0);
-			String endString = TimeCode.toString(endBytes / bytesPerSecond);
+        if( current != null ) {
+            assert (bytesPerSecond > 0);
+            String endString = TimeCode.toString( endBytes / bytesPerSecond );
 
-			current.setEndTime(endString);
-			current.setEndBytes(endBytes);
-			saveSession();
-		}
-		updateUtteranceDisplays();
+            current.setEndTime( endString );
+            current.setEndBytes( endBytes );
+            saveSession();
+        }
+        resetUnparseCount();
+        updateUtteranceDisplays();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// MISC Template Handlers
 
-	public synchronized void handleButtonMiscCode(MiscCode miscCode) {
+    public synchronized void handleButtonMiscCode( MiscCode miscCode ) {
 
-		assert (miscCode.isValid());
+        assert (miscCode.isValid());
 
-		// Assign code to current utterance, if one exists.
-		Utterance utterance = getCurrentUtterance();
+        // Assign code to current utterance, if one exists.
+        Utterance utterance = getCurrentUtterance();
 
-		if (utterance == null) {
-			return; // No current utterance.
-		}
+        if( utterance == null )
+            return; // No current utterance.
 
-		// If playback position is not within current utterance (i.e. it is
-		// between utterances),
-		// ignore code. NOTE: We don't test end bytes because a) when
-		// waitingForCode, we will be
-		// past end of current utterance and b) when not waitingForCode, we
-		// advance utterance index
-		// as soon as we pass end of one utterance.
-		int playbackPosition = streamPosition();
+        // If playback position is not within current utterance (i.e. it is
+        // between utterances),
+        // ignore code. NOTE: We don't test end bytes because a) when
+        // waitingForCode, we will be
+        // past end of current utterance and b) when not waitingForCode, we
+        // advance utterance index
+        // as soon as we pass end of one utterance.
+        int playbackPosition = streamPosition();
 
-		if (playbackPosition < utterance.getStartBytes()) {
-			return;
-		}
+        if( playbackPosition < utterance.getStartBytes() )
+            return;
 
-		utterance.setMiscCode(miscCode);
-		saveSession();
+        utterance.setMiscCode( miscCode );
+        saveSession();
 
-		// If paused, waiting for a code, advance utterance index and resume
-		// playback.
-		if (waitingForCode) {
-			currentUtterance++;
-			waitingForCode = false;
-			playerResume();
-		}
-		updateUtteranceDisplays();
-	}
+        // If paused, waiting for a code, advance utterance index and resume
+        // playback.
+        if( waitingForCode ) {
+            currentUtterance++;
+            waitingForCode = false;
+            playerResume();
+        }
+        updateUtteranceDisplays();
+    }
 
-	private synchronized void removeLastUtterance(boolean seek) {
+    private synchronized void removeLastUtterance( boolean seek ) {
 		getUtteranceList().removeLast();
 
-		if (getUtteranceList().size() > 0) {
+		if (getUtteranceList().size() > 0)
 			currentUtterance = getUtteranceList().size() - 1;
-		} else {
+		else
 			currentUtterance = 0;
-		}
 
 		Utterance utterance = getCurrentUtterance();
 
 		// Seek to start of current parsed utterance, if seek requested.
-		if (seek) {
-			playerSeek(utterance == null ? 0 : getCurrentUtterance()
-					.getStartBytes());
-		}
+        if( seek )
+            playerSeek( utterance == null ? 0 : getCurrentUtterance().getStartBytes() );
 
 		// Strip end data from current utterance, so it will register as not
 		// parsed.
-		if (utterance != null) {
-			utterance.stripEndData();
-		}
+        if( utterance != null )
+            utterance.stripEndData();
 
 		updateUtteranceDisplays();
 	}
@@ -1374,25 +1323,24 @@ public class MainController implements BasicPlayerListener {
 		Utterance utterance = getCurrentUtterance();
 
 		// Strip code from current (may or may not be coded at this point).
-		if (utterance != null) {
-			utterance.setMiscCode(MiscCode.INVALID_CODE);
-		}
+        if( utterance != null )
+            utterance.setMiscCode( MiscCode.INVALID_CODE );
 
-		// Move to previous utterance, if one exists.
-		if (hasPreviousUtterance()) {
-			gotoPreviousUtterance();
-			utterance = getCurrentUtterance();
+        // Move to previous utterance, if one exists.
+        if( hasPreviousUtterance() ) {
+            gotoPreviousUtterance();
+            utterance = getCurrentUtterance();
 
-			// Strip code, now that we've stepped back to previous utterance.
-			assert utterance != null;
-			utterance.setMiscCode(MiscCode.INVALID_CODE);
-			playerSeek(utterance.getStartBytes());
-		} else {
-			playerSeek(0);
-		}
+            // Strip code, now that we've stepped back to previous utterance.
+            assert utterance != null;
+            utterance.setMiscCode( MiscCode.INVALID_CODE );
+            playerSeek( utterance.getStartBytes() );
+        } else {
+            playerSeek( 0 );
+        }
 
-		waitingForCode = false;
-		updateUtteranceDisplays();
+        waitingForCode = false;
+        updateUtteranceDisplays();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1402,64 +1350,61 @@ public class MainController implements BasicPlayerListener {
 		playerView.getTimeline().repaint();
 
 		if (templateView instanceof ParserTemplateView) {
-			ParserTemplateView view = (ParserTemplateView) templateView;
-			Utterance current = getCurrentUtterance();
-			Utterance prev = getPreviousUtterance();
+			ParserTemplateView   view    = (ParserTemplateView) templateView;
+			Utterance            current = getCurrentUtterance();
+			Utterance            prev    = getPreviousUtterance();
 
-			if (current == null) {
-				view.setTextFieldOrder("");
-				view.setTextFieldStartTime("");
-				view.setTextFieldEndTime("");
-			} else {
-				view.setTextFieldOrder("" + current.getEnum());
-				view.setTextFieldStartTime(current.getStartTime());
-				view.setTextFieldEndTime(current.getEndTime());
-			}
+            if( current == null ) {
+                view.setTextFieldOrder( "" );
+                view.setTextFieldStartTime( "" );
+                view.setTextFieldEndTime( "" );
+            } else {
+                view.setTextFieldOrder( "" + current.getEnum() );
+                view.setTextFieldStartTime( current.getStartTime() );
+                view.setTextFieldEndTime( current.getEndTime() );
+            }
 
-			if (prev == null) {
-				view.setTextFieldPrev("");
-			} else {
-				view.setTextFieldPrev(prev.toString());
-			}
-		} else if (templateView instanceof MiscTemplateView) {
-			MiscTemplateView view = (MiscTemplateView) templateView;
-			Utterance current = getCurrentUtterance();
-			Utterance next = getNextUtterance();
-			Utterance prev = getPreviousUtterance();
+            if( prev == null )
+                view.setTextFieldPrev( "" );
+            else
+                view.setTextFieldPrev( prev.toString() );
+        } else if( templateView instanceof MiscTemplateView ) {
+			MiscTemplateView view    = (MiscTemplateView) templateView;
+			Utterance        current = getCurrentUtterance();
+			Utterance        next    = getNextUtterance();
+			Utterance        prev    = getPreviousUtterance();
 
-			if (next == null) {
-				view.setTextFieldNext("");
-			} else {
-				view.setTextFieldNext(next.toString());
-			}
-			if (prev == null) {
-				view.setTextFieldPrev("");
-			} else {
-				view.setTextFieldPrev(prev.toString());
-			}
+            if( next == null )
+                view.setTextFieldNext( "" );
+            else
+                view.setTextFieldNext( next.toString() );
 
-			if (current == null) {
-				view.setTextFieldOrder("");
-				view.setTextFieldCode("");
-				view.setTextFieldStartTime("");
-				view.setTextFieldEndTime("");
-			} else {
-				view.setTextFieldOrder("" + current.getEnum());
-				if (current.getMiscCode().value == MiscCode.INVALID) {
-					view.setTextFieldCode("");
-				} else {
-					view.setTextFieldCode(current.getMiscCode().label);
-				}
-				view.setTextFieldStartTime(current.getStartTime());
-				view.setTextFieldEndTime(current.getEndTime());
+            if( prev == null )
+                view.setTextFieldPrev( "" );
+            else
+                view.setTextFieldPrev( prev.toString() );
 
-				// Visual indication when in between utterances.
-				if (streamPosition() < current.getStartBytes()) {
-					view.setTextFieldStartTimeColor(Color.RED);
-				} else {
-					view.setTextFieldStartTimeColor(Color.BLACK);
-				}
-			}
+            if( current == null ) {
+                view.setTextFieldOrder( "" );
+                view.setTextFieldCode( "" );
+                view.setTextFieldStartTime( "" );
+                view.setTextFieldEndTime( "" );
+            } else {
+                view.setTextFieldOrder( "" + current.getEnum() );
+                if( current.getMiscCode().value == MiscCode.INVALID )
+                    view.setTextFieldCode( "" );
+                else
+                    view.setTextFieldCode( current.getMiscCode().label );
+
+                view.setTextFieldStartTime( current.getStartTime() );
+                view.setTextFieldEndTime( current.getEndTime() );
+
+                // Visual indication when in between utterances.
+                if( streamPosition() < current.getStartBytes() )
+                    view.setTextFieldStartTimeColor( Color.RED );
+                else
+                    view.setTextFieldStartTimeColor( Color.BLACK );
+            }
 		}
 	}
 
@@ -1470,46 +1415,35 @@ public class MainController implements BasicPlayerListener {
 		currentUtterance = 0; // Default to first utterance.
 		if (templateView instanceof ParserTemplateView) {
 			// Seek to last existing utterance.
-			if (getUtteranceList().size() > 0) {
-				currentUtterance = getUtteranceList().size() - 1;
-			}
+            if( getUtteranceList().size() > 0 ) {
+                currentUtterance = getUtteranceList().size() - 1;
+            }
 
-			if (getCurrentUtterance() == null) {
-				playerSeek(0);
-			} else {
-				playerSeek(getCurrentUtterance().getEndBytes()); // Seek to end
-																	// of last
-																	// existing
-																	// utterance,
-																	// so we're
-																	// ready to
-																	// start
-																	// parsing
-																	// the next.
-			}
-		} else if (templateView instanceof MiscTemplateView) {
-			// Seek to first uncoded utterance. May be one past last utterance
-			// in list.
+            if( getCurrentUtterance() == null ) {
+                playerSeek( 0 );
+            } else {
+                // Seek to end of last existing utterance, so we're ready to start parsing the next.
+                playerSeek( getCurrentUtterance().getEndBytes() );
+            }
+        } else if( templateView instanceof MiscTemplateView ) {
+			// Seek to first uncoded utterance. May be one past last utterance in list.
 			currentUtterance = getUtteranceList().getLastCodedUtterance();
 			currentUtterance++;
 
-			if (getCurrentUtterance() == null) {
-				if (getUtteranceList().isEmpty()) {
-					playerSeek(0);
-				} else {
-					playerSeek(getLastUtterance().getEndBytes());
-				}
-			} else {
-				// Special case - if we haven't coded any utterances yet, always
-				// seek to zero.
-				// Else seek to start of first uncoded utterance.
-				if (currentUtterance == 0) {
-					playerSeek(0);
-				} else {
-					playerSeek(getCurrentUtterance().getStartBytes());
-				}
-			}
-		} else if (templateView == null) {
+            if( getCurrentUtterance() == null ) {
+                if( getUtteranceList().isEmpty() )
+                    playerSeek( 0 );
+                else
+                    playerSeek( getLastUtterance().getEndBytes() );
+            } else {
+                // Special case - if we haven't coded any utterances yet, always seek to zero.
+                // Else seek to start of first uncoded utterance.
+                if( currentUtterance == 0 )
+                    playerSeek( 0 );
+                else
+                    playerSeek( getCurrentUtterance().getStartBytes() );
+            }
+        } else if( templateView == null ) {
 			showTemplateNotFoundDialog();
 		} else {
 			showQueueNotLoadedDialog();
@@ -1523,9 +1457,9 @@ public class MainController implements BasicPlayerListener {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized UtteranceList getUtteranceList() {
-		if (utteranceList == null) {
+		if( utteranceList == null )
 			utteranceList = new UtteranceList();
-		}
+
 		return utteranceList;
 	}
 
@@ -1545,12 +1479,10 @@ public class MainController implements BasicPlayerListener {
 	}
 
 	public void stateUpdated(BasicPlayerEvent event) {
-		// Notification of BasicPlayer states (opened, playing, end of media,
-		// ...).
+		// Notification of BasicPlayer states (opened, playing, end of media, ...).
 		// Modify stored playerStatus string only on "significant" changes (e.g.
 		// "Opened", but not "Seeked").
-		// Synchronize, so we apply changes before another status update comes
-		// in.
+		// Synchronize, so we apply changes before another status update comes in.
 		synchronized (this) {
 			String oldStatus = new String(playerStatus);
 
@@ -1581,8 +1513,7 @@ public class MainController implements BasicPlayerListener {
 				// SEEKED
 				break;
 			case 8:
-				// Record position before setting flag, to ensure flag is not
-				// handled
+				// Record position before setting flag, to ensure flag is not handled
 				// in main thread until position is valid.
 				endOfMediaPosition = event.getPosition();
 				endOfMediaReported = true;
