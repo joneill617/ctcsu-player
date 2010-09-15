@@ -20,6 +20,8 @@ package edu.unm.casaa.misc;
 
 import java.util.Vector;
 
+import edu.unm.casaa.main.MainController;
+
 // MiscCode associates a label, such as "CR+/-" or "ADP", with a numeric value.
 public class MiscCode { 
 	private static final long serialVersionUID 	= 1L;
@@ -35,7 +37,8 @@ public class MiscCode {
 
 	// Class:
 
-	public static void	addCode( int value, String label ) {
+	// Add new code.  Returns true on success, shows warning dialog on failure.
+	public static boolean	addCode( int value, String label ) {
 		MiscCode newCode = new MiscCode( value, label );
 
 		// Check that we're not duplicating an existing value or label.
@@ -43,12 +46,15 @@ public class MiscCode {
 			MiscCode code = list.get( i );
 
 			if( code.value == newCode.value || code.label.equals( newCode.label ) ) {
-				// TODO - Warning dialog.
-				System.out.println( "Error: new code " + newCode.toDisplayString() + " conflicts with existing code " + code.toDisplayString() );
-				return;
+				MainController.instance.showWarning(
+						"User Code Error",
+						"New code " + 
+						newCode.toDisplayString() + " conflicts with existing code " + code.toDisplayString() );
+				return false;
 			}
 		}
 		list.add( newCode );
+		return true;
 	}
 
 	public static int	numCodes() {

@@ -24,16 +24,12 @@ import java.awt.Dimension;
 import javax.swing.ImageIcon;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 public class AboutWindowView extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	
 	// GUI Components.
-	private JFrame frameParentWindow		= null;
-	private ImageIcon iconParentWindow		= null;
 	private JEditorPane textPane 			= null;
 	
 	public AboutWindowView(){
@@ -42,28 +38,18 @@ public class AboutWindowView extends JFrame {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void init(){
-		setLookAndFeel();
-		getFrameParentWindow().getContentPane().setLayout(new BorderLayout());
-		getFrameParentWindow().getContentPane().add(getTextPane(), BorderLayout.CENTER);
-		getFrameParentWindow().setLocationRelativeTo(getParent());
-		getFrameParentWindow().setVisible(true);
+		setTitle("About this Application");
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		setMinimumSize(new Dimension(300, 400));
+		setResizable(true);
+		setIconImage(new ImageIcon("images/UNM_Color.jpg").getImage());
+
+		getContentPane().setLayout(new BorderLayout());
+		getContentPane().add(getTextPane(), BorderLayout.CENTER);
+		setLocationRelativeTo(getParent());
+		setVisible(true);
 	}
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private JFrame getFrameParentWindow(){
-		if( frameParentWindow == null ){
-			frameParentWindow = new JFrame("About this Application");
-			frameParentWindow.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-			frameParentWindow.setMinimumSize(new Dimension(300, 400));
-			frameParentWindow.setResizable(true);
-			if( iconParentWindow == null ){
-				iconParentWindow = new ImageIcon("images/UNM_Color.jpg");
-			}
-			frameParentWindow.setIconImage(iconParentWindow.getImage());
-		}
-		return frameParentWindow;
-	}
-	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private JEditorPane getTextPane(){
 		if( textPane == null ){
@@ -89,21 +75,4 @@ public class AboutWindowView extends JFrame {
 		}
 		return textPane;
 	}
-	
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void setLookAndFeel(){
-		//set the look and feel to the native platform
-		String strNativeLF = UIManager.getSystemLookAndFeelClassName();
-		if( ! strNativeLF.equalsIgnoreCase("com.sun.java.swing.plaf.gtk.GTKLookAndFeel") ){
-			//this check avoids a bug where gtk can't display properly
-			try {
-				UIManager.setLookAndFeel(strNativeLF);
-			} catch (InstantiationException e) {
-			} catch (ClassNotFoundException e) {
-			} catch (UnsupportedLookAndFeelException e) {
-			} catch (IllegalAccessException e) {
-			}
-		}
-	}
-	
 }

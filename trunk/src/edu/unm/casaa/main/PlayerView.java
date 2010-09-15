@@ -60,17 +60,12 @@ public class PlayerView extends JFrame {
 
 	// Window Constants and Variables
 	private String strWindowTitle = "CACTI | The CASAA Application for Coding Treatment Interactions | v" + Version.versionString();
-	private String strNativeLF					= null;
 	private static final int X_LOCATION			= 100;
 	private static final int Y_LOCATION			= 5;
-	private static final int WINDOW_WIDTH		= 700;
-	private static final int WINDOW_HEIGHT		= 850;
-	private Dimension dimMAX					= null;
-	private Dimension dimMIN					= null;
-	private ImageIcon iconParentWindow			= null;
+	private static final int WINDOW_MIN_WIDTH	= 700;
+	private static final int WINDOW_MIN_HEIGHT	= 0;
 
 	// GUI Components
-	private JFrame frameParentWindow				= null;
 	private JPanel topLayoutPanel					= null;
 	private static final int TOP_PANEL_WIDTH		= 600;
 	private static final int TOP_PANEL_HEIGHT		= 270;
@@ -136,21 +131,44 @@ public class PlayerView extends JFrame {
 	private static final int PAN_INIT_VAL		= 0;
 	private TitledBorder borderPan				= null;
 
-	private MainController	control				= null;
-
 	//====================================================================
 	// Constructor and Initialization Methods
 	//====================================================================
 
-	public PlayerView( MainController control ) {
-		assert( control != null );
-		this.control = control;
-		setLookAndFeel();
-		getFrameParentWindow().getContentPane().setLayout(new BorderLayout());
-		getFrameParentWindow().getContentPane().add(getTopLayoutPanel(), BorderLayout.NORTH);
-		getFrameParentWindow().getContentPane().add(getBottomLayoutPanel(), BorderLayout.CENTER);
-		getFrameParentWindow().setLocation(X_LOCATION, Y_LOCATION);
-		getFrameParentWindow().setVisible(true);
+	public PlayerView() {
+		setTitle( strWindowTitle );
+
+		setMinimumSize(new Dimension(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT));	
+		setLocation(X_LOCATION, Y_LOCATION);
+
+		setIconImage(new ImageIcon("images/UNM_Color.jpg").getImage());
+		setJMenuBar(getMenuBarPlayer());
+		setResizable(true);
+
+		getContentPane().setLayout(new BorderLayout());
+		getContentPane().add(getTopLayoutPanel(), BorderLayout.NORTH);
+		getContentPane().add(getBottomLayoutPanel(), BorderLayout.CENTER);
+		
+		setVisible(true);
+	}
+
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	public static void setLookAndFeel(){
+		// Set the look and feel to the native platform
+		String lookAndFeel = UIManager.getSystemLookAndFeelClassName();
+
+		// This check avoids a bug where gtk can't display properly.
+		if( !lookAndFeel.equalsIgnoreCase( "com.sun.java.swing.plaf.windows.WindowsLookAndFeel" ) ) {
+			lookAndFeel = "com.sun.java.swing.plaf.gtk.GTKLookAndFeel";
+		}
+
+		try {
+			UIManager.setLookAndFeel( lookAndFeel );
+		} catch (InstantiationException e) {
+		} catch (ClassNotFoundException e) {
+		} catch (UnsupportedLookAndFeelException e) {
+		} catch (IllegalAccessException e) {
+		}
 	}
 
 	//====================================================================
@@ -164,7 +182,7 @@ public class PlayerView extends JFrame {
 	 * @return a JButton used to start playing the audio file
 	 */
 	private JButton newPlayerButton( String actionCommand, KeyStroke keyBinding ) {
-		JButton button = new JButton( control.getActionTable().get( actionCommand ) );
+		JButton button = new JButton( MainController.instance.getActionTable().get( actionCommand ) );
 
 		button.setPreferredSize( getDimPlayerButtonSize() );
 		if( keyBinding != null ) {
@@ -370,36 +388,6 @@ public class PlayerView extends JFrame {
 	// Private Helper Methods
 	//====================================================================
 
-	public JFrame getFrameParentWindow(){
-		if( frameParentWindow == null ){
-			frameParentWindow = new JFrame(strWindowTitle);
-			
-			frameParentWindow.setMaximumSize(getDimMAX());
-			frameParentWindow.setMinimumSize(getDimMIN());
-			if( iconParentWindow == null ){
-				iconParentWindow = new ImageIcon("images/UNM_Color.jpg");
-			}
-			frameParentWindow.setIconImage(iconParentWindow.getImage());
-			frameParentWindow.setJMenuBar(getMenuBarPlayer());
-			frameParentWindow.setResizable(true);
-		}
-		return frameParentWindow;
-	}
-	
-	private Dimension getDimMAX(){
-		if( dimMAX == null ){
-			dimMAX = new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT);
-		}
-		return dimMAX;
-	}
-	
-	private Dimension getDimMIN(){
-		if( dimMIN == null ){
-			dimMIN = new Dimension(WINDOW_WIDTH, TOP_PANEL_HEIGHT);
-		}
-		return dimMAX;
-	}
-
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private JPanel getTopLayoutPanel(){
 		if( topLayoutPanel == null ){
@@ -430,7 +418,6 @@ public class PlayerView extends JFrame {
 					BOTTOM_PANEL_HEIGHT));
 			bottomLayoutPanel.setMinimumSize(new Dimension(BOTTOM_PANEL_WIDTH,
 					BOTTOM_PANEL_HEIGHT));
-			//TODO: Set a default view (Instructions, logo, etc.)
 			bottomLayoutPanel.setBorder(getBorderBottom());
 			bottomLayoutPanel.setVisible(true);
 		}
@@ -506,7 +493,7 @@ public class PlayerView extends JFrame {
 
 	public Timeline getTimeline() {
 		if( timeline == null ){
-			timeline = new Timeline( control );
+			timeline = new Timeline( MainController.instance );
 		}
 		return timeline;
 	}
@@ -669,33 +656,6 @@ public class PlayerView extends JFrame {
 			menuItemAbout = new JMenuItem("About this Application");
 		}
 		return menuItemAbout;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private void setLookAndFeel(){
-		if( strNativeLF == null ){
-			//set the look and feel to the native platform
-			strNativeLF = UIManager.getSystemLookAndFeelClassName();
-			if( strNativeLF.equalsIgnoreCase("com.sun.java.swing.plaf.windows.WindowsLookAndFeel") ){
-				//this check avoids a bug where gtk can't display properly
-				try {
-					UIManager.setLookAndFeel(strNativeLF);
-				} catch (InstantiationException e) {
-				} catch (ClassNotFoundException e) {
-				} catch (UnsupportedLookAndFeelException e) {
-				} catch (IllegalAccessException e) {
-				}
-			}
-			else{
-				try {
-					UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
-				} catch (ClassNotFoundException e) {					
-				} catch (InstantiationException e) {
-				} catch (IllegalAccessException e) {
-				} catch (UnsupportedLookAndFeelException e) {
-				}
-			}
-		}
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

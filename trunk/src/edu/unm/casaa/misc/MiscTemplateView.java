@@ -173,14 +173,13 @@ public class MiscTemplateView extends JPanel {
 
 	// Parse user controls from XML file.
 	private void parseUserControls() {
-		String	filename 	= "userCodes.xml";
-		File 	file 		= new File( filename );
+		File 	file	= new File( "userCodes.xml" );
 
 		if( file.exists() ) {
 			try {
 				DocumentBuilderFactory 	fact 	= DocumentBuilderFactory.newInstance();
 		        DocumentBuilder 		builder = fact.newDocumentBuilder();
-		        Document 				doc 	= builder.parse( filename );
+		        Document 				doc 	= builder.parse( file.getCanonicalFile());
 		        Node 					root	= doc.getDocumentElement();
 
 		        /* Expected format:
@@ -210,12 +209,12 @@ public class MiscTemplateView extends JPanel {
 			        }
 		        }
 			} catch( SAXParseException e ) {
-				MainController.instance.handleUserCodesParseError( filename, e );
+				MainController.instance.handleUserCodesParseException( file, e );
 			} catch( Exception e ) {
-				MainController.instance.handleUserCodesGenericError( filename, e );
+				MainController.instance.handleUserCodesGenericException( file, e );
 			}
 		} else {
-			MainController.instance.handleUserCodesMissing( filename );
+			MainController.instance.handleUserCodesMissing( file );
 		}
 	}
 
