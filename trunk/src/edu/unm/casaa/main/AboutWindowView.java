@@ -38,16 +38,16 @@ public class AboutWindowView extends JFrame {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void init(){
-		setTitle("About this Application");
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		setMinimumSize(new Dimension(300, 400));
-		setResizable(true);
-		setIconImage(new ImageIcon("images/UNM_Color.jpg").getImage());
+        setTitle( "About this Application" );
+        setDefaultCloseOperation( DISPOSE_ON_CLOSE );
+        setMinimumSize( new Dimension( 300, 400 ) );
+        setResizable( true );
+        setIconImage( new ImageIcon( "images/UNM_Color.jpg" ).getImage() );
 
-		getContentPane().setLayout(new BorderLayout());
-		getContentPane().add(getTextPane(), BorderLayout.CENTER);
-		setLocationRelativeTo(getParent());
-		setVisible(true);
+        getContentPane().setLayout( new BorderLayout() );
+        getContentPane().add( getTextPane(), BorderLayout.CENTER );
+        setLocationRelativeTo( getParent() );
+        setVisible( true );
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
