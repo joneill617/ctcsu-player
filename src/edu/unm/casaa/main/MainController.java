@@ -151,8 +151,9 @@ public class MainController implements BasicPlayerListener {
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	public static void main( String[] args ) {
 		MainController.instance = new MainController();
+		MainController.instance.init();
 		MainController.instance.run();
 	}
 
@@ -161,12 +162,16 @@ public class MainController implements BasicPlayerListener {
 	// ====================================================================
 
 	public MainController() {
+	}
+
+	public void init() {
+		PlayerView.setLookAndFeel(); // Set look and feel first, so any warning dialogs triggered during initialization look right.
 		parseUserCodes();
-		playerView = new PlayerView(this);
+		playerView = new PlayerView();
 		player.addBasicPlayerListener(this);
 		registerPlayerViewListeners();
 		// Handle window closing events.
-		playerView.getFrameParentWindow().addWindowListener(
+		playerView.addWindowListener(
 				new WindowAdapter() {
 					public void windowClosing(WindowEvent e) {
 						actionExit();
@@ -294,30 +299,45 @@ public class MainController implements BasicPlayerListener {
 	// Handle errors re: user codes XML file. We must be able to find and parse
 	// this file
 	// successfully, so all of these errors are fatal.
-	public void handleUserCodesParseError(String filename, SAXParseException e) {
-		// Alert and quit.
-		JOptionPane.showMessageDialog(playerView, "Parse error in " + filename
-				+ " (line " + e.getLineNumber() + "):\n" + e.getMessage(),
-				"Failed to load user codes", JOptionPane.ERROR_MESSAGE);
-		System.exit(0);
-	}
-
-	public void handleUserCodesGenericError(String filename, Exception e) {
-		JOptionPane
-				.showMessageDialog(playerView, "Unknown error parsing file: "
-						+ filename + "\n" + e.toString(),
-						"Failed to load user codes", JOptionPane.ERROR_MESSAGE);
-		System.exit(0);
-	}
-
-	public void handleUserCodesMissing(String filename) {
+	public void handleUserCodesParseException(File file, SAXParseException e) {
 		// Alert and quit.
 		JOptionPane.showMessageDialog(playerView,
-				"Failed to find required file." + filename,
+				"Parse error in " + file.getAbsolutePath() +
+				" (line " + e.getLineNumber() + "):\n" + e.getMessage(),
 				"Failed to load user codes", JOptionPane.ERROR_MESSAGE);
 		System.exit(0);
 	}
 
+	public void handleUserCodesGenericException(File file, Exception e) {
+		JOptionPane.showMessageDialog(playerView,
+				"Unknown error parsing file: " + file.getAbsolutePath() +
+				"\n" + e.toString(),
+				"Failed to load user codes", JOptionPane.ERROR_MESSAGE);
+		System.exit(0);
+	}
+
+	public void handleUserCodesError(File file, String message) {
+		JOptionPane.showMessageDialog(playerView,
+				"Error loading file: " + file.getAbsolutePath() +
+				"\n" + message,
+				"Failed to load user codes", JOptionPane.ERROR_MESSAGE);
+		System.exit(0);
+	}
+
+	public void handleUserCodesMissing(File file) {
+		// Alert and quit.
+		JOptionPane.showMessageDialog(playerView,
+				"Failed to find required file." + file.getAbsolutePath(),
+				"Failed to load user codes", JOptionPane.ERROR_MESSAGE);
+		System.exit(0);
+	}
+
+	public void showWarning(String title, String message) {
+		JOptionPane.showMessageDialog(playerView,
+				message,
+				title,
+				JOptionPane.WARNING_MESSAGE);		
+	}
 	// ====================================================================
 	// Private Helper Methods
 	// ====================================================================
@@ -344,44 +364,40 @@ public class MainController implements BasicPlayerListener {
 	private void parseUserCodes() {
 		// NOTE: We display parse errors to user, so user can correct XML file.
 		// Then quit.
-		String filename = "userCodes.xml";
-		File file = new File(filename);
+		File 	file	= new File( "userCodes.xml" );
 
 		if (file.exists()) {
 			try {
-				DocumentBuilderFactory fact = DocumentBuilderFactory
-						.newInstance();
+				DocumentBuilderFactory fact = DocumentBuilderFactory.newInstance();
 				DocumentBuilder builder = fact.newDocumentBuilder();
-				Document doc = builder.parse(filename);
+				Document doc = builder.parse( file.getCanonicalFile() );
 				Node root = doc.getDocumentElement();
 
 				/*
 				 * Expected format: <userCodes> <codes> <code label="Foo"
 				 * value="0"/> etc... </codes> ... </userCodes>
 				 */
-				for (Node node = root.getFirstChild(); node != null; node = node
-						.getNextSibling()) {
-					for (Node nodeCode = node.getFirstChild(); nodeCode != null; nodeCode = nodeCode
-							.getNextSibling()) {
+				for (Node node = root.getFirstChild(); node != null; node = node.getNextSibling()) {
+					for (Node nodeCode = node.getFirstChild(); nodeCode != null; nodeCode = nodeCode.getNextSibling()) {
 						if (nodeCode.getNodeName().equalsIgnoreCase("code")) {
 							NamedNodeMap map = nodeCode.getAttributes();
 							Node nodeValue = map.getNamedItem("value");
-							int value = new Integer(nodeValue.getTextContent())
-									.intValue();
-							String label = map.getNamedItem("label")
-									.getTextContent();
+							int value = new Integer(nodeValue.getTextContent()).intValue();
+							String label = map.getNamedItem("label").getTextContent();
 
-							MiscCode.addCode(value, label);
+							if( !MiscCode.addCode(value, label) ) {
+								handleUserCodesError( file, "Failed to add code." );
+							}
 						}
 					}
 				}
 			} catch (SAXParseException e) {
-				handleUserCodesParseError(filename, e);
+				handleUserCodesParseException(file, e);
 			} catch (Exception e) {
-				handleUserCodesGenericError(filename, e);
+				handleUserCodesGenericException(file, e);
 			}
 		} else {
-			handleUserCodesMissing(filename);
+			handleUserCodesMissing(file);
 		}
 	}
 
@@ -527,6 +543,9 @@ public class MainController implements BasicPlayerListener {
 
 		playerView.getTimeline().setVisible(
 				mode == Mode.PARSE || mode == Mode.CODE);
+
+		// Pack window, resizing to match visible interface.
+		playerView.pack();
 
 		// If entering GLOBALS mode, ping callback so we'll save the file.
 		if (mode == Mode.GLOBALS) {
