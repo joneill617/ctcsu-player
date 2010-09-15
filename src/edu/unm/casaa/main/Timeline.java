@@ -149,11 +149,7 @@ public class Timeline extends JPanel {
 			}
 			g.drawString( u.getStartTime(), boxX + 5, boxY - 5 );
 
-			// Label.
-			// TODO - What should we include in label?  Ask UNM.
-			// - Enumeration?
-			// - MISC code numeric value?
-			// - MISC code label?
+			// Label (enumeration, MISC code label if coded).
 			String	label = "" + u.getEnum() + ")";
 
 			if( u.isCoded() ) {

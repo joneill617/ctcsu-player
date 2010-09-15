@@ -169,7 +169,7 @@ public class UtteranceList {
 			//				int startBytes, int endBytes,
 			//				int code, String codename
 			String 			nextStr 	= in.nextLine();
-			StringTokenizer st 			= new StringTokenizer(nextStr/*in.nextLine()*/, "\t");
+			StringTokenizer st 			= new StringTokenizer(nextStr, "\t");
 			int 			lineSize 	= st.countTokens();  //5 = parsed only, 7 = coded
 			int 			order 		= new Integer(st.nextToken()).intValue();
 
