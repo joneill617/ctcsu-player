@@ -29,6 +29,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Date;
 import java.util.Map;
 
 import javax.swing.JFileChooser;
@@ -39,6 +40,12 @@ import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import javazoom.jlgui.basicplayer.BasicController;
+import javazoom.jlgui.basicplayer.BasicPlayer;
+import javazoom.jlgui.basicplayer.BasicPlayerEvent;
+import javazoom.jlgui.basicplayer.BasicPlayerException;
+import javazoom.jlgui.basicplayer.BasicPlayerListener;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -55,12 +62,6 @@ import edu.unm.casaa.utterance.ParserTemplateUiService;
 import edu.unm.casaa.utterance.ParserTemplateView;
 import edu.unm.casaa.utterance.Utterance;
 import edu.unm.casaa.utterance.UtteranceList;
-
-import javazoom.jlgui.basicplayer.BasicController;
-import javazoom.jlgui.basicplayer.BasicPlayer;
-import javazoom.jlgui.basicplayer.BasicPlayerEvent;
-import javazoom.jlgui.basicplayer.BasicPlayerException;
-import javazoom.jlgui.basicplayer.BasicPlayerListener;
 
 /*
  * TODO:
@@ -137,8 +138,28 @@ public class MainController implements BasicPlayerListener {
 	 * @param args
 	 */
 	public static void main( String[] args ) {
-		MainController.instance = new MainController();
+	    // Create and show splash screen.
+	    Splash splash      = new Splash();
+	    Date   date        = new Date();
+	    long   startTime   = date.getTime();
+
+	    splash.setVisible( true );
+
+	    // Initialize main controller.
+	    MainController.instance = new MainController();
 		MainController.instance.init();
+
+		// Delay long enough to ensure splash screen is visible.
+		long  elapsed = date.getTime() - startTime;
+
+		try {
+		    Thread.sleep( 1000 - elapsed );
+		} catch( Exception e ) {		    
+		}
+
+		// Hide splash screen, show main controller.
+		splash.setVisible( false );
+		MainController.instance.show();
 		MainController.instance.run();
 	}
 
@@ -166,7 +187,11 @@ public class MainController implements BasicPlayerListener {
         setMode( Mode.PLAYBACK );
     }
 
-	// ====================================================================
+    public void show() {
+        playerView.setVisible( true );
+    }
+
+    // ====================================================================
 	// MainController interface
 	// ====================================================================
 
