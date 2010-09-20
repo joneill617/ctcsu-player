@@ -20,8 +20,8 @@ package edu.unm.casaa.misc;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -272,6 +272,7 @@ public class MiscTemplateView extends JPanel {
 					NamedNodeMap 	groupMap 	= cell.getAttributes();
 					String			groupLabel	= groupMap.getNamedItem( "label" ).getTextContent();
 					JPopupMenu 		popup 		= new JPopupMenu();
+					String			tooltipList	= "";
 
 					for( Node member = cell.getFirstChild(); member != null; member = member.getNextSibling() ) {
 						if( !member.getNodeName().equalsIgnoreCase( "code" ) ) {
@@ -286,13 +287,20 @@ public class MiscTemplateView extends JPanel {
 						// Add mouse listener, keyed with code for this member in group.
 						item.addMouseListener( new PopupItemListener( code ) );
 						popup.add( item );
+
+						if( tooltipList.length() > 0 )
+							tooltipList += ", ";
+						tooltipList += memberLabel;
 					}
 
 					// Add button to open popup.
 					JButton 		button = new JButton( groupLabel );
 
 					button.setPreferredSize( getDimButtonSize() );
-					button.setToolTipText( "Select from " + groupLabel + "group" );
+					if( tooltipList.length() > 0 )
+						button.setToolTipText( "Select from " + tooltipList );
+					else
+						button.setToolTipText( "Empty group" );
 					button.addMouseListener( new PopupListener( popup ) );
 					panel.add( button );
 
@@ -319,6 +327,7 @@ public class MiscTemplateView extends JPanel {
 		if( panelClientControls == null ){
 			panelClientControls = new JPanel();
 			panelClientControls.setBorder( getBorderClient() );
+			panelClientControls.setAlignmentY(Component.TOP_ALIGNMENT);
 		}
 		return panelClientControls;
 	}
@@ -338,13 +347,14 @@ public class MiscTemplateView extends JPanel {
 		if( panelButtons == null ){
 			panelButtons = new JPanel();
 			panelButtons.setBorder(getBorderButtons());
-			panelButtons.setLayout(new FlowLayout());
+			panelButtons.setLayout(new BoxLayout(panelButtons, BoxLayout.X_AXIS));
 
 			JPanel panelLeft = new JPanel();
 
 			panelLeft.setLayout(new BoxLayout(panelLeft, BoxLayout.Y_AXIS));
 			panelLeft.add(getPanelTherapistControls());
 			panelLeft.add(getCheckBoxPauseUncoded());
+			panelLeft.setAlignmentY(Component.TOP_ALIGNMENT);
 			panelButtons.add(panelLeft);
 			panelButtons.add(getPanelClientControls());
 		}
