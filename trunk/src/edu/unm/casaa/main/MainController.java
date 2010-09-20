@@ -157,7 +157,7 @@ public class MainController implements BasicPlayerListener {
 
 		try {
 		    Thread.sleep( 1000 - elapsed );
-		} catch( Exception e ) {		    
+		} catch( Exception e ) {
 		}
 
 		// Hide splash screen, show main controller.
@@ -609,14 +609,13 @@ public class MainController implements BasicPlayerListener {
 	private boolean selectAndLoadAudioFile() {
 		JFileChooser chooser = new JFileChooser();
 
-		chooser.setDialogTitle("Select an Audio File to Load");
-		chooser.setFileFilter(new FileNameExtensionFilter(
-				"WAV Audio only for coding", "wav"));
-		if (chooser.showOpenDialog(playerView) == JFileChooser.APPROVE_OPTION) {
-			return loadAudioFile(chooser.getSelectedFile().getAbsolutePath());
-		} else {
-			return false;
-		}
+        chooser.setDialogTitle( "Load Audio File" );
+        chooser.setFileFilter( new FileNameExtensionFilter( "WAV Audio only for coding", "wav" ) );
+        if( chooser.showOpenDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
+            return loadAudioFile( chooser.getSelectedFile().getAbsolutePath() );
+        } else {
+            return false;
+        }
 	}
 
 	// Load audio file from given filename. Records filenameAudio.
@@ -884,6 +883,18 @@ public class MainController implements BasicPlayerListener {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Menu Handlers
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	// Show dialog requesting user confirmation for overwriting given file.
+	// Returns true if user clicks "OK".
+	private synchronized boolean confirmOverwrite( String filename ) {
+        int option = JOptionPane.showConfirmDialog( playerView,
+                                                    "File '" + filename + "' already exists.  Overwrite?",
+                                                    "File Exists",
+                                                    JOptionPane.OK_CANCEL_OPTION );
+
+        return option == JOptionPane.OK_OPTION;
+	}
+
 	private synchronized void handleNewParseFile() {
         if( player.getStatus() == BasicPlayer.PLAYING )
             playerPause();
@@ -892,17 +903,22 @@ public class MainController implements BasicPlayerListener {
 
         JFileChooser chooser = new JFileChooser();
 
-        chooser.setDialogTitle( "Select Save Directory and Enter a Filename for the PARSE File" );
+        chooser.setDialogTitle( "New Parse File" );
         chooser.setFileFilter( new FileNameExtensionFilter( "PARSE files", "parse" ) );
-        chooser.setToolTipText( "Use \".parse\" as the file extension." );
-        if( chooser.showSaveDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
-            if( selectAndLoadAudioFile() ) {
-                cleanupMode();
-                filenameParse = chooser.getSelectedFile().getAbsolutePath();
-                filenameParse = correctTextFileType( ".parse", filenameParse );
-                utteranceListChanged();
-                setMode( Mode.PARSE );
-            }
+        if( chooser.showSaveDialog( playerView ) != JFileChooser.APPROVE_OPTION )
+            return; // User canceled.
+
+        // Check if code filename refers to an existing file.  If so, warn and get user confirmation.
+        String  newFilename = chooser.getSelectedFile().getAbsolutePath();
+
+        if( new File( newFilename ).exists() && !confirmOverwrite( newFilename ) )
+                return; // User canceled.
+
+        if( selectAndLoadAudioFile() ) {
+            cleanupMode();
+            filenameParse = correctTextFileType( ".parse", newFilename );
+            utteranceListChanged();
+            setMode( Mode.PARSE );
         }
 	}
 
@@ -915,26 +931,44 @@ public class MainController implements BasicPlayerListener {
 
         JFileChooser chooser = new JFileChooser();
 
-        chooser.setDialogTitle( "Select a PARSE File to Start Coding" );
+        chooser.setDialogTitle( "Select a Parse File to Code" );
         chooser.setFileFilter( new FileNameExtensionFilter( "PARSE files", "parse" ) );
-        if( chooser.showSaveDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
-            cleanupMode();
-            filenameParse   = chooser.getSelectedFile().getAbsolutePath();
-            filenameMisc    = correctTextFileType( ".casaa", filenameParse );
-            try {
-                copyParseFileToCodeFile();
-            } catch( IOException e ) {
-                e.printStackTrace();
-                showFileNotCreatedDialog();
-            }
+        if( chooser.showOpenDialog( playerView ) != JFileChooser.APPROVE_OPTION )
+            return; // User canceled.
 
-            // Load the parse and audio files.
-            filenameAudio = getUtteranceList().loadFromFile( new File( filenameMisc ) );
-            utteranceListChanged();
-            loadAudioFile( filenameAudio );
-            setMode( Mode.CODE );
-            postLoad();
+        // Prompt user to select code file name.  Default to same name as parse file,
+        // but with .casaa extension.
+        String  newFilenameParse    = chooser.getSelectedFile().getAbsolutePath();
+        String  newFilenameMisc     = correctTextFileType( ".casaa", newFilenameParse );
+
+        chooser.setDialogTitle( "Select a Name for the New Code File" );
+        chooser.setFileFilter( new FileNameExtensionFilter( "CASAA files", "casaa" ) );
+        chooser.setSelectedFile( new File( newFilenameMisc ) );
+        if( chooser.showSaveDialog( playerView ) != JFileChooser.APPROVE_OPTION )
+            return; // User canceled.
+
+        newFilenameMisc = chooser.getSelectedFile().getAbsolutePath();
+
+        // Check if code filename refers to an existing file.  If so, warn and get user confirmation.
+        if( new File( newFilenameMisc ).exists() && !confirmOverwrite( newFilenameMisc ) )
+            return; // User canceled.
+ 
+        cleanupMode();
+        filenameParse   = newFilenameParse;
+        filenameMisc    = newFilenameMisc;
+        try {
+            copyParseFileToCodeFile();
+        } catch( IOException e ) {
+            e.printStackTrace();
+            showFileNotCreatedDialog();
         }
+
+        // Load the parse and audio files.
+        filenameAudio = getUtteranceList().loadFromFile( new File( filenameMisc ) );
+        utteranceListChanged();
+        loadAudioFile( filenameAudio );
+        setMode( Mode.CODE );
+        postLoad();
     }
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -946,16 +980,21 @@ public class MainController implements BasicPlayerListener {
 
 		JFileChooser chooser = new JFileChooser();
 
-        chooser.setDialogTitle( "Select Save Directory and Enter a Filename" );
+        chooser.setDialogTitle( "New Globals File" );
         chooser.setFileFilter( new FileNameExtensionFilter( "GLOBALS files", "global" ) );
-        chooser.setToolTipText( "Use \".global\" as the file extension." );
-        if( chooser.showSaveDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
-            if( selectAndLoadAudioFile() ) {
-                cleanupMode();
-				filenameGlobals     = chooser.getSelectedFile().getAbsolutePath();
-                filenameGlobals     = correctTextFileType( ".global", filenameGlobals );
-                setMode( Mode.GLOBALS );
-			}
+        if( chooser.showSaveDialog( playerView ) != JFileChooser.APPROVE_OPTION )
+            return; // User canceled.
+
+        // Check if code filename refers to an existing file.  If so, warn and get user confirmation.
+        String  newFilename = chooser.getSelectedFile().getAbsolutePath();
+
+        if( new File( newFilename ).exists() && !confirmOverwrite( newFilename ) )
+            return; // User canceled.
+
+        if( selectAndLoadAudioFile() ) {
+            cleanupMode();
+            filenameGlobals = correctTextFileType( ".global", newFilename );
+            setMode( Mode.GLOBALS );
 		}
 	}
 
@@ -968,7 +1007,7 @@ public class MainController implements BasicPlayerListener {
 
         JFileChooser chooser = new JFileChooser();
 
-        chooser.setDialogTitle( "Select a PARSE File to Load" );
+        chooser.setDialogTitle( "Load Parse File" );
         chooser.setFileFilter( new FileNameExtensionFilter( "PARSE files", "parse" ) );
         if( chooser.showOpenDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
             cleanupMode();
@@ -996,7 +1035,7 @@ public class MainController implements BasicPlayerListener {
 
         JFileChooser chooser = new JFileChooser();
 
-        chooser.setDialogTitle( "Select a CASAA Code File to Load" );
+        chooser.setDialogTitle( "Load Code File" );
         chooser.setFileFilter( new FileNameExtensionFilter( "CASAA code files", "casaa" ) );
         if( chooser.showOpenDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
             cleanupMode();
