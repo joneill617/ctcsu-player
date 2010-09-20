@@ -26,26 +26,24 @@ import edu.unm.casaa.main.MainController;
 public class MiscCode { 
 	private static final long serialVersionUID 	= 1L;
 
-	public static final int 			INVALID			= 0;
+	public static final int 			INVALID			= -1;
 	public static final MiscCode		INVALID_CODE	= new MiscCode();
 
 	// List of available codes.  Built when we parse XML file.
 	private static Vector< MiscCode >	list	= new Vector< MiscCode >();
 
 	public int 			value	= INVALID;
-	public String		label	= "";
+	public String		name	= "";
 
 	// Class:
 
 	// Add new code.  Returns true on success, shows warning dialog on failure.
-	public static boolean	addCode( int value, String label ) {
-		MiscCode newCode = new MiscCode( value, label );
-
+	public static boolean	addCode( MiscCode newCode ) {
 		// Check that we're not duplicating an existing value or label.
 		for( int i = 0; i < list.size(); i++ ) {
 			MiscCode code = list.get( i );
 
-			if( code.value == newCode.value || code.label.equals( newCode.label ) ) {
+			if( code.value == newCode.value || code.name.equals( newCode.name ) ) {
 				MainController.instance.showWarning(
 						"User Code Error",
 						"New code " + 
@@ -84,29 +82,29 @@ public class MiscCode {
 		return null;
 	}
 
-	// PRE: code exists with given label.
-	public static MiscCode codeWithLabel( String label ) {
+	// PRE: code exists with given name.
+	public static MiscCode codeWithName( String name ) {
 		// Check known codes.
-		if( label.equals( INVALID_CODE.value ) ) {
+		if( name.equals( INVALID_CODE.name ) ) {
 			return INVALID_CODE;
 		}
 		// Check user codes.
 		for( int i = 0; i < list.size(); i++ ) {
 			MiscCode code = list.get( i );
 
-			if( code.label.equals( label ) ) {
+			if( code.name.equals( name ) ) {
 				return code;
 			}
 		}
-		assert false : "Code with given label not found: " + label;
+		assert false : "Code with given name not found: " + name;
 		return null;
 	}
 
 	// Instance:
 
-	public MiscCode( int value, String label ) {
-		this.value = value;
-		this.label = label;
+	public MiscCode( int value, String name ) {
+		this.value    = value;
+		this.name     = name;
 	}
 
 	public MiscCode() {
@@ -118,6 +116,6 @@ public class MiscCode {
 
 	// Get string representation for use in user dialogs.
 	public String toDisplayString() {
-		return "(label: " + label + ", value: " + value + ")";
+		return "(name: " + name + ", value: " + value + ")";
 	}
 };

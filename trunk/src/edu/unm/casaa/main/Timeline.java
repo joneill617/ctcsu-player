@@ -153,7 +153,7 @@ public class Timeline extends JPanel {
 			String	label = "" + u.getEnum() + ")";
 
 			if( u.isCoded() ) {
-				label += " " + u.getMiscCode().label;
+				label += " " + u.getMiscCode().name;
 			}
 			g.drawString( label, boxX + 5, boxY + fontAscent + 5 );
 		}

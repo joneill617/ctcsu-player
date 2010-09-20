@@ -18,31 +18,91 @@ This source code file is part of the CASAA Treatment Coding System Utility
 
 package edu.unm.casaa.globals;
 
-public enum GlobalCode { 
-	ACCEPTANCE( "Acceptance", 0 ),
-	EMPATHY( "Empathy", 1 ),
-	DIRECTION( "Direction", 2 ),
-	AUTONOMY( "Autonomy Support", 3 ),
-	COLLABORATION( "Collaboration", 4 ),
-	EVOCATION( "Evocation", 5 ),
-	SELF_EXPLORATION( "Self Exploration", 6 );
+import java.util.Vector;
 
-	public final int 		value;
-	public final String		label; // Human-readable name.
+import edu.unm.casaa.main.MainController;
 
-	GlobalCode( String label, int value ) {
-		this.label = label;
-		this.value = value;
-	}
+public class GlobalCode { 
+    private static final long           serialVersionUID = 1L;
 
-	/**
-	 * Get initial (default) value for this code.
-	 */
-	public int defaultValue() {
-		if( this == SELF_EXPLORATION ) {
-			return 1;
-		} else {
-			return 3;
-		}
-	}
+    // List of available codes. Built when we parse XML file.
+    private static Vector< GlobalCode > list             = new Vector< GlobalCode >();
+
+    public int                          value            = 0;
+    public String                       name;                                         // Name for use in file. Ex: "ACCEPTANCE".
+    public String                       label;                                        // Human-readable label for use in UI. Ex: "Acceptance".
+    public int                          defaultRating    = 1;
+
+    // Class:
+
+    // Add new code.  Returns true on success, shows warning dialog on failure.
+    public static boolean   addCode( GlobalCode newCode ) {
+        // Check that we're not duplicating an existing value or label.
+        for( int i = 0; i < list.size(); i++ ) {
+            GlobalCode code = list.get( i );
+
+            if( code.value == newCode.value || code.name.equals( newCode.name ) ) {
+                MainController.instance.showWarning(
+                        "User Code Error",
+                        "New global code " + 
+                        newCode.toDisplayString() + " conflicts with existing global code " + code.toDisplayString() );
+                return false;
+            }
+        }
+        list.add( newCode );
+        return true;
+    }
+
+    public static int numCodes() {
+        return list.size();
+    }
+
+    // PRE: index < numCodes().
+    public static GlobalCode codeAtIndex( int index ) {
+        return list.get( index );
+    }
+
+    // PRE: code exists with given value.
+    public static GlobalCode codeWithValue( int value ) {
+        // Check user codes.
+        for( int i = 0; i < list.size(); i++ ) {
+            GlobalCode code = list.get( i );
+
+            if( code.value == value ) {
+                return code;
+            }
+        }
+        assert false : "Global code with given value not found: " + value;
+        return null;
+    }
+
+    // PRE: code exists with given name.
+    public static GlobalCode codeWithName( String name ) {
+        // Check user codes.
+        for( int i = 0; i < list.size(); i++ ) {
+            GlobalCode code = list.get( i );
+
+            if( code.name.equals( name ) ) {
+                return code;
+            }
+        }
+        assert false : "Global code with given name not found: " + name;
+        return null;
+    }
+
+    // Instance:
+
+    public GlobalCode( int value, String name, String label ) {
+        this.value  = value;
+        this.name   = name;
+        this.label  = label;
+    }
+
+    public GlobalCode() {
+    }
+
+    // Get string representation for use in user dialogs.
+    public String toDisplayString() {
+        return "(label: " + label + ", value: " + value + ")";
+    }
 };

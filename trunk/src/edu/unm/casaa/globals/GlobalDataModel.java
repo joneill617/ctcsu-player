@@ -32,33 +32,34 @@ import edu.unm.casaa.globals.GlobalCode;
  */
 public class GlobalDataModel {
 
-	// Map of GlobalCode to value.
-	private HashMap< Integer, Integer > valueMap = new HashMap< Integer, Integer >();
+	// Map of GlobalCode value (i.e. identifier) to rating.
+	private HashMap< Integer, Integer > ratings = new HashMap< Integer, Integer >();
 
 	public GlobalDataModel() {
-		// Initialize to default values as defined by GlobalCode.
-		for( GlobalCode g : GlobalCode.values() ) {
-			valueMap.put( g.value, g.defaultValue() );
+		// Initialize to default ratings as defined by GlobalCode.
+	    for( int i = 0; i < GlobalCode.numCodes(); i++ ) {
+	        GlobalCode code = GlobalCode.codeAtIndex( i );
+
+	        ratings.put( code.value, code.defaultRating );
 		}
 	}
 
-	public int getValue( GlobalCode code ) {
-		Integer result = valueMap.get( code.value );
-
-		assert( result != null );
-		return result.intValue();
+	public int getRating( GlobalCode code ) {
+		return ratings.get( code.value ).intValue();
 	}
 
-	public void	setValue( GlobalCode code, int value ) {
-		valueMap.put( new Integer( code.value ), value );
+	public void	setRating( GlobalCode code, int rating ) {
+		ratings.put( new Integer( code.value ), rating );
 	}
 
 	public String toString() {
 		String result = new String();
 		
-		for( GlobalCode g : GlobalCode.values() ) {
-			result += g.toString() + ":\t" + getValue( g ) + "\n";
-		}
+        for( int i = 0; i < GlobalCode.numCodes(); i++ ) {
+            GlobalCode code = GlobalCode.codeAtIndex( i );
+
+            result += code.name + ":\t" + getRating( code ) + "\n";
+        }
 		return result;
 	}
 
