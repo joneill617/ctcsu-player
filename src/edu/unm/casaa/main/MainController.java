@@ -53,6 +53,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXParseException;
 
+import edu.unm.casaa.globals.GlobalCode;
 import edu.unm.casaa.globals.GlobalTemplateUiService;
 import edu.unm.casaa.globals.GlobalTemplateView;
 import edu.unm.casaa.misc.MiscCode;
@@ -175,7 +176,7 @@ public class MainController implements BasicPlayerListener {
 
     public void init() {
         PlayerView.setLookAndFeel(); // Set look and feel first, so any warning dialogs triggered during initialization look right.
-        parseUserCodes();
+        parseUserConfig();
         playerView = new PlayerView();
         player.addBasicPlayerListener( this );
         registerPlayerViewListeners();
@@ -366,48 +367,73 @@ public class MainController implements BasicPlayerListener {
 		e.printStackTrace();
 	}
 
-	// Parse user codes from XML.
-	private void parseUserCodes() {
-		// NOTE: We display parse errors to user, so user can correct XML file.
-		// Then quit.
-		File 	file	= new File( "userCodes.xml" );
+	// Parse user codes and globals from XML.
+	private void parseUserConfig() {
+		// NOTE: We display parse errors to user, so user can correct XML file, then quit.
+        File file = new File( "userConfiguration.xml" );
 
-		if (file.exists()) {
-			try {
-				DocumentBuilderFactory fact = DocumentBuilderFactory.newInstance();
-				DocumentBuilder builder = fact.newDocumentBuilder();
-				Document doc = builder.parse( file.getCanonicalFile() );
-				Node root = doc.getDocumentElement();
+        if( file.exists() ) {
+            try {
+                DocumentBuilderFactory  fact    = DocumentBuilderFactory.newInstance();
+                DocumentBuilder         builder = fact.newDocumentBuilder();
+                Document                doc     = builder.parse( file.getCanonicalFile() );
+                Node                    root    = doc.getDocumentElement();
 
-				/*
-				 * Expected format: <userCodes> <codes> <code label="Foo"
-				 * value="0"/> etc... </codes> ... </userCodes>
-				 */
-				for (Node node = root.getFirstChild(); node != null; node = node.getNextSibling()) {
-					for (Node nodeCode = node.getFirstChild(); nodeCode != null; nodeCode = nodeCode.getNextSibling()) {
-						if (nodeCode.getNodeName().equalsIgnoreCase("code")) {
-							NamedNodeMap map = nodeCode.getAttributes();
-							Node nodeValue = map.getNamedItem("value");
-							int value = new Integer(nodeValue.getTextContent()).intValue();
-							String label = map.getNamedItem("label").getTextContent();
+                // Expected format: <userConfiguration> <codes>...</codes> <globals>...</globals> </userConfiguration>
+                for( Node node = root.getFirstChild(); node != null; node = node.getNextSibling() ) {
 
-							if( !MiscCode.addCode(value, label) ) {
-								handleUserCodesError( file, "Failed to add code." );
-							}
-						}
-					}
-				}
-			} catch (SAXParseException e) {
-				handleUserCodesParseException(file, e);
-			} catch (Exception e) {
-				handleUserCodesGenericException(file, e);
-			}
-		} else {
-			handleUserCodesMissing(file);
+                    if( node.getNodeName().equalsIgnoreCase( "codes" ) )
+                        parseUserCodes( file, node );
+                    else if( node.getNodeName().equalsIgnoreCase( "globals" ) )
+                        parseUserGlobals( file, node );
+                }
+            } catch( SAXParseException e ) {
+                handleUserCodesParseException( file, e );
+            } catch( Exception e ) {
+                handleUserCodesGenericException( file, e );
+            }
+        } else {
+            handleUserCodesMissing( file );
 		}
 	}
 
-	// Get final utterance in list, or null if list is empty.
+    // Parse codes from given <codes> tag.
+    private void parseUserCodes( File file, Node codes ) {
+        for( Node n = codes.getFirstChild(); n != null; n = n.getNextSibling() ) {
+            if( n.getNodeName().equalsIgnoreCase( "code" ) ) {
+                NamedNodeMap    map         = n.getAttributes();
+                Node            nodeValue   = map.getNamedItem( "value" );
+                int             value       = new Integer( nodeValue.getTextContent() ).intValue();
+                String          name        = map.getNamedItem( "name" ).getTextContent();
+
+                if( !MiscCode.addCode( new MiscCode( value, name ) ) )
+                    handleUserCodesError( file, "Failed to add code." );
+            }
+        }
+    }
+
+    // Parse globals from given <globals> tag.
+    private void parseUserGlobals( File file, Node globals ) {
+        for( Node n = globals.getFirstChild(); n != null; n = n.getNextSibling() ) {
+            if( n.getNodeName().equalsIgnoreCase( "global" ) ) {
+                NamedNodeMap    map         = n.getAttributes();
+                Node            nodeValue   = map.getNamedItem( "value" );
+                int             value       = new Integer( nodeValue.getTextContent() ).intValue();
+                Node            nodeDefaultRating   = map.getNamedItem( "defaultRating" );
+                String          name        = map.getNamedItem( "name" ).getTextContent();
+                String          label       = map.getNamedItem( "label" ).getTextContent();
+                GlobalCode      code        = new GlobalCode( value, name, label );
+
+                if( nodeDefaultRating != null )
+                    code.defaultRating = new Integer( nodeDefaultRating.getTextContent() ).intValue();
+
+                if( !GlobalCode.addCode( code ) )
+                    handleUserCodesError( file, "Failed to add code." );
+            }
+        }
+    }
+
+    // Get final utterance in list, or null if list is empty.
 	private synchronized Utterance getLastUtterance() {
 		if (getUtteranceList().size() > 0) {
 			return getUtteranceList().get(getUtteranceList().size() - 1);
@@ -1449,7 +1475,7 @@ public class MainController implements BasicPlayerListener {
                 if( current.getMiscCode().value == MiscCode.INVALID )
                     view.setTextFieldCode( "" );
                 else
-                    view.setTextFieldCode( current.getMiscCode().label );
+                    view.setTextFieldCode( current.getMiscCode().name );
 
                 view.setTextFieldStartTime( current.getStartTime() );
                 view.setTextFieldEndTime( current.getEndTime() );

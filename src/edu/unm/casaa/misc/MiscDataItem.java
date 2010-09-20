@@ -186,7 +186,7 @@ public class MiscDataItem implements Utterance {
 					startBytes	+ "\t" +
 					endBytes	+ "\t" +
 					miscCode.value 	+ "\t" +
-					miscCode.label);
+					miscCode.name);
 	}
 	
 	public String writeParsed(){

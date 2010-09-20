@@ -41,11 +41,12 @@ public class GlobalTemplateUiService extends TemplateUiService {
 	public GlobalTemplateUiService( MainController control ) {
 		this.control = control;
 
-		for( GlobalCode g : GlobalCode.values() ) {
-			JSlider slider = view.getSlider( g );
+        for( int i = 0; i < GlobalCode.numCodes(); i++ ) {
+            GlobalCode  code    = GlobalCode.codeAtIndex( i );
+            JSlider     slider  = view.getSlider( code );
 
-			slider.addChangeListener( new GlobalTemplateSliderListener( g ) );
-			slider.setValue( data.getValue( g ) ); // Initialize slider to data value.
+			slider.addChangeListener( new GlobalTemplateSliderListener( code ) );
+			slider.setValue( data.getRating( code ) ); // Initialize slider to data value.
 		}
 
 		// Add document listener to text area, so we can save file when text data changes (as we do with sliders).
@@ -100,13 +101,13 @@ public class GlobalTemplateUiService extends TemplateUiService {
 				return; // Wait until user releases slider.
 			}
 
-			int value = slider.getValue();
+			int rating = slider.getValue();
 
-			if( data.getValue( code ) == value ) {
+			if( data.getRating( code ) == rating ) {
 				return; // No change.
 			}
 
-			data.setValue( code, value );
+			data.setRating( code, rating );
 			control.globalDataChanged();
 		}
 

@@ -126,16 +126,16 @@ public class MiscTemplateView extends JPanel {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void init(){
-		setBorder(getBorderWindow());
-		setMaximumSize(getDimMainPanel());
-		setMinimumSize(getDimMainPanel());
-		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		parseUserControls();
-		add(getPanelPrevText());
-		add(getPanelCurrentText());
-		add(getPanelNextText());
-		add(getPanelButtons());
-		setVisible(true);
+        setBorder( getBorderWindow() );
+        setMaximumSize( getDimMainPanel() );
+        setMinimumSize( getDimMainPanel() );
+        setLayout( new BoxLayout( this, BoxLayout.Y_AXIS ) );
+        parseUserControls();
+        add( getPanelPrevText() );
+        add( getPanelCurrentText() );
+        add( getPanelNextText() );
+        add( getPanelButtons() );
+        setVisible( true );
 	}
 
 	//====================================================================
@@ -149,7 +149,7 @@ public class MiscTemplateView extends JPanel {
 
 		// Create button if it does not yet exist.
 		if( button == null ) {
-			button = new JButton( miscCode.label );
+			button = new JButton( miscCode.name );
 			button.setPreferredSize( getDimButtonSize() );
 			button.setToolTipText( "" + miscCode.value );
 			buttonMiscCode.put( miscCode.value, button );
@@ -161,8 +161,6 @@ public class MiscTemplateView extends JPanel {
 	public JCheckBox getCheckBoxPauseUncoded(){
 		if( checkBoxPauseUncoded == null ){
 			checkBoxPauseUncoded = new JCheckBox("Pause if Uncoded", true);
-			/*checkBoxPauseUncoded.setToolTipText("Pauses playback if current utterance " +
-			"has not been assigned a MISC code value.");*/
 		}
 		return checkBoxPauseUncoded;
 	}
@@ -173,7 +171,7 @@ public class MiscTemplateView extends JPanel {
 
 	// Parse user controls from XML file.
 	private void parseUserControls() {
-		File 	file	= new File( "userCodes.xml" );
+		File 	file	= new File( "userConfiguration.xml" );
 
 		if( file.exists() ) {
 			try {
@@ -183,20 +181,20 @@ public class MiscTemplateView extends JPanel {
 		        Node 					root	= doc.getDocumentElement();
 
 		        /* Expected format:
-		         * <userCodes>
+		         * <userConfiguration>
 		         *   <codes>
 		         *    ...
 		         *   </codes>
-		         *   <controls panel="therapist">
+		         *   <codeControls panel="therapist">
 		         *     ...
-		         *   </controls>
-		         *   <controls panel="client">
-		         *     ...
-		         *   </controls>
-		         * </userCodes>
+		         *   </codeControls>
+                 *   <codeControls panel="client">
+                 *     ...
+                 *   </codeControls>
+		         * </userConfiguration>
 		         */
 		        for( Node node = root.getFirstChild(); node != null; node = node.getNextSibling() ) {
-			        if( node.getNodeName().equalsIgnoreCase( "controls" ) ) {
+			        if( node.getNodeName().equalsIgnoreCase( "codeControls" ) ) {
 			        	// Get panel attribute.  Must be "therapist" or "client".
 						NamedNodeMap 	map 		= node.getAttributes();
 						String			panelName	= map.getNamedItem( "panel" ).getTextContent();
@@ -240,7 +238,7 @@ public class MiscTemplateView extends JPanel {
 			int	colsThisRow = 0;
 
 			for( Node cell = row.getFirstChild(); cell != null; cell = cell.getNextSibling() ) {
-				if( cell.getNodeName().equalsIgnoreCase( "code" ) ||
+				if( cell.getNodeName().equalsIgnoreCase( "button" ) ||
 					cell.getNodeName().equalsIgnoreCase( "group") ) {
 						colsThisRow++;
 				}
@@ -257,15 +255,15 @@ public class MiscTemplateView extends JPanel {
 			}
 			int	colsThisRow = 0;
 
-			for( Node cell = row.getFirstChild(); cell != null; cell = cell.getNextSibling() ) {
+            for( Node cell = row.getFirstChild(); cell != null; cell = cell.getNextSibling() ) {
 				// If cell represents a single value, add a button assigned to that code.
 				// If cell represents a group of values, add a button that will open a popup.
-				if( cell.getNodeName().equalsIgnoreCase( "code" ) ) {
-					NamedNodeMap 	map 	= cell.getAttributes();
-					String			label	= map.getNamedItem( "label" ).getTextContent();
-					MiscCode		code	= MiscCode.codeWithLabel( label );
+				if( cell.getNodeName().equalsIgnoreCase( "button" ) ) {
+					NamedNodeMap 	map      = cell.getAttributes();
+					String			codeName = map.getNamedItem( "code" ).getTextContent();
+					MiscCode		code     = MiscCode.codeWithName( codeName );
 
-					panel.add( getButtonMiscCode( code ) );
+			        panel.add( getButtonMiscCode( code ) );
 					colsThisRow++;
 				} else if( cell.getNodeName().equalsIgnoreCase( "group" ) ) {
 					// Generate a popup menu to select one code from this group.
@@ -274,15 +272,15 @@ public class MiscTemplateView extends JPanel {
 					JPopupMenu 		popup 		= new JPopupMenu();
 					String			tooltipList	= "";
 
-					for( Node member = cell.getFirstChild(); member != null; member = member.getNextSibling() ) {
-						if( !member.getNodeName().equalsIgnoreCase( "code" ) ) {
+                    for( Node member = cell.getFirstChild(); member != null; member = member.getNextSibling() ) {
+						if( !member.getNodeName().equalsIgnoreCase( "button" ) ) {
 							continue;
 						}
 
-						NamedNodeMap 	memberMap 	= member.getAttributes();
-						String			memberLabel	= memberMap.getNamedItem( "label" ).getTextContent();
-						JMenuItem 		item 		= new JMenuItem( memberLabel );
-						MiscCode		code		= MiscCode.codeWithLabel( memberLabel );
+						NamedNodeMap 	memberMap 	     = member.getAttributes();
+						String			memberCodeName   = memberMap.getNamedItem( "code" ).getTextContent();
+						JMenuItem 		item 		     = new JMenuItem( memberCodeName );
+						MiscCode		code		     = MiscCode.codeWithName( memberCodeName );
 
 						// Add mouse listener, keyed with code for this member in group.
 						item.addMouseListener( new PopupItemListener( code ) );
@@ -290,10 +288,10 @@ public class MiscTemplateView extends JPanel {
 
 						if( tooltipList.length() > 0 )
 							tooltipList += ", ";
-						tooltipList += memberLabel;
+						tooltipList += memberCodeName;
 					}
 
-					// Add button to open popup.
+                    // Add button to open popup.
 					JButton 		button = new JButton( groupLabel );
 
 					button.setPreferredSize( getDimButtonSize() );
@@ -310,7 +308,7 @@ public class MiscTemplateView extends JPanel {
 
 			// Add spacers to match max number of cells in any row.
 			for( int i = colsThisRow; i < maxCols; i++ ) {
-				panelTherapistControls.add( Box.createRigidArea( getDimButtonSize() ) );
+				panel.add( Box.createRigidArea( getDimButtonSize() ) );
 			}
 		}
 	}

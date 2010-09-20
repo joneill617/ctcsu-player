@@ -18,8 +18,11 @@ This source code file is part of the CASAA Treatment Coding System Utility
 
 package edu.unm.casaa.globals;
 
+import java.awt.Component;
 import java.awt.Dimension;
+import java.io.File;
 import java.util.HashMap;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -28,6 +31,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXParseException;
+
+import edu.unm.casaa.main.MainController;
 
 /**
  * This is the template panel for the Global Ratings sliders.
@@ -101,33 +113,103 @@ public class GlobalTemplateView extends JPanel {
 		return getTextArea().getText();
 	}
 
-	private JPanel getPanelSliders() {
+    private TitledBorder createBorderWindow() {
+        TitledBorder border = BorderFactory.createTitledBorder( "Global Ratings" );
+
+        border.setTitleJustification( TitledBorder.CENTER );        
+        return border;
+    }
+
+    private JPanel getPanelSliders() {
 		if( panelSliders == null ) {
 			panelSliders = new JPanel();
 			panelSliders.setMaximumSize( dimMainPanel );
 			panelSliders.setMinimumSize( dimMainPanel );
 			panelSliders.setLayout( new BoxLayout( panelSliders, BoxLayout.X_AXIS ) );
+			parseUserControls();
 			panelSliders.add( getLeftPanelSliders() );
 			panelSliders.add( getRightPanelSliders() );
 		}
 		return panelSliders;
 	}
 
-	private TitledBorder createBorderWindow() {
-		TitledBorder border = BorderFactory.createTitledBorder( "Global Ratings" );
+    private void parseUserControls() {
+        File    file    = new File( "userConfiguration.xml" );
 
-		border.setTitleJustification( TitledBorder.CENTER );		
-		return border;
-	}
+        if( file.exists() ) {
+            try {
+                DocumentBuilderFactory  fact    = DocumentBuilderFactory.newInstance();
+                DocumentBuilder         builder = fact.newDocumentBuilder();
+                Document                doc     = builder.parse( file.getCanonicalFile());
+                Node                    root    = doc.getDocumentElement();
+
+                /* Expected format:
+                 * <userConfiguration>
+                 *   <globals>
+                 *    ...
+                 *   </globals>
+                 *   <globalControls panel="left">
+                 *     ...
+                 *   </globalControls>
+                 *   <globalControls panel="right">
+                 *     ...
+                 *   </globalControls>
+                 * </userConfiguration>
+                 */
+                for( Node node = root.getFirstChild(); node != null; node = node.getNextSibling() ) {
+                    if( node.getNodeName().equalsIgnoreCase( "globalControls" ) ) {
+                        // Get panel attribute.  Must be "left" or "right".
+                        NamedNodeMap    map         = node.getAttributes();
+                        String          panelName   = map.getNamedItem( "panel" ).getTextContent();
+
+                        if( panelName.equalsIgnoreCase( "left" ) ) {
+                            parseControlColumn( node, getLeftPanelSliders() );
+                        } else if( panelName.equalsIgnoreCase( "right" ) ) {
+                            parseControlColumn( node, getRightPanelSliders() );
+                        }
+                    }
+                }
+            } catch( SAXParseException e ) {
+                MainController.instance.handleUserCodesParseException( file, e );
+            } catch( Exception e ) {
+                MainController.instance.handleUserCodesGenericException( file, e );
+            }
+        } else {
+            MainController.instance.handleUserCodesMissing( file );
+        }
+    }
 	
-	private JPanel getLeftPanelSliders() {
+    // Parse a column of controls from given XML node.  Add buttons to given panel, and set panel layout.
+    // Each child of given node is expected to be one row of controls.
+    private void parseControlColumn( Node node, JPanel panel ) {
+        // Traverse children, creating sliders.
+        for( Node n = node.getFirstChild(); n != null; n = n.getNextSibling() ) {
+            if( n.getNodeName().equalsIgnoreCase( "slider" ) ) {
+                NamedNodeMap    map         = n.getAttributes();
+                String          globalName  = map.getNamedItem( "global" ).getTextContent();
+                GlobalCode      code        = GlobalCode.codeWithName( globalName );
+    
+                panel.add( getSlider( code ) );
+            } else if( n.getNodeName().equalsIgnoreCase( "spacer" ) ) {
+
+                // Create a dummy slider so we can query preferred size.
+                JSlider slider = new JSlider( SLIDER_MIN, SLIDER_MAX, SLIDER_INIT );
+
+                slider.setMajorTickSpacing( 1 );
+                slider.setPaintTicks( true );
+                slider.setPaintTrack( true );
+                slider.setPaintLabels( true );
+                slider.setBorder( BorderFactory.createTitledBorder( "Dummy" ) );
+                panel.add( Box.createRigidArea( slider.getPreferredSize() ) ); // Spacing.
+            }
+        }
+    }
+
+    private JPanel getLeftPanelSliders() {
 		if( panelLeftSliders == null ) {
 			panelLeftSliders = new JPanel();
 			panelLeftSliders.setLayout( new BoxLayout( panelLeftSliders, BoxLayout.Y_AXIS ) );
-			panelLeftSliders.add( getSlider( GlobalCode.ACCEPTANCE ) );
-			panelLeftSliders.add( getSlider( GlobalCode.EMPATHY ) );
-			panelLeftSliders.add( getSlider( GlobalCode.DIRECTION ) );
-			panelLeftSliders.add( getSlider( GlobalCode.AUTONOMY ) );
+			panelLeftSliders.setAlignmentY( Component.TOP_ALIGNMENT );
 		}
 		return panelLeftSliders;
 	}
@@ -136,15 +218,7 @@ public class GlobalTemplateView extends JPanel {
 		if( panelRightSliders == null ) {
 			panelRightSliders = new JPanel();
 			panelRightSliders.setLayout( new BoxLayout( panelRightSliders, BoxLayout.Y_AXIS ) );
-			panelRightSliders.add( getSlider( GlobalCode.COLLABORATION ) );
-			panelRightSliders.add( getSlider( GlobalCode.EVOCATION ) );
-
-			// Use preferred size of one already created slider as spacing in layout.
-			Dimension	size	= getSlider( GlobalCode.COLLABORATION ).getPreferredSize();
-
-			panelRightSliders.add( Box.createRigidArea( size ) ); // Spacing.
-			
-			panelRightSliders.add( getSlider( GlobalCode.SELF_EXPLORATION ) );
+            panelRightSliders.setAlignmentY( Component.TOP_ALIGNMENT );
 		}
 		return panelRightSliders;
 	}
