@@ -175,10 +175,6 @@ public class PlayerView extends JFrame {
 		return button;
 	}
 
-	private JButton newPlayerButton( String actionCommand ) {
-		return newPlayerButton( actionCommand, null );
-	}
-
 	/**
 	 * Returns the Player's Play Button
 	 * @return a JButton used to start playing the audio file
@@ -209,7 +205,7 @@ public class PlayerView extends JFrame {
 	 */
 	public JButton getButtonUnparse(){
 		if( buttonUnparse == null ){
-			buttonUnparse = newPlayerButton( "unparse" );
+			buttonUnparse = newPlayerButton( "unparse", KeyStroke.getKeyStroke( KeyEvent.VK_N, 0 ) );
 		}
 		return buttonUnparse;
 	}
