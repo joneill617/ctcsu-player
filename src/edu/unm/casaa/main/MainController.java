@@ -68,8 +68,14 @@ import edu.unm.casaa.utterance.UtteranceList;
 /*
  * TODO:
  * Interface:
- *  - We should label the current mode (parse, code, globals).
+ *  - We should label the current mode (parse, code, globals).  This is implicitly illustrated
+ *    by the set of UI elements displayed (parse buttons, code buttons, etc).  But it would be
+ *    more user-friendly to explicitly label the mode we're in.
  *  - We should label the file (e.g. foo.parse, foo.casaa) we're editing.
+ *    - Audio file (all modes).
+ *    - Parse file (parse and code modes).
+ *    - Code file (code mode only).
+ *    - Globals file (globals mode only). 
  */
 
 /*
@@ -1279,29 +1285,32 @@ public class MainController implements BasicPlayerListener {
 
 	// Start parse.
 	public synchronized void parseStart() {
-		// Ignore parseStart if we've rewound earlier than last parse start.
+	    // Cache stream position, as it may change over repeated queries (because it advances
+	    // with player thread).
+	    int    position    = streamPosition();
+
+	    // Ignore parseStart if we've rewound earlier than last parse start.
 		Utterance last = getLastUtterance();
 
-        if( last != null && streamPosition() < last.getStartBytes() )
+        if( last != null && position < last.getStartBytes() )
             return;
 
         if( isParsingUtterance() ) {
-            parseEnd();
+            parseEnd( position );
         } else {
             // Ignore parseStart if we've rewound earlier than last parse end.
-            if( last != null && streamPosition() < last.getEndBytes() ) {
+            if( last != null && position < last.getEndBytes() ) {
                 return;
             }
         }
 
-		// Record start data.
+        // Record start data.
         assert (bytesPerSecond > 0);
-        int     startPosition   = streamPosition();
-        String  startString     = TimeCode.toString( startPosition / bytesPerSecond );
+        String  startString     = TimeCode.toString( position / bytesPerSecond );
 
         // Create a new utterance.
         int         order   = getUtteranceList().size();
-        Utterance   data    = new MiscDataItem( order, startString, startPosition );
+        Utterance   data    = new MiscDataItem( order, startString, position );
 
         getUtteranceList().add( data );
         currentUtterance = order; // Select this as current utterance.
