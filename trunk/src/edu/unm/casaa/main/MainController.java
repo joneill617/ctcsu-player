@@ -935,7 +935,7 @@ public class MainController implements BasicPlayerListener {
 
         JFileChooser chooser = new JFileChooser();
 
-        chooser.setDialogTitle( "New Parse File" );
+        chooser.setDialogTitle( "Name New Parse File" );
         chooser.setFileFilter( new FileNameExtensionFilter( "PARSE files", "parse" ) );
         if( chooser.showSaveDialog( playerView ) != JFileChooser.APPROVE_OPTION )
             return; // User canceled.
@@ -1012,7 +1012,7 @@ public class MainController implements BasicPlayerListener {
 
 		JFileChooser chooser = new JFileChooser();
 
-        chooser.setDialogTitle( "New Globals File" );
+        chooser.setDialogTitle( "Name New Globals File" );
         chooser.setFileFilter( new FileNameExtensionFilter( "GLOBALS files", "global" ) );
         if( chooser.showSaveDialog( playerView ) != JFileChooser.APPROVE_OPTION )
             return; // User canceled.
