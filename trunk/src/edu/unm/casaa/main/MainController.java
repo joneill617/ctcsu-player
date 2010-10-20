@@ -66,7 +66,7 @@ import edu.unm.casaa.utterance.Utterance;
 import edu.unm.casaa.utterance.UtteranceList;
 
 /*
- * TODO:
+ * IMPROVE:
  * Interface:
  *  - We should label the current mode (parse, code, globals).  This is implicitly illustrated
  *    by the set of UI elements displayed (parse buttons, code buttons, etc).  But it would be
@@ -848,8 +848,8 @@ public class MainController implements BasicPlayerListener {
 
     private synchronized void incrementUnparseCount() {
         numUninterruptedUnparses++;
-        if( numUninterruptedUnparses >= 3 ) {
-            showWarning( "Unparse Warning", "You have unparsed 3 times in a row." );
+        if( numUninterruptedUnparses >= 4 ) {
+            showWarning( "Unparse Warning", "You have unparsed 4 times in a row." );
             numUninterruptedUnparses = 0;
         }
     }
