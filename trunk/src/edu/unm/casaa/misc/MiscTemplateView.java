@@ -135,6 +135,10 @@ public class MiscTemplateView extends JPanel {
         add( getPanelCurrentText() );
         add( getPanelNextText() );
         add( getPanelButtons() );
+
+        // Prevent control panels from expanding, as that breaks alignment.
+        getPanelClientControls().setMaximumSize( getPanelClientControls().getMinimumSize() );
+        getPanelTherapistControls().setMaximumSize( getPanelTherapistControls().getMinimumSize() );
         setVisible( true );
 	}
 
@@ -151,6 +155,11 @@ public class MiscTemplateView extends JPanel {
 		if( button == null ) {
 			button = new JButton( miscCode.name );
 			button.setPreferredSize( getDimButtonSize() );
+
+			// Prevent button from expanding or contracting, so all misc code buttons are the same size.
+			button.setMinimumSize( getDimButtonSize() );
+			button.setMaximumSize( getDimButtonSize() );
+
 			button.setToolTipText( "" + miscCode.value );
 			buttonMiscCode.put( miscCode.value, button );
 		}
@@ -317,6 +326,7 @@ public class MiscTemplateView extends JPanel {
 		if( panelTherapistControls == null ) {
 			panelTherapistControls = new JPanel();
 			panelTherapistControls.setBorder( getBorderTherapist() );
+			panelTherapistControls.setAlignmentY(Component.TOP_ALIGNMENT);
 		}
 		return panelTherapistControls;
 	}
@@ -345,16 +355,15 @@ public class MiscTemplateView extends JPanel {
 		if( panelButtons == null ){
 			panelButtons = new JPanel();
 			panelButtons.setBorder(getBorderButtons());
-			panelButtons.setLayout(new BoxLayout(panelButtons, BoxLayout.X_AXIS));
+			panelButtons.setLayout(new BoxLayout(panelButtons, BoxLayout.Y_AXIS));
 
-			JPanel panelLeft = new JPanel();
+			JPanel panelInner = new JPanel();
 
-			panelLeft.setLayout(new BoxLayout(panelLeft, BoxLayout.Y_AXIS));
-			panelLeft.add(getPanelTherapistControls());
-			panelLeft.add(getCheckBoxPauseUncoded());
-			panelLeft.setAlignmentY(Component.TOP_ALIGNMENT);
-			panelButtons.add(panelLeft);
-			panelButtons.add(getPanelClientControls());
+			panelInner.setLayout(new BoxLayout(panelInner, BoxLayout.X_AXIS));
+			panelInner.add(getPanelTherapistControls());
+            panelInner.add(getPanelClientControls());
+			panelButtons.add(panelInner);
+            panelButtons.add(getCheckBoxPauseUncoded());
 		}
 		return panelButtons;
 	}
