@@ -943,12 +943,13 @@ public class MainController implements BasicPlayerListener {
         // Check if code filename refers to an existing file.  If so, warn and get user confirmation.
         String  newFilename = chooser.getSelectedFile().getAbsolutePath();
 
+        newFilename = correctTextFileType( ".parse", newFilename );
         if( new File( newFilename ).exists() && !confirmOverwrite( newFilename ) )
                 return; // User canceled.
 
         if( selectAndLoadAudioFile() ) {
             cleanupMode();
-            filenameParse = correctTextFileType( ".parse", newFilename );
+            filenameParse = newFilename;
             utteranceListChanged();
             setMode( Mode.PARSE );
         }
@@ -980,6 +981,7 @@ public class MainController implements BasicPlayerListener {
             return; // User canceled.
 
         newFilenameMisc = chooser.getSelectedFile().getAbsolutePath();
+        newFilenameMisc = correctTextFileType( ".casaa", newFilenameMisc );
 
         // Check if code filename refers to an existing file.  If so, warn and get user confirmation.
         if( new File( newFilenameMisc ).exists() && !confirmOverwrite( newFilenameMisc ) )
@@ -1020,12 +1022,13 @@ public class MainController implements BasicPlayerListener {
         // Check if code filename refers to an existing file.  If so, warn and get user confirmation.
         String  newFilename = chooser.getSelectedFile().getAbsolutePath();
 
+        newFilename = correctTextFileType( ".global", newFilename );
         if( new File( newFilename ).exists() && !confirmOverwrite( newFilename ) )
             return; // User canceled.
 
         if( selectAndLoadAudioFile() ) {
             cleanupMode();
-            filenameGlobals = correctTextFileType( ".global", newFilename );
+            filenameGlobals = newFilename;
             setMode( Mode.GLOBALS );
 		}
 	}
@@ -1081,6 +1084,8 @@ public class MainController implements BasicPlayerListener {
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// IMPROVE - This method is really just used to set the suffix of a file, regardless of
+	// its current suffix.  It would be better named setSuffix().
     private String correctTextFileType( String fileType, String filename ) {
         if( filename.endsWith( fileType ) ) {
             // no changes needed
