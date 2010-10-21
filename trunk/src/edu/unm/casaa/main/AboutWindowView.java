@@ -40,7 +40,7 @@ public class AboutWindowView extends JFrame {
 	private void init(){
         setTitle( "About this Application" );
         setDefaultCloseOperation( DISPOSE_ON_CLOSE );
-        setMinimumSize( new Dimension( 300, 400 ) );
+        setMinimumSize( new Dimension( 550, 450 ) );
         setResizable( true );
         setIconImage( new ImageIcon( "images/UNM_Color.jpg" ).getImage() );
 
@@ -54,24 +54,28 @@ public class AboutWindowView extends JFrame {
 	private JEditorPane getTextPane(){
 		if( textPane == null ){
 			textPane = new JEditorPane();
-			textPane.setText(
-					"CACTI | The CASAA Application for Coding Treatment Interactions\n\n" +
-					"Version " + Version.versionString() + "\n\n" +
-					"Copyright (C) 2009\n\n" +
-					"Original developer:\n" +
-					"Alex Manuel - amanuel@unm.edu\n" +
-					"http://www.cs.unm.edu/~amanuel/casaa/\n\n\n" +
-					"This application is being developed to assist\n" +
-					"the research of\n\nDr. Theresa B. Moyers\n" +
-					"of the\nCenter on Alcoholism, Substance Abuse and Addictions\n" +
-					"at the\n" +
-					"University of New Mexico\n" +
-					"Albuquerque, NM\n\n\n" +
-					"Unless otherwise stated,\n" +
-					"this software is free and open source,\n" +
-					"per the terms of the GNU Public License:\n" +
-					"http://www.gnu.org/licenses/gpl-3.0.txt");
-			textPane.setEditable(false);
+			textPane.setContentType( "text/html" );
+			String   sourceURL  = "http://casaa.unm.edu";
+            String   licenseURL = "http://www.gnu.org/licenses/gpl-3.0.txt";
+
+            textPane.setText(
+					"CACTI | The CASAA Application for Coding Treatment Interactions<br/>" +
+					"Version " + Version.versionString() + "<br/>" +
+					"Copyright (C) 2009<br/>" +
+                    "<br/>" +
+					"Original developers:<br/>" +
+                    "Alex Manuel<br/>" +
+					"Carl Staaf<br/>" +
+					"<br/>" +
+					"The latest version, source code, and help manual can be downloaded from " + sourceURL + ".<br/>" +
+                    "<br/>" +
+					"This application is being developed to assist the research of Theresa B. Moyers of the " +
+					"Center on Alcoholism, Substance Abuse and Addictions at the University of New Mexico<br/>" +
+					"Albuquerque, NM<br/>" +
+                    "<br/>" +
+					"Unless otherwise stated, this software is free and open source, per the terms of the GNU Public License:<br/>" +
+				    licenseURL );
+			textPane.setEditable( false );
 		}
 		return textPane;
 	}
