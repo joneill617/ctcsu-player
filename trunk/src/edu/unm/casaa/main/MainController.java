@@ -817,10 +817,18 @@ public class MainController implements BasicPlayerListener {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private synchronized void handleActionReplay() {
         if( templateView instanceof ParserTemplateView || templateView instanceof MiscTemplateView ) {
-            // Seek to beginning of current utterance.
-            Utterance utterance = getCurrentUtterance();
+            // Seek to beginning of current utterance.  Seek a little further back
+            // to ensure audio synchronization issues don't cause player to actually
+            // seek later than beginning of utterance.
+            Utterance   utterance   = getCurrentUtterance();
+            int         pos         = 0;
 
-            playerSeek( utterance == null ? 0 : getCurrentUtterance().getStartBytes() );
+            if( utterance != null ) {
+                pos = utterance.getStartBytes();
+                pos -= bytesPerSecond; // Skip back one extra second.
+                pos = Math.max( pos, 0 ); // Clamp.
+            }
+            playerSeek( pos );
             playbackPositionChanged();
         } else {
             showParsingErrorDialog();
@@ -1434,7 +1442,7 @@ public class MainController implements BasicPlayerListener {
 
 		// Seek to start of current parsed utterance, if seek requested.
         if( seek )
-            playerSeek( utterance == null ? 0 : getCurrentUtterance().getStartBytes() );
+            playerSeek( utterance == null ? 0 : utterance.getStartBytes() );
 
 		// Strip end data from current utterance, so it will register as not
 		// parsed.
