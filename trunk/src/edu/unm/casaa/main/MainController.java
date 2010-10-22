@@ -409,7 +409,7 @@ public class MainController implements BasicPlayerListener {
             if( n.getNodeName().equalsIgnoreCase( "code" ) ) {
                 NamedNodeMap    map         = n.getAttributes();
                 Node            nodeValue   = map.getNamedItem( "value" );
-                int             value       = new Integer( nodeValue.getTextContent() ).intValue();
+                int             value       = Integer.parseInt( nodeValue.getTextContent() );
                 String          name        = map.getNamedItem( "name" ).getTextContent();
 
                 if( !MiscCode.addCode( new MiscCode( value, name ) ) )
@@ -424,17 +424,32 @@ public class MainController implements BasicPlayerListener {
             if( n.getNodeName().equalsIgnoreCase( "global" ) ) {
                 NamedNodeMap    map         = n.getAttributes();
                 Node            nodeValue   = map.getNamedItem( "value" );
-                int             value       = new Integer( nodeValue.getTextContent() ).intValue();
+                int             value       = Integer.parseInt( nodeValue.getTextContent() );
                 Node            nodeDefaultRating   = map.getNamedItem( "defaultRating" );
+                Node            nodeMinRating       = map.getNamedItem( "minRating" );
+                Node            nodeMaxRating       = map.getNamedItem( "maxRating" );
                 String          name        = map.getNamedItem( "name" ).getTextContent();
                 String          label       = map.getNamedItem( "label" ).getTextContent();
                 GlobalCode      code        = new GlobalCode( value, name, label );
 
                 if( nodeDefaultRating != null )
-                    code.defaultRating = new Integer( nodeDefaultRating.getTextContent() ).intValue();
+                    code.defaultRating = Integer.parseInt( nodeDefaultRating.getTextContent() );
+                if( nodeMinRating != null )
+                    code.minRating = Integer.parseInt( nodeMinRating.getTextContent() );
+                if( nodeMaxRating != null )
+                    code.maxRating = Integer.parseInt( nodeMaxRating.getTextContent() );
+
+                if( code.defaultRating < code.minRating ||
+                    code.defaultRating > code.maxRating ||
+                    code.maxRating < code.minRating ) {
+                    handleUserCodesError( file, "Invalid range for global code: " + code.name +
+                                          ", minRating: " + code.minRating +
+                                          ", maxRating: " + code.maxRating +
+                                          ", defaultRating: " + code.defaultRating );
+                }
 
                 if( !GlobalCode.addCode( code ) )
-                    handleUserCodesError( file, "Failed to add code." );
+                    handleUserCodesError( file, "Failed to add global code." );
             }
         }
     }
