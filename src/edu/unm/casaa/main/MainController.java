@@ -113,6 +113,8 @@ public class MainController implements BasicPlayerListener {
     private String               filenameMisc             = null;
     private String               filenameGlobals          = null;
 
+    private String               globalsLabel             = "Global Ratings";   // Label for global template view.
+
     // Audio Player back-end
     private BasicPlayer          player                   = new BasicPlayer();
     private String               playerStatus             = "";
@@ -351,6 +353,10 @@ public class MainController implements BasicPlayerListener {
 				JOptionPane.WARNING_MESSAGE);		
 	}
 
+	public String getGlobalsLabel() {
+	    return globalsLabel;
+	}
+
 	// ====================================================================
 	// Private Helper Methods
 	// ====================================================================
@@ -392,6 +398,8 @@ public class MainController implements BasicPlayerListener {
                         parseUserCodes( file, node );
                     else if( node.getNodeName().equalsIgnoreCase( "globals" ) )
                         parseUserGlobals( file, node );
+                    else if( node.getNodeName().equalsIgnoreCase( "globalsBorder" ) )
+                        parseUserGlobalsBorder( file, node );
                 }
             } catch( SAXParseException e ) {
                 handleUserCodesParseException( file, e );
@@ -452,6 +460,13 @@ public class MainController implements BasicPlayerListener {
                     handleUserCodesError( file, "Failed to add global code." );
             }
         }
+    }
+
+    // Parse globalsLabel from given <globalsBorder> tag.
+    private void parseUserGlobalsBorder( File file, Node node ) {
+        NamedNodeMap    map = node.getAttributes();
+
+        globalsLabel = map.getNamedItem( "label" ).getTextContent();
     }
 
     // Get final utterance in list, or null if list is empty.

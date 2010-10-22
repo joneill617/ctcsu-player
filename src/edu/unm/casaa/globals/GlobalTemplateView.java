@@ -109,7 +109,7 @@ public class GlobalTemplateView extends JPanel {
 	}
 
     private TitledBorder createBorderWindow() {
-        TitledBorder border = BorderFactory.createTitledBorder( "Global Ratings" );
+        TitledBorder border = BorderFactory.createTitledBorder( MainController.instance.getGlobalsLabel() );
 
         border.setTitleJustification( TitledBorder.CENTER );        
         return border;
