@@ -47,7 +47,7 @@
         <code name="Z-" value="101"/>
         <code name="Z+/-" value="102"/>
     </codes>
-    <codeControls panel="therapist">
+    <codeControls panel="left" label="Therapist">
         <row>
             <button code="CQ0"/>
             <button code="OQ0"/>
@@ -89,7 +89,7 @@
             <button code="GI"/>
         </row>
     </codeControls>
-    <codeControls panel="client">
+    <codeControls panel="right" label="Client">
         <row>
             <button code="D+"/>
             <button code="D-"/>
@@ -125,9 +125,9 @@
         <!-- Example row with group
         <row>
             <group label="Group Z">
-                <button code="Z+"/>
-                <button code="Z-"/>
-                <button code="Z+/-"/>
+                <button code="Z+" key="X"/>
+                <button code="Z-" key="C"/>
+                <button code="Z+/-" key="Z"/>
             </group>
         </row>
         -->
