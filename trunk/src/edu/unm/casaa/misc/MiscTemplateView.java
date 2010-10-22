@@ -255,8 +255,11 @@ public class MiscTemplateView extends JPanel {
 			int	colsThisRow = 0;
 
 			for( Node cell = row.getFirstChild(); cell != null; cell = cell.getNextSibling() ) {
-				if( cell.getNodeName().equalsIgnoreCase( "button" ) ||
-					cell.getNodeName().equalsIgnoreCase( "group") ) {
+			    String   cellName = cell.getNodeName();
+
+			    if( cellName.equalsIgnoreCase( "button" ) ||
+			        cellName.equalsIgnoreCase( "spacer" ) ||
+					cellName.equalsIgnoreCase( "group") ) {
 						colsThisRow++;
 				}
 			}
@@ -293,6 +296,9 @@ public class MiscTemplateView extends JPanel {
 		                button.getActionMap().put( "pressed", button.getAction() );
 			        }
 					colsThisRow++;
+				} else if( cell.getNodeName().equalsIgnoreCase( "spacer" ) ) {
+				    panel.add( Box.createRigidArea( getDimButtonSize() ) );
+                    colsThisRow++;
 				} else if( cell.getNodeName().equalsIgnoreCase( "group" ) ) {
 					// Generate a popup menu to select one code from this group.
 					NamedNodeMap 	groupMap 	= cell.getAttributes();
