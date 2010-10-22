@@ -79,10 +79,8 @@ public class MiscTemplateView extends JPanel {
 	private JPanel panelPrevText			= null;
 	private JPanel panelCurrentText			= null;
 	private JPanel panelNextText			= null;
-	private JPanel panelTherapistControls	= null;
-	private TitledBorder borderTherapist	= null;
-	private JPanel panelClientControls		= null;
-	private TitledBorder borderClient		= null;
+	private JPanel panelLeftControls	    = null;
+	private JPanel panelRightControls		= null;
 	private static final int BUTTON_HOR_GAP	= 5;
 	private static final int BUTTON_VER_GAP	= 4;
 
@@ -139,8 +137,8 @@ public class MiscTemplateView extends JPanel {
         add( getPanelButtons() );
 
         // Prevent control panels from expanding, as that breaks alignment.
-        getPanelClientControls().setMaximumSize( getPanelClientControls().getMinimumSize() );
-        getPanelTherapistControls().setMaximumSize( getPanelTherapistControls().getMinimumSize() );
+        getPanelLeftControls().setMaximumSize( getPanelLeftControls().getMinimumSize() );
+        getPanelRightControls().setMaximumSize( getPanelRightControls().getMinimumSize() );
         setVisible( true );
 	}
 
@@ -206,24 +204,35 @@ public class MiscTemplateView extends JPanel {
                  *   <codes>
                  *    ...
                  *   </codes>
-                 *   <codeControls panel="therapist">
+                 *   <codeControls panel="left" label="Therapist">
                  *     ...
                  *   </codeControls>
-                 *   <codeControls panel="client">
+                 *   <codeControls panel="right" label="Client">
                  *     ...
                  *   </codeControls>
                  * </userConfiguration>
                  */
                 for( Node node = root.getFirstChild(); node != null; node = node.getNextSibling() ) {
                     if( node.getNodeName().equalsIgnoreCase( "codeControls" ) ) {
-                        // Get panel attribute.  Must be "therapist" or "client".
+                        // Get panel name.  Must be "left" or "right".
                         NamedNodeMap    map         = node.getAttributes();
                         String          panelName   = map.getNamedItem( "panel" ).getTextContent();
+                        String          panelLabel  = map.getNamedItem( "label" ).getTextContent();
+                        JPanel          panel       = null;
 
-                        if( panelName.equalsIgnoreCase( "therapist" ) ) {
-                            parseControlColumn( node, getPanelTherapistControls() );
-                        } else if( panelName.equalsIgnoreCase( "client" ) ) {
-                            parseControlColumn( node, getPanelClientControls() );
+                        // Lookup panel.
+                        if( panelName.equalsIgnoreCase( "left" ) ) {
+                            panel   = getPanelLeftControls();
+                        } else if( panelName.equalsIgnoreCase( "right" ) ) {
+                            panel = getPanelRightControls();
+                        }
+
+                        // Parse controls, create border with given label.
+                        if( panel == null ) {
+                            MainController.instance.handleUserCodesError( file, "codeControls panel unrecognized: " + panelName );
+                        } else {
+                            parseControlColumn( node, panel );
+                            panel.setBorder( getBorderControls( panelLabel ) );
                         }
                     }
                 }
@@ -362,22 +371,20 @@ public class MiscTemplateView extends JPanel {
 		}
 	}
 
-	private JPanel getPanelTherapistControls() {
-		if( panelTherapistControls == null ) {
-			panelTherapistControls = new JPanel();
-			panelTherapistControls.setBorder( getBorderTherapist() );
-			panelTherapistControls.setAlignmentY(Component.TOP_ALIGNMENT);
+	private JPanel getPanelLeftControls() {
+		if( panelLeftControls == null ) {
+		    panelLeftControls = new JPanel();
+		    panelLeftControls.setAlignmentY(Component.TOP_ALIGNMENT);
 		}
-		return panelTherapistControls;
+		return panelLeftControls;
 	}
 
-	private JPanel getPanelClientControls(){
-		if( panelClientControls == null ){
-			panelClientControls = new JPanel();
-			panelClientControls.setBorder( getBorderClient() );
-			panelClientControls.setAlignmentY(Component.TOP_ALIGNMENT);
+	private JPanel getPanelRightControls(){
+		if( panelRightControls == null ){
+		    panelRightControls = new JPanel();
+		    panelRightControls.setAlignmentY(Component.TOP_ALIGNMENT);
 		}
-		return panelClientControls;
+		return panelRightControls;
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -400,8 +407,8 @@ public class MiscTemplateView extends JPanel {
 			JPanel panelInner = new JPanel();
 
 			panelInner.setLayout(new BoxLayout(panelInner, BoxLayout.X_AXIS));
-			panelInner.add(getPanelTherapistControls());
-            panelInner.add(getPanelClientControls());
+			panelInner.add(getPanelLeftControls());
+            panelInner.add(getPanelRightControls());
 			panelButtons.add(panelInner);
             panelButtons.add(getCheckBoxPauseUncoded());
 		}
@@ -656,22 +663,11 @@ public class MiscTemplateView extends JPanel {
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private TitledBorder getBorderTherapist(){
-		if( borderTherapist == null ){
-			borderTherapist = BorderFactory.createTitledBorder(
-			"Therapist Codes");
-			borderTherapist.setTitleJustification(TitledBorder.LEADING);
-		}
-		return borderTherapist;
-	}
+	private TitledBorder getBorderControls( String label ){
+	    TitledBorder border = BorderFactory.createTitledBorder( label );
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private TitledBorder getBorderClient(){
-		if( borderClient == null ){
-			borderClient = BorderFactory.createTitledBorder("Client Codes");
-			borderClient.setTitleJustification(TitledBorder.LEADING);
-		}
-		return borderClient;
+	    border.setTitleJustification(TitledBorder.LEADING);
+		return border;
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
