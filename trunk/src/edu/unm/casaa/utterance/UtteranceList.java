@@ -171,19 +171,19 @@ public class UtteranceList {
 			String 			nextStr 	= in.nextLine();
 			StringTokenizer st 			= new StringTokenizer(nextStr, "\t");
 			int 			lineSize 	= st.countTokens();  //5 = parsed only, 7 = coded
-			int 			order 		= new Integer(st.nextToken()).intValue();
+			int 			order 		= Integer.parseInt(st.nextToken());
 
 			// TODO: Place a check for "null" in start and end fields to report to the user.
 			String 			start 		= st.nextToken();
 			String 			end 		= st.nextToken();
-			int 			stBytes 	= new Integer(st.nextToken()).intValue();
-			int 			endBytes 	= new Integer(st.nextToken()).intValue();
+			int 			stBytes 	= Integer.parseInt(st.nextToken());
+			int 			endBytes 	= Integer.parseInt(st.nextToken());
 			MiscDataItem 	item 		= new MiscDataItem(order, start, stBytes);
 
 			item.setEndTime(end);
 			item.setEndBytes(endBytes);
 			if( lineSize == 7 ){
-				item.setMiscCodeByValue( new Integer( st.nextToken() ).intValue() );
+				item.setMiscCodeByValue( Integer.parseInt( st.nextToken() ) );
 				st.nextToken(); //throw away the code string
 			}
 			add(item);
