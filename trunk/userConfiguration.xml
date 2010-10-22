@@ -153,4 +153,5 @@
         <spacer/>
         <slider global="SELF_EXPLORATION"/>
     </globalControls>
+    <globalsBorder label="Global Ratings"/>
 </userConfiguration>
