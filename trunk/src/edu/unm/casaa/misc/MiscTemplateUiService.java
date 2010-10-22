@@ -18,66 +18,24 @@ This source code file is part of the CASAA Treatment Coding System Utility
 
 package edu.unm.casaa.misc;
 
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-
-import javax.swing.JButton;
 import javax.swing.JPanel;
 
-import edu.unm.casaa.main.MainController;
 import edu.unm.casaa.main.TemplateUiService;
 
-public class MiscTemplateUiService extends TemplateUiService{
+public class MiscTemplateUiService extends TemplateUiService {
 	
-	private MainController control 	= null;
 	private MiscTemplateView view 	= null;
 
-	public MiscTemplateUiService( MainController control ) {
-		this.control = control;
+	public MiscTemplateUiService() {
 		init();
 	}
 
 	private void init() {
 		view = new MiscTemplateView();
-
-		for( int i = 0; i < MiscCode.numCodes(); i++ ) {
-			MiscCode 	m 		= MiscCode.codeAtIndex( i );
-			JButton 	button 	= view.getButtonMiscCode( m );
-
-			button.addMouseListener( getMiscButtonListener( m ) );
-			button.setToolTipText( "" + m.value );
-		}
-		
-		view.getCheckBoxPauseUncoded().addMouseListener( new MouseAdapter() {
-			public void mouseClicked( MouseEvent e ) {
-				control.setPauseOnUncoded( view.getCheckBoxPauseUncoded().isSelected() );
-			}
-		});
-	}
-	
-	private MiscTemplateListener getMiscButtonListener( MiscCode code ) {
-		return new MiscTemplateListener( code );
 	}
 	
 	public JPanel getTemplateView() {
 		return view;
-	}
-	
-	//===============================================================
-	// MiscTemplateListener
-	//===============================================================
-
-	private class MiscTemplateListener extends MouseAdapter {
-		private MiscCode code;
-		
-		MiscTemplateListener( MiscCode code ) {
-			this.code = code;
-		}
-		
-		public void mousePressed( MouseEvent e ) {
-			control.handleButtonMiscCode( code );
-		}
-				
 	}
 
 }

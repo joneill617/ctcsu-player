@@ -34,13 +34,10 @@ import edu.unm.casaa.globals.GlobalCode;
 
 public class GlobalTemplateUiService extends TemplateUiService {
 
-	private MainController 		control	= null;
 	private GlobalTemplateView	view 	= new GlobalTemplateView();
 	private GlobalDataModel 	data	= new GlobalDataModel();
 
-	public GlobalTemplateUiService( MainController control ) {
-		this.control = control;
-
+	public GlobalTemplateUiService() {
         for( int i = 0; i < GlobalCode.numCodes(); i++ ) {
             GlobalCode  code    = GlobalCode.codeAtIndex( i );
             JSlider     slider  = view.getSlider( code );
@@ -68,15 +65,15 @@ public class GlobalTemplateUiService extends TemplateUiService {
 	private class GlobalTemplateDocumentListener implements DocumentListener {
 
 		public void removeUpdate( DocumentEvent e ) {
-			control.globalDataChanged();
+			MainController.instance.globalDataChanged();
 		}
 		
 		public void insertUpdate( DocumentEvent e ) {
-			control.globalDataChanged();
+		    MainController.instance.globalDataChanged();
 		}
 		
 		public void changedUpdate( DocumentEvent e ) {
-			control.globalDataChanged();
+		    MainController.instance.globalDataChanged();
 		}
 		
 	}
@@ -108,7 +105,7 @@ public class GlobalTemplateUiService extends TemplateUiService {
 			}
 
 			data.setRating( code, rating );
-			control.globalDataChanged();
+			MainController.instance.globalDataChanged();
 		}
 
 	}
