@@ -32,6 +32,8 @@ public class GlobalCode {
     public String                       name;                                         // Name for use in file. Ex: "ACCEPTANCE".
     public String                       label;                                        // Human-readable label for use in UI. Ex: "Acceptance".
     public int                          defaultRating    = 1;
+    public int                          minRating        = 1;
+    public int                          maxRating        = 5;
 
     // Class:
 

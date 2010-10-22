@@ -67,11 +67,6 @@ public class GlobalTemplateView extends JPanel {
 	// Sliders.
 	private HashMap< Integer, JSlider > sliderGlobalCode = new HashMap< Integer, JSlider >();
 	
-	// Slider constants.
-	private static final int SLIDER_MIN		= 1;
-	private static final int SLIDER_MAX		= 5;
-	private static final int SLIDER_INIT	= 3;
-
 	public GlobalTemplateView() {
 		init();
 	}
@@ -92,7 +87,7 @@ public class GlobalTemplateView extends JPanel {
 
 		// Create slider (and border) if it does not yet exist.
 		if( slider == null ) {
-			slider = new JSlider( SLIDER_MIN, SLIDER_MAX, SLIDER_INIT );
+			slider = new JSlider( code.minRating, code.maxRating, code.defaultRating );
 			slider.setSnapToTicks( true );
 			slider.setMajorTickSpacing( 1 );
 			slider.setPaintTicks( true );
@@ -193,7 +188,7 @@ public class GlobalTemplateView extends JPanel {
             } else if( n.getNodeName().equalsIgnoreCase( "spacer" ) ) {
 
                 // Create a dummy slider so we can query preferred size.
-                JSlider slider = new JSlider( SLIDER_MIN, SLIDER_MAX, SLIDER_INIT );
+                JSlider slider = new JSlider( 1, 1 );
 
                 slider.setMajorTickSpacing( 1 );
                 slider.setPaintTicks( true );
