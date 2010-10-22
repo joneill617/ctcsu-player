@@ -35,11 +35,13 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.border.TitledBorder;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -146,90 +148,96 @@ public class MiscTemplateView extends JPanel {
 	// Public Getter and Setter Methods
 	//====================================================================
 
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	//Misc Code Buttons
-	public JButton getButtonMiscCode( MiscCode miscCode ) {
-		JButton button = buttonMiscCode.get( miscCode.value );
-
-		// Create button if it does not yet exist.
-		if( button == null ) {
-			button = new JButton( miscCode.name );
-			button.setPreferredSize( getDimButtonSize() );
-
-			// Prevent button from expanding or contracting, so all misc code buttons are the same size.
-			button.setMinimumSize( getDimButtonSize() );
-			button.setMaximumSize( getDimButtonSize() );
-
-			button.setToolTipText( "" + miscCode.value );
-			buttonMiscCode.put( miscCode.value, button );
-		}
-		return button;
-	}
-
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	public JCheckBox getCheckBoxPauseUncoded(){
-		if( checkBoxPauseUncoded == null ){
-			checkBoxPauseUncoded = new JCheckBox("Pause if Uncoded", true);
-		}
-		return checkBoxPauseUncoded;
-	}
-
 	public String toString(){
 		return ("MISC");
 	}
 
-	// Parse user controls from XML file.
-	private void parseUserControls() {
-		File 	file	= new File( "userConfiguration.xml" );
+	//====================================================================
+	// Private Methods
+	//====================================================================
 
-		if( file.exists() ) {
-			try {
-				DocumentBuilderFactory 	fact 	= DocumentBuilderFactory.newInstance();
-		        DocumentBuilder 		builder = fact.newDocumentBuilder();
-		        Document 				doc 	= builder.parse( file.getCanonicalFile());
-		        Node 					root	= doc.getDocumentElement();
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // MISC Code Buttons
+    private JButton getButtonMiscCode( MiscCode miscCode ) {
+        JButton button = buttonMiscCode.get( miscCode.value );
 
-		        /* Expected format:
-		         * <userConfiguration>
-		         *   <codes>
-		         *    ...
-		         *   </codes>
-		         *   <codeControls panel="therapist">
-		         *     ...
-		         *   </codeControls>
+        // Create button if it does not yet exist.
+        if( button == null ) {
+            button = new JButton( new MiscAction( miscCode ) );
+
+            button.setPreferredSize( getDimButtonSize() );
+
+            // Prevent button from expanding or contracting, so all misc code buttons are the same size.
+            button.setMinimumSize( getDimButtonSize() );
+            button.setMaximumSize( getDimButtonSize() );
+
+            button.setToolTipText( "" + miscCode.value );
+            buttonMiscCode.put( miscCode.value, button );
+        }
+        return button;
+    }
+
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    private JCheckBox getCheckBoxPauseUncoded(){
+        if( checkBoxPauseUncoded == null ){
+            checkBoxPauseUncoded = new JCheckBox("Pause if Uncoded", true);
+            checkBoxPauseUncoded.addMouseListener( new MouseAdapter() {
+                public void mouseClicked( MouseEvent e ) {
+                    MainController.instance.setPauseOnUncoded( checkBoxPauseUncoded.isSelected() );
+                }
+            } );
+        }
+        return checkBoxPauseUncoded;
+    }
+
+    // Parse user controls from XML file.
+    private void parseUserControls() {
+        File    file    = new File( "userConfiguration.xml" );
+
+        if( file.exists() ) {
+            try {
+                DocumentBuilderFactory  fact    = DocumentBuilderFactory.newInstance();
+                DocumentBuilder         builder = fact.newDocumentBuilder();
+                Document                doc     = builder.parse( file.getCanonicalFile());
+                Node                    root    = doc.getDocumentElement();
+
+                /* Expected format:
+                 * <userConfiguration>
+                 *   <codes>
+                 *    ...
+                 *   </codes>
+                 *   <codeControls panel="therapist">
+                 *     ...
+                 *   </codeControls>
                  *   <codeControls panel="client">
                  *     ...
                  *   </codeControls>
-		         * </userConfiguration>
-		         */
-		        for( Node node = root.getFirstChild(); node != null; node = node.getNextSibling() ) {
-			        if( node.getNodeName().equalsIgnoreCase( "codeControls" ) ) {
-			        	// Get panel attribute.  Must be "therapist" or "client".
-						NamedNodeMap 	map 		= node.getAttributes();
-						String			panelName	= map.getNamedItem( "panel" ).getTextContent();
+                 * </userConfiguration>
+                 */
+                for( Node node = root.getFirstChild(); node != null; node = node.getNextSibling() ) {
+                    if( node.getNodeName().equalsIgnoreCase( "codeControls" ) ) {
+                        // Get panel attribute.  Must be "therapist" or "client".
+                        NamedNodeMap    map         = node.getAttributes();
+                        String          panelName   = map.getNamedItem( "panel" ).getTextContent();
 
-						if( panelName.equalsIgnoreCase( "therapist" ) ) {
-				        	parseControlColumn( node, getPanelTherapistControls() );
-						} else if( panelName.equalsIgnoreCase( "client" ) ) {
-							parseControlColumn( node, getPanelClientControls() );
-						}
-			        }
-		        }
-			} catch( SAXParseException e ) {
-				MainController.instance.handleUserCodesParseException( file, e );
-			} catch( Exception e ) {
-				MainController.instance.handleUserCodesGenericException( file, e );
-			}
-		} else {
-			MainController.instance.handleUserCodesMissing( file );
-		}
-	}
+                        if( panelName.equalsIgnoreCase( "therapist" ) ) {
+                            parseControlColumn( node, getPanelTherapistControls() );
+                        } else if( panelName.equalsIgnoreCase( "client" ) ) {
+                            parseControlColumn( node, getPanelClientControls() );
+                        }
+                    }
+                }
+            } catch( SAXParseException e ) {
+                MainController.instance.handleUserCodesParseException( file, e );
+            } catch( Exception e ) {
+                MainController.instance.handleUserCodesGenericException( file, e );
+            }
+        } else {
+            MainController.instance.handleUserCodesMissing( file );
+        }
+    }
 
-	//====================================================================
-	// Private Helper Methods
-	//====================================================================
-
-	// Parse a column of controls from given XML node.  Add buttons to given panel, and set panel layout.
+    // Parse a column of controls from given XML node.  Add buttons to given panel, and set panel layout.
 	// Each child of given node is expected to be one row of controls.
 	private void parseControlColumn( Node node, JPanel panel ) {
 		// Count actual rows (node children), columns (max of any node child's children),
@@ -268,11 +276,22 @@ public class MiscTemplateView extends JPanel {
 				// If cell represents a single value, add a button assigned to that code.
 				// If cell represents a group of values, add a button that will open a popup.
 				if( cell.getNodeName().equalsIgnoreCase( "button" ) ) {
-					NamedNodeMap 	map      = cell.getAttributes();
-					String			codeName = map.getNamedItem( "code" ).getTextContent();
-					MiscCode		code     = MiscCode.codeWithName( codeName );
+					NamedNodeMap   map      = cell.getAttributes();
+					String		   codeName = map.getNamedItem( "code" ).getTextContent();
+					MiscCode	   code     = MiscCode.codeWithName( codeName );
+					JButton        button   = getButtonMiscCode( code );
 
-			        panel.add( getButtonMiscCode( code ) );
+			        panel.add( button );
+
+			        // Assign key binding (optional).
+			        Node           keyStrokeNode = map.getNamedItem( "key" );
+
+			        if( keyStrokeNode != null ) {
+			            KeyStroke    keyBinding  = KeyStroke.getKeyStroke( keyStrokeNode.getTextContent() );
+
+			            button.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( keyBinding, "pressed" );
+		                button.getActionMap().put( "pressed", button.getAction() );
+			        }
 					colsThisRow++;
 				} else if( cell.getNodeName().equalsIgnoreCase( "group" ) ) {
 					// Generate a popup menu to select one code from this group.
@@ -288,13 +307,28 @@ public class MiscTemplateView extends JPanel {
 
 						NamedNodeMap 	memberMap 	     = member.getAttributes();
 						String			memberCodeName   = memberMap.getNamedItem( "code" ).getTextContent();
-						JMenuItem 		item 		     = new JMenuItem( memberCodeName );
 						MiscCode		code		     = MiscCode.codeWithName( memberCodeName );
+   						JMenuItem       item             = new JMenuItem( new MiscAction( code ) );
 
-						// Add mouse listener, keyed with code for this member in group.
-						item.addMouseListener( new PopupItemListener( code ) );
+			            item.setToolTipText( "" + code.value );
+
+	                    // Assign key binding (optional).
+	                    Node           keyStrokeNode = memberMap.getNamedItem( "key" );
+
+	                    if( keyStrokeNode != null ) {
+	                        KeyStroke  keyBinding  = KeyStroke.getKeyStroke( keyStrokeNode.getTextContent() );
+	                        String     actionName  = "pressed_" + code.name;
+
+	                        // Map in panel, rather than menu item, so binding is available whether or not popup is open.
+	                        // Use unique action name (including code name) to avoid overwriting "pressed" action.
+                            getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( keyBinding, actionName );
+                            getActionMap().put( actionName, item.getAction() );
+	                    }
+
+	                    // Add to popup.
 						popup.add( item );
 
+						// Include name in group button tooltip.
 						if( tooltipList.length() > 0 )
 							tooltipList += ", ";
 						tooltipList += memberCodeName;
@@ -658,20 +692,4 @@ public class MiscTemplateView extends JPanel {
 	    }
 	}
 
-	//===============================================================
-	// PopupItemListener
-	//===============================================================
-
-	private class PopupItemListener extends MouseAdapter {
-		private MiscCode code;
-		
-		PopupItemListener( MiscCode code ) {
-			this.code = code;
-		}
-		
-		public void mousePressed( MouseEvent e ) {
-			MainController.instance.handleButtonMiscCode( code );
-		}
-				
-	}
 }

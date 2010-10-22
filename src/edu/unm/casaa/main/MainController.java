@@ -361,7 +361,7 @@ public class MainController implements BasicPlayerListener {
 	}
 
 	private void mapAction(String text, String command) {
-		actionTable.put(command, new MainControllerAction(this, text, command));
+		actionTable.put(command, new MainControllerAction(text, command));
 	}
 
 	private void display(String msg) {
@@ -1257,11 +1257,11 @@ public class MainController implements BasicPlayerListener {
             templateView    = templateUI.getTemplateView();
             break;
         case CODE:
-            templateUI      = new MiscTemplateUiService( this );
+            templateUI      = new MiscTemplateUiService();
             templateView    = templateUI.getTemplateView();
             break;
         case GLOBALS:
-            templateUI      = new GlobalTemplateUiService( this );
+            templateUI      = new GlobalTemplateUiService();
             templateView    = templateUI.getTemplateView();
             break;
         default:

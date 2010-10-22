@@ -27,16 +27,14 @@ import javax.swing.AbstractAction;
 class MainControllerAction extends AbstractAction {
 
 	private static final long 	serialVersionUID 	= 1L;
-	private MainController 		mc 					= null;
 	private String				actionCommand		= null;
 
-	public MainControllerAction( MainController mc, String text, String actionCommand ) {
+	public MainControllerAction( String text, String actionCommand ) {
 		super( text );
-		this.mc 			= mc;
 		this.actionCommand	= actionCommand;
 	}
 
 	public void actionPerformed( ActionEvent e ) {
-		mc.handleAction( actionCommand ); // Pass to MainController.
+	    MainController.instance.handleAction( actionCommand ); // Pass to MainController.
 	}
 }
