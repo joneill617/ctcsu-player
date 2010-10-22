@@ -37,9 +37,9 @@ public class TimeCode {
 
 		assert( st.countTokens() == 3 );
 
-		int	hours 	= new Integer( st.nextToken() ).intValue();
-		int minutes = new Integer( st.nextToken() ).intValue();
-		int	seconds	= new Integer( st.nextToken() ).intValue();
+		int	hours 	= Integer.parseInt( st.nextToken() );
+		int minutes = Integer.parseInt( st.nextToken() );
+		int	seconds	= Integer.parseInt( st.nextToken() );
 
 		return (hours * 3600) + (minutes * 60) + seconds;
 	}
