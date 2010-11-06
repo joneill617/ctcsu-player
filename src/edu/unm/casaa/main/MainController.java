@@ -785,7 +785,7 @@ public class MainController implements BasicPlayerListener {
         // About Menu: Help
         playerView.getMenuItemHelp().addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
-                showNotImplementedDialog();
+                showHelpDialog();
             }
         } );
 
@@ -1108,7 +1108,7 @@ public class MainController implements BasicPlayerListener {
 
         JFileChooser chooser = new JFileChooser();
 
-        chooser.setDialogTitle( "Load Code File" );
+        chooser.setDialogTitle( "Load CASAA File" );
         chooser.setFileFilter( new FileNameExtensionFilter( "CASAA code files", "casaa" ) );
         if( chooser.showOpenDialog( playerView ) == JFileChooser.APPROVE_OPTION ) {
             cleanupMode();
@@ -1191,14 +1191,13 @@ public class MainController implements BasicPlayerListener {
 	// ====================================================================
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Other Stuff
-	private void showNotImplementedDialog() {
-		JOptionPane.showMessageDialog( playerView,
-				"This Feature Has Not Been Implemented Yet.\n"
-						+ "Please Check for it in a Future Release.",
-				"Beta Release Notification", JOptionPane.ERROR_MESSAGE);
-	}
+    private void showHelpDialog() {
+        JOptionPane.showMessageDialog( playerView,
+                "Please visit http://casaa.unm.edu for the latest reference manual.",
+                "Help", JOptionPane.INFORMATION_MESSAGE);
+    }
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private void showAudioFileNotFoundDialog() {
 		JOptionPane.showMessageDialog( playerView,
 						"The audio file:\n"

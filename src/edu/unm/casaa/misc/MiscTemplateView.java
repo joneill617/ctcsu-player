@@ -390,7 +390,7 @@ public class MiscTemplateView extends JPanel {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private TitledBorder getBorderWindow(){
 		if( borderWindow == null ){
-			borderWindow = BorderFactory.createTitledBorder("MISC Coding Template");
+			borderWindow = BorderFactory.createTitledBorder("Coding Template");
 			borderWindow.setTitleJustification(TitledBorder.CENTER);
 			borderWindow.setTitleColor(Color.BLACK);
 		}
